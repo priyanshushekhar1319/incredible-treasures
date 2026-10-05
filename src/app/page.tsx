@@ -22,19 +22,24 @@ import {
 export default function HomePage() {
   // Live Price Calculator State (Demonstrating Production Math)
   const [selectedPaper, setSelectedPaper] = useState<"matte" | "goldFoil">("matte");
+  const [orderMode, setOrderMode] = useState<"samples" | "bulk">("bulk");
   const [quantity, setQuantity] = useState<number>(500);
 
-  // Pricing math matrix
+  // Pricing math matrix (Supporting 1 pc sample, 10 pcs trial, up to 1000 pcs bulk)
   const pricingData = {
     matte: {
       name: "350 GSM Royal Silk Matte",
       description: "Non-reflective anti-fingerprint coating with ultra-crisp offset vector printing.",
       basePerPiece: 3.99,
       tiers: {
-        100: { unit: 3.99, total: 399, discount: 0 },
-        250: { unit: 3.40, total: 850, discount: 15 },
-        500: { unit: 2.60, total: 1300, discount: 35 },
-        1000: { unit: 1.99, total: 1990, discount: 50 },
+        1: { unit: 99.0, total: 99, discount: 0, label: "Sample Kit", note: "1 PC proof + paper swatch kit" },
+        10: { unit: 19.9, total: 199, discount: 0, label: "Trial Pack", note: "10 cards for quick meetings" },
+        25: { unit: 11.96, total: 299, discount: 0, label: "Boutique", note: "25 cards small batch" },
+        50: { unit: 6.98, total: 349, discount: 0, label: "Startup", note: "50 cards starter pack" },
+        100: { unit: 3.99, total: 399, discount: 0, label: "Standard", note: "100 cards classic box" },
+        250: { unit: 3.40, total: 850, discount: 15, label: "Corporate", note: "250 cards team pack" },
+        500: { unit: 2.60, total: 1300, discount: 35, label: "Growth", note: "500 cards (Most Popular)" },
+        1000: { unit: 1.99, total: 1990, discount: 50, label: "Wholesale", note: "1000 cards enterprise tier" },
       },
     },
     goldFoil: {
@@ -42,16 +47,20 @@ export default function HomePage() {
       description: "Tactile metallic gold foil stamped over obsidian velvet cardstock.",
       basePerPiece: 7.99,
       tiers: {
-        100: { unit: 7.99, total: 799, discount: 0 },
-        250: { unit: 6.99, total: 1748, discount: 12 },
-        500: { unit: 5.49, total: 2745, discount: 31 },
-        1000: { unit: 4.29, total: 4290, discount: 46 },
+        1: { unit: 149.0, total: 149, discount: 0, label: "Gold Sample", note: "1 PC master foil proof" },
+        10: { unit: 34.9, total: 349, discount: 0, label: "VIP Trial", note: "10 cards executive pack" },
+        25: { unit: 19.96, total: 499, discount: 0, label: "Boutique", note: "25 cards luxury run" },
+        50: { unit: 12.98, total: 649, discount: 0, label: "Founder", note: "50 cards prestige pack" },
+        100: { unit: 7.99, total: 799, discount: 0, label: "Standard", note: "100 cards luxury box" },
+        250: { unit: 6.99, total: 1748, discount: 12, label: "Corporate", note: "250 cards executive suite" },
+        500: { unit: 5.49, total: 2745, discount: 31, label: "Growth", note: "500 cards (Most Popular)" },
+        1000: { unit: 4.29, total: 4290, discount: 46, label: "Wholesale", note: "1000 cards elite bulk" },
       },
     },
   };
 
   const currentConfig = pricingData[selectedPaper];
-  const tierInfo = currentConfig.tiers[quantity as keyof typeof currentConfig.tiers];
+  const tierInfo = currentConfig.tiers[quantity as keyof typeof currentConfig.tiers] || currentConfig.tiers[100];
   const subtotal = tierInfo.total;
   const gstAmount = Math.round(subtotal * 0.18 * 100) / 100;
   const totalWithTax = Math.round((subtotal + gstAmount) * 100) / 100;
@@ -277,37 +286,106 @@ export default function HomePage() {
                 </div>
               </div>
 
-              {/* Quantity Tier Selector */}
+              {/* Quantity Tier Selector with Sample / 1 PC & Bulk Toggle */}
               <div className="glass-panel p-6 rounded-2xl border border-white/10">
-                <label className="text-xs font-semibold uppercase tracking-wider text-stone-400 block mb-3">
-                  Step 2: Choose Quantity (Bulk Discounts Applied Automatically)
-                </label>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  {[100, 250, 500, 1000].map((qty) => {
-                    const tier = currentConfig.tiers[qty as keyof typeof currentConfig.tiers];
-                    const isSelected = quantity === qty;
-                    return (
-                      <button
-                        key={qty}
-                        onClick={() => setQuantity(qty)}
-                        className={`p-3.5 rounded-xl text-center border relative transition ${
-                          isSelected
-                            ? "border-[#D4AF37] bg-[#D4AF37]/15 shadow-md shadow-[#D4AF37]/15"
-                            : "border-white/10 bg-stone-900/30 hover:border-white/20"
-                        }`}
-                      >
-                        {tier.discount > 0 && (
-                          <span className="absolute -top-2 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-emerald-500 text-black">
-                            Save {tier.discount}%
-                          </span>
-                        )}
-                        <div className="text-base font-bold text-white">{qty} pcs</div>
-                        <div className="text-xs text-stone-400 mt-1">₹{tier.unit}/pc</div>
-                        <div className="text-xs font-semibold text-[#D4AF37] mt-1">₹{tier.total}</div>
-                      </button>
-                    );
-                  })}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+                  <label className="text-xs font-semibold uppercase tracking-wider text-stone-400">
+                    Step 2: Choose Order Size & Quantity
+                  </label>
+                  {/* Mode Switcher */}
+                  <div className="inline-flex rounded-lg bg-stone-900 p-1 border border-white/10 text-xs">
+                    <button
+                      onClick={() => {
+                        setOrderMode("bulk");
+                        setQuantity(500);
+                      }}
+                      className={`px-3 py-1.5 rounded-md font-semibold transition ${
+                        orderMode === "bulk"
+                          ? "bg-[#D4AF37] text-black shadow"
+                          : "text-stone-400 hover:text-white"
+                      }`}
+                    >
+                      Corporate Bulk (100–1000+)
+                    </button>
+                    <button
+                      onClick={() => {
+                        setOrderMode("samples");
+                        setQuantity(1);
+                      }}
+                      className={`px-3 py-1.5 rounded-md font-semibold transition flex items-center gap-1.5 ${
+                        orderMode === "samples"
+                          ? "bg-[#D4AF37] text-black shadow"
+                          : "text-stone-400 hover:text-white"
+                      }`}
+                    >
+                      <Sparkles className="w-3 h-3" /> Samples (1–50 pcs)
+                    </button>
+                  </div>
                 </div>
+
+                {/* Bulk Quantities (100, 250, 500, 1000) */}
+                {orderMode === "bulk" ? (
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    {[100, 250, 500, 1000].map((qty) => {
+                      const tier = currentConfig.tiers[qty as keyof typeof currentConfig.tiers];
+                      const isSelected = quantity === qty;
+                      return (
+                        <button
+                          key={qty}
+                          onClick={() => setQuantity(qty)}
+                          className={`p-3.5 rounded-xl text-center border relative transition ${
+                            isSelected
+                              ? "border-[#D4AF37] bg-[#D4AF37]/15 shadow-md shadow-[#D4AF37]/15"
+                              : "border-white/10 bg-stone-900/30 hover:border-white/20"
+                          }`}
+                        >
+                          {tier.discount > 0 && (
+                            <span className="absolute -top-2 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-emerald-500 text-black">
+                              Save {tier.discount}%
+                            </span>
+                          )}
+                          <div className="text-base font-bold text-white">{qty} pcs</div>
+                          <div className="text-xs text-stone-400 mt-1">₹{tier.unit}/pc</div>
+                          <div className="text-xs font-semibold text-[#D4AF37] mt-1">₹{tier.total}</div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  /* Small Batch & Samples (1, 10, 25, 50) */
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                      {[1, 10, 25, 50].map((qty) => {
+                        const tier = currentConfig.tiers[qty as keyof typeof currentConfig.tiers];
+                        const isSelected = quantity === qty;
+                        return (
+                          <button
+                            key={qty}
+                            onClick={() => setQuantity(qty)}
+                            className={`p-3.5 rounded-xl text-center border relative transition ${
+                              isSelected
+                                ? "border-[#D4AF37] bg-[#D4AF37]/20 shadow-md shadow-[#D4AF37]/20 ring-1 ring-[#D4AF37]"
+                                : "border-white/10 bg-stone-900/30 hover:border-white/20"
+                            }`}
+                          >
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-[#D4AF37] block mb-1">
+                              {tier.label}
+                            </span>
+                            <div className="text-lg font-bold text-white">{qty} {qty === 1 ? "pc" : "pcs"}</div>
+                            <div className="text-xs text-stone-400 mt-0.5">₹{tier.unit}/pc</div>
+                            <div className="text-xs font-bold text-[#D4AF37] mt-1">₹{tier.total}</div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <div className="p-3 rounded-xl bg-stone-900/60 border border-white/5 text-xs text-stone-300 flex items-center gap-2">
+                      <Sparkles className="w-4 h-4 text-[#D4AF37] shrink-0" />
+                      <span>
+                        <strong>Zero MOQ Guarantee:</strong> Need 1 single card to verify your logo & gold foil finish before placing a 500-card order? Or just 10 cards for a board meeting? We support digital fast-track printing!
+                      </span>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -326,7 +404,21 @@ export default function HomePage() {
                 <div className="space-y-4 text-sm">
                   <div>
                     <div className="font-semibold text-white text-base">{currentConfig.name}</div>
-                    <div className="text-xs text-stone-400 mt-0.5">Quantity: {quantity} Cards</div>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className="text-xs text-stone-300 font-medium">
+                        Quantity: <strong className="text-white font-mono">{quantity} {quantity === 1 ? "Card (Sample Kit)" : "Cards"}</strong>
+                      </span>
+                      {quantity === 1 && (
+                        <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-[#D4AF37] text-black">
+                          Proof Sample
+                        </span>
+                      )}
+                      {quantity === 10 && (
+                        <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-emerald-500 text-black">
+                          Trial Pack
+                        </span>
+                      )}
+                    </div>
                   </div>
 
                   <div className="pt-4 border-t border-white/5 space-y-2.5">
