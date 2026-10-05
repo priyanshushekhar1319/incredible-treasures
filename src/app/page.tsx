@@ -415,7 +415,7 @@ export default function HomePage() {
             <div className="glass-panel rounded-2xl overflow-hidden border border-white/10 hover:border-[#D4AF37]/40 transition group">
               <div className="h-52 overflow-hidden relative bg-stone-900">
                 <img
-                  src="https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=800&q=80"
+                  src="/images/royal-matte-card.jpg"
                   alt="Royal Matte Visiting Card"
                   className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
                 />
@@ -456,7 +456,7 @@ export default function HomePage() {
             <div className="glass-panel-gold rounded-2xl overflow-hidden border border-[#D4AF37]/40 shadow-xl group">
               <div className="h-52 overflow-hidden relative bg-stone-900">
                 <img
-                  src="https://images.unsplash.com/photo-1607344645866-009c320c5ab8?auto=format&fit=crop&w=800&q=80"
+                  src="/images/gold-foil-card.jpg"
                   alt="Imperial Raised Gold Foil Card"
                   className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
                 />
@@ -497,7 +497,7 @@ export default function HomePage() {
             <div className="glass-panel rounded-2xl overflow-hidden border border-white/10 hover:border-[#D4AF37]/40 transition group">
               <div className="h-52 overflow-hidden relative bg-stone-900">
                 <img
-                  src="https://images.unsplash.com/photo-1586075010923-2dd4570fb338?auto=format&fit=crop&w=800&q=80"
+                  src="/images/letterhead-suite.jpg"
                   alt="Executive Letterhead Suite"
                   className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
                 />
