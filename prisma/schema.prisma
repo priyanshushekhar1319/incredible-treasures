@@ -1,0 +1,156 @@
+// Incredible Treasures Prisma Database Schema
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Category {
+  id          String    @id @default(cuid())
+  name        String
+  slug        String    @unique
+  description String?
+  icon        String?
+  image       String?
+  displayOrder Int      @default(0)
+  products    Product[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Product {
+  id             String           @id @default(cuid())
+  name           String
+  slug           String           @unique
+  tagline        String?
+  description    String
+  basePrice      Float
+  hsnCode        String           @default("49090000") // Printing HSN Code
+  categoryId     String
+  category       Category         @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  minQuantity    Int              @default(100)
+  estimatedDays  String           @default("2-3 Business Days")
+  images         String           // JSON stringified array of image URLs
+  featured       Boolean          @default(false)
+  rating         Float            @default(4.9)
+  reviewCount    Int              @default(128)
+  variants       ProductVariant[]
+  volumeTiers    VolumeTier[]
+  templates      Template[]
+  orderItems     OrderItem[]
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+}
+
+model ProductVariant {
+  id            String   @id @default(cuid())
+  productId     String
+  product       Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  name          String   // e.g. "350 GSM Royal Matte"
+  paperType     String   // e.g. "Royal Matte", "Velvet Touch", "Recycled Kraft"
+  thicknessGsm  Int      @default(350)
+  finish        String   // e.g. "Silk Matte", "Gloss Lamination", "Spot UV + Gold Foil"
+  cornerStyle   String   @default("Square") // "Square" or "Rounded"
+  priceModifier Float    @default(0.0) // Additional cost per unit
+  isDefault     Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model VolumeTier {
+  id              String   @id @default(cuid())
+  productId       String
+  product         Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  quantity        Int      // 100, 250, 500, 1000, 2500, 5000
+  unitPrice       Float    // Price per piece at this tier
+  discountPercent Int      @default(0) // Savings badge, e.g. 35%
+  isPopular       Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@unique([productId, quantity])
+}
+
+model Template {
+  id               String   @id @default(cuid())
+  productId        String
+  product          Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  name             String
+  slug             String   @unique
+  industry         String   // "Corporate", "Doctors", "Lawyers", "Tech", "Real Estate", "Luxury"
+  previewFront     String
+  previewBack      String?
+  canvasDataFront  String   // JSON string of Fabric.js canvas state
+  canvasDataBack   String?  // JSON string of Fabric.js canvas state
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  name         String?
+  phone        String?
+  companyName  String?
+  gstin        String?
+  role         String    @default("CUSTOMER") // "CUSTOMER", "STAFF", "SUPER_ADMIN"
+  orders       Order[]
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+model Order {
+  id                 String      @id @default(cuid())
+  orderNumber        String      @unique // e.g. "IT-2026-1001"
+  userId             String?
+  user               User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
+  customerName       String
+  customerEmail      String
+  customerPhone      String
+  shippingAddress    String
+  city               String
+  state              String
+  pincode            String
+  isB2B              Boolean     @default(false)
+  companyName        String?
+  gstin              String?
+  subtotal           Float
+  taxAmount          Float       // 18% GST (CGST+SGST or IGST)
+  cgstAmount         Float       @default(0.0)
+  sgstAmount         Float       @default(0.0)
+  igstAmount         Float       @default(0.0)
+  shippingFee        Float       @default(0.0)
+  discountAmount     Float       @default(0.0)
+  totalAmount        Float
+  status             String      @default("PENDING") // PENDING, PROCESSING, PREPRESS_CHECK, PRINTING, SHIPPED, DELIVERED, CANCELLED
+  paymentStatus      String      @default("PENDING") // PENDING, PAID, FAILED, REFUNDED
+  razorpayOrderId    String?
+  razorpayPaymentId  String?
+  trackingNumber     String?
+  courierPartner     String?     @default("Shiprocket")
+  items              OrderItem[]
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
+}
+
+model OrderItem {
+  id                String   @id @default(cuid())
+  orderId           String
+  order             Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId         String
+  product           Product  @relation(fields: [productId], references: [id])
+  productName       String
+  variantName       String
+  quantity          Int
+  unitPrice         Float
+  totalPrice        Float
+  specsJson         String   // JSON string of selected paper, finish, corners
+  customDesignFront String?  // High-res preview / storage URL
+  customDesignBack  String?  // High-res preview / storage URL
+  printReadyPdfUrl  String?  // 300 DPI vector PDF URL for print press
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
