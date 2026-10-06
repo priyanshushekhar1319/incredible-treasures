@@ -1,0 +1,758 @@
+[
+  {
+    "id": "awards-1",
+    "category": "awards",
+    "sourceFile": "Crystal Trophies.pdf",
+    "page": 1,
+    "image": "/images/catalog/awards/awards_1_crystal_trophie.jpg",
+    "width": 2502,
+    "height": 2502
+  },
+  {
+    "id": "awards-2",
+    "category": "awards",
+    "sourceFile": "Crystal Trophies.pdf",
+    "page": 2,
+    "image": "/images/catalog/awards/awards_2_crystal_trophie.jpg",
+    "width": 2502,
+    "height": 2502
+  },
+  {
+    "id": "awards-3",
+    "category": "awards",
+    "sourceFile": "Crystal Trophies.pdf",
+    "page": 3,
+    "image": "/images/catalog/awards/awards_3_crystal_trophie.jpg",
+    "width": 2502,
+    "height": 2502
+  },
+  {
+    "id": "awards-4",
+    "category": "awards",
+    "sourceFile": "Crystal Trophies.pdf",
+    "page": 4,
+    "image": "/images/catalog/awards/awards_4_crystal_trophie.jpg",
+    "width": 2502,
+    "height": 2502
+  },
+  {
+    "id": "awards-5",
+    "category": "awards",
+    "sourceFile": "Crystal Trophies.pdf",
+    "page": 5,
+    "image": "/images/catalog/awards/awards_5_crystal_trophie.jpg",
+    "width": 2502,
+    "height": 2502
+  },
+  {
+    "id": "awards-6",
+    "category": "awards",
+    "sourceFile": "Crystal Trophies.pdf",
+    "page": 6,
+    "image": "/images/catalog/awards/awards_6_crystal_trophie.jpg",
+    "width": 2097,
+    "height": 2097
+  },
+  {
+    "id": "awards-7",
+    "category": "awards",
+    "sourceFile": "Crystal Trophies.pdf",
+    "page": 7,
+    "image": "/images/catalog/awards/awards_7_crystal_trophie.jpg",
+    "width": 2245,
+    "height": 2245
+  },
+  {
+    "id": "awards-8",
+    "category": "awards",
+    "sourceFile": "Crystal Trophies.pdf",
+    "page": 8,
+    "image": "/images/catalog/awards/awards_8_crystal_trophie.jpg",
+    "width": 2502,
+    "height": 2502
+  },
+  {
+    "id": "awards-9",
+    "category": "awards",
+    "sourceFile": "Crystal Trophies.pdf",
+    "page": 9,
+    "image": "/images/catalog/awards/awards_9_crystal_trophie.jpg",
+    "width": 2502,
+    "height": 2502
+  },
+  {
+    "id": "awards-10",
+    "category": "awards",
+    "sourceFile": "Crystal Trophies.pdf",
+    "page": 10,
+    "image": "/images/catalog/awards/awards_10_crystal_trophie.jpg",
+    "width": 2307,
+    "height": 2307
+  },
+  {
+    "id": "awards-11",
+    "category": "awards",
+    "sourceFile": "Crystal Trophies.pdf",
+    "page": 11,
+    "image": "/images/catalog/awards/awards_11_crystal_trophie.jpg",
+    "width": 2262,
+    "height": 2262
+  },
+  {
+    "id": "awards-12",
+    "category": "awards",
+    "sourceFile": "Crystal Trophies.pdf",
+    "page": 12,
+    "image": "/images/catalog/awards/awards_12_crystal_trophie.jpg",
+    "width": 2493,
+    "height": 2493
+  },
+  {
+    "id": "drinkware-1",
+    "category": "drinkware",
+    "sourceFile": "Aquabot Bottle and Drinkware 2025.pdf",
+    "page": 1,
+    "image": "/images/catalog/drinkware/drinkware_1_page_1.jpg",
+    "width": 1771,
+    "height": 2479
+  },
+  {
+    "id": "drinkware-2",
+    "category": "drinkware",
+    "sourceFile": "Aquabot Bottle and Drinkware 2025.pdf",
+    "page": 2,
+    "image": "/images/catalog/drinkware/drinkware_2_aquabot_bottle_.jpg",
+    "width": 381,
+    "height": 381
+  },
+  {
+    "id": "drinkware-3",
+    "category": "drinkware",
+    "sourceFile": "Aquabot Bottle and Drinkware 2025.pdf",
+    "page": 2,
+    "image": "/images/catalog/drinkware/drinkware_3_aquabot_bottle_.jpg",
+    "width": 626,
+    "height": 625
+  },
+  {
+    "id": "drinkware-4",
+    "category": "drinkware",
+    "sourceFile": "Aquabot Bottle and Drinkware 2025.pdf",
+    "page": 2,
+    "image": "/images/catalog/drinkware/drinkware_4_aquabot_bottle_.jpg",
+    "width": 381,
+    "height": 381
+  },
+  {
+    "id": "drinkware-5",
+    "category": "drinkware",
+    "sourceFile": "Aquabot Bottle and Drinkware 2025.pdf",
+    "page": 2,
+    "image": "/images/catalog/drinkware/drinkware_5_aquabot_bottle_.jpg",
+    "width": 381,
+    "height": 381
+  },
+  {
+    "id": "drinkware-6",
+    "category": "drinkware",
+    "sourceFile": "Aquabot Bottle and Drinkware 2025.pdf",
+    "page": 2,
+    "image": "/images/catalog/drinkware/drinkware_6_aquabot_bottle_.jpg",
+    "width": 381,
+    "height": 381
+  },
+  {
+    "id": "drinkware-7",
+    "category": "drinkware",
+    "sourceFile": "Aquabot Bottle and Drinkware 2025.pdf",
+    "page": 2,
+    "image": "/images/catalog/drinkware/drinkware_7_aquabot_bottle_.jpg",
+    "width": 381,
+    "height": 381
+  },
+  {
+    "id": "drinkware-8",
+    "category": "drinkware",
+    "sourceFile": "Aquabot Bottle and Drinkware 2025.pdf",
+    "page": 2,
+    "image": "/images/catalog/drinkware/drinkware_8_aquabot_bottle_.jpg",
+    "width": 381,
+    "height": 381
+  },
+  {
+    "id": "drinkware-9",
+    "category": "drinkware",
+    "sourceFile": "Aquabot Bottle and Drinkware 2025.pdf",
+    "page": 2,
+    "image": "/images/catalog/drinkware/drinkware_9_aquabot_bottle_.jpg",
+    "width": 359,
+    "height": 381
+  },
+  {
+    "id": "drinkware-10",
+    "category": "drinkware",
+    "sourceFile": "Aquabot Bottle and Drinkware 2025.pdf",
+    "page": 2,
+    "image": "/images/catalog/drinkware/drinkware_10_aquabot_bottle_.jpg",
+    "width": 429,
+    "height": 429
+  },
+  {
+    "id": "drinkware-11",
+    "category": "drinkware",
+    "sourceFile": "Aquabot Bottle and Drinkware 2025.pdf",
+    "page": 2,
+    "image": "/images/catalog/drinkware/drinkware_11_aquabot_bottle_.jpg",
+    "width": 382,
+    "height": 381
+  },
+  {
+    "id": "drinkware-12",
+    "category": "drinkware",
+    "sourceFile": "Aquabot Bottle and Drinkware 2025.pdf",
+    "page": 3,
+    "image": "/images/catalog/drinkware/drinkware_12_aquabot_bottle_.jpg",
+    "width": 476,
+    "height": 476
+  },
+  {
+    "id": "pens-1",
+    "category": "pens",
+    "sourceFile": "A-SERIES PEN CATALOGUE.pdf",
+    "page": 1,
+    "image": "/images/catalog/pens/pens_1_a_series_pen_ca.jpg",
+    "width": 1788,
+    "height": 2522
+  },
+  {
+    "id": "pens-2",
+    "category": "pens",
+    "sourceFile": "A-SERIES PEN CATALOGUE.pdf",
+    "page": 1,
+    "image": "/images/catalog/pens/pens_2_a_series_pen_ca.jpg",
+    "width": 1747,
+    "height": 2478
+  },
+  {
+    "id": "pens-3",
+    "category": "pens",
+    "sourceFile": "A-SERIES PEN CATALOGUE.pdf",
+    "page": 2,
+    "image": "/images/catalog/pens/pens_3_a_series_pen_ca.jpg",
+    "width": 1788,
+    "height": 2519
+  },
+  {
+    "id": "pens-4",
+    "category": "pens",
+    "sourceFile": "A-SERIES PEN CATALOGUE.pdf",
+    "page": 3,
+    "image": "/images/catalog/pens/pens_4_a_series_pen_ca.jpg",
+    "width": 1788,
+    "height": 2519
+  },
+  {
+    "id": "pens-5",
+    "category": "pens",
+    "sourceFile": "A-SERIES PEN CATALOGUE.pdf",
+    "page": 4,
+    "image": "/images/catalog/pens/pens_5_a_series_pen_ca.jpg",
+    "width": 1788,
+    "height": 2519
+  },
+  {
+    "id": "pens-6",
+    "category": "pens",
+    "sourceFile": "A-SERIES PEN CATALOGUE.pdf",
+    "page": 5,
+    "image": "/images/catalog/pens/pens_6_a_series_pen_ca.jpg",
+    "width": 1788,
+    "height": 2519
+  },
+  {
+    "id": "pens-7",
+    "category": "pens",
+    "sourceFile": "A-SERIES PEN CATALOGUE.pdf",
+    "page": 6,
+    "image": "/images/catalog/pens/pens_7_a_series_pen_ca.jpg",
+    "width": 1788,
+    "height": 2519
+  },
+  {
+    "id": "pens-8",
+    "category": "pens",
+    "sourceFile": "A-SERIES PEN CATALOGUE.pdf",
+    "page": 7,
+    "image": "/images/catalog/pens/pens_8_a_series_pen_ca.jpg",
+    "width": 1788,
+    "height": 2519
+  },
+  {
+    "id": "pens-9",
+    "category": "pens",
+    "sourceFile": "A-SERIES PEN CATALOGUE.pdf",
+    "page": 7,
+    "image": "/images/catalog/pens/pens_9_a_series_pen_ca.jpg",
+    "width": 465,
+    "height": 335
+  },
+  {
+    "id": "pens-10",
+    "category": "pens",
+    "sourceFile": "A-SERIES PEN CATALOGUE.pdf",
+    "page": 8,
+    "image": "/images/catalog/pens/pens_10_a_series_pen_ca.jpg",
+    "width": 1788,
+    "height": 2519
+  },
+  {
+    "id": "pens-11",
+    "category": "pens",
+    "sourceFile": "A-SERIES PEN CATALOGUE.pdf",
+    "page": 9,
+    "image": "/images/catalog/pens/pens_11_a_series_pen_ca.jpg",
+    "width": 1788,
+    "height": 2519
+  },
+  {
+    "id": "pens-12",
+    "category": "pens",
+    "sourceFile": "A-SERIES PEN CATALOGUE.pdf",
+    "page": 10,
+    "image": "/images/catalog/pens/pens_12_a_series_pen_ca.jpg",
+    "width": 1788,
+    "height": 2519
+  },
+  {
+    "id": "stationery-1",
+    "category": "stationery",
+    "sourceFile": "iScape 'IA Series' Note Book Catalogue - September 2026.pdf",
+    "page": 1,
+    "image": "/images/catalog/stationery/stationery_1_iscape__ia_seri.jpg",
+    "width": 822,
+    "height": 1169
+  },
+  {
+    "id": "stationery-2",
+    "category": "stationery",
+    "sourceFile": "iScape 'IA Series' Note Book Catalogue - September 2026.pdf",
+    "page": 2,
+    "image": "/images/catalog/stationery/stationery_2_iscape__ia_seri.jpg",
+    "width": 822,
+    "height": 1169
+  },
+  {
+    "id": "stationery-3",
+    "category": "stationery",
+    "sourceFile": "iScape 'IA Series' Note Book Catalogue - September 2026.pdf",
+    "page": 3,
+    "image": "/images/catalog/stationery/stationery_3_iscape__ia_seri.jpg",
+    "width": 822,
+    "height": 1169
+  },
+  {
+    "id": "stationery-4",
+    "category": "stationery",
+    "sourceFile": "iScape 'IA Series' Note Book Catalogue - September 2026.pdf",
+    "page": 4,
+    "image": "/images/catalog/stationery/stationery_4_iscape__ia_seri.jpg",
+    "width": 822,
+    "height": 1169
+  },
+  {
+    "id": "stationery-5",
+    "category": "stationery",
+    "sourceFile": "iScape 'IA Series' Note Book Catalogue - September 2026.pdf",
+    "page": 5,
+    "image": "/images/catalog/stationery/stationery_5_iscape__ia_seri.jpg",
+    "width": 940,
+    "height": 1344
+  },
+  {
+    "id": "stationery-6",
+    "category": "stationery",
+    "sourceFile": "iScape 'IA Series' Note Book Catalogue - September 2026.pdf",
+    "page": 6,
+    "image": "/images/catalog/stationery/stationery_6_iscape__ia_seri.jpg",
+    "width": 822,
+    "height": 1169
+  },
+  {
+    "id": "stationery-7",
+    "category": "stationery",
+    "sourceFile": "iScape 'IA Series' Note Book Catalogue - September 2026.pdf",
+    "page": 7,
+    "image": "/images/catalog/stationery/stationery_7_iscape__ia_seri.jpg",
+    "width": 822,
+    "height": 1169
+  },
+  {
+    "id": "stationery-8",
+    "category": "stationery",
+    "sourceFile": "iScape 'IA Series' Note Book Catalogue - September 2026.pdf",
+    "page": 8,
+    "image": "/images/catalog/stationery/stationery_8_iscape__ia_seri.jpg",
+    "width": 822,
+    "height": 1169
+  },
+  {
+    "id": "stationery-9",
+    "category": "stationery",
+    "sourceFile": "iScape 'IA Series' Note Book Catalogue - September 2026.pdf",
+    "page": 9,
+    "image": "/images/catalog/stationery/stationery_9_iscape__ia_seri.jpg",
+    "width": 822,
+    "height": 1169
+  },
+  {
+    "id": "stationery-10",
+    "category": "stationery",
+    "sourceFile": "iScape 'IA Series' Note Book Catalogue - September 2026.pdf",
+    "page": 10,
+    "image": "/images/catalog/stationery/stationery_10_iscape__ia_seri.jpg",
+    "width": 822,
+    "height": 1169
+  },
+  {
+    "id": "stationery-11",
+    "category": "stationery",
+    "sourceFile": "iScape 'IA Series' Note Book Catalogue - September 2026.pdf",
+    "page": 11,
+    "image": "/images/catalog/stationery/stationery_11_iscape__ia_seri.jpg",
+    "width": 822,
+    "height": 1169
+  },
+  {
+    "id": "stationery-12",
+    "category": "stationery",
+    "sourceFile": "iScape 'IA Series' Note Book Catalogue - September 2026.pdf",
+    "page": 12,
+    "image": "/images/catalog/stationery/stationery_12_iscape__ia_seri.jpg",
+    "width": 822,
+    "height": 1169
+  },
+  {
+    "id": "gifting-1",
+    "category": "gifting",
+    "sourceFile": "Brillare Gift Boxes.pdf",
+    "page": 2,
+    "image": "/images/catalog/gifting/gifting_1_brillare_gift_b.jpg",
+    "width": 469,
+    "height": 469
+  },
+  {
+    "id": "gifting-2",
+    "category": "gifting",
+    "sourceFile": "Brillare Gift Boxes.pdf",
+    "page": 2,
+    "image": "/images/catalog/gifting/gifting_2_brillare_gift_b.jpg",
+    "width": 450,
+    "height": 468
+  },
+  {
+    "id": "gifting-3",
+    "category": "gifting",
+    "sourceFile": "Brillare Gift Boxes.pdf",
+    "page": 2,
+    "image": "/images/catalog/gifting/gifting_3_brillare_gift_b.jpg",
+    "width": 450,
+    "height": 468
+  },
+  {
+    "id": "gifting-4",
+    "category": "gifting",
+    "sourceFile": "Brillare Gift Boxes.pdf",
+    "page": 2,
+    "image": "/images/catalog/gifting/gifting_4_brillare_gift_b.jpg",
+    "width": 467,
+    "height": 468
+  },
+  {
+    "id": "gifting-5",
+    "category": "gifting",
+    "sourceFile": "Brillare Gift Boxes.pdf",
+    "page": 2,
+    "image": "/images/catalog/gifting/gifting_5_brillare_gift_b.jpg",
+    "width": 451,
+    "height": 469
+  },
+  {
+    "id": "gifting-6",
+    "category": "gifting",
+    "sourceFile": "Brillare Gift Boxes.pdf",
+    "page": 2,
+    "image": "/images/catalog/gifting/gifting_6_brillare_gift_b.jpg",
+    "width": 451,
+    "height": 468
+  },
+  {
+    "id": "gifting-7",
+    "category": "gifting",
+    "sourceFile": "Brillare Gift Boxes.pdf",
+    "page": 3,
+    "image": "/images/catalog/gifting/gifting_7_brillare_gift_b.jpg",
+    "width": 1368,
+    "height": 1385
+  },
+  {
+    "id": "gifting-8",
+    "category": "gifting",
+    "sourceFile": "Brillare Gift Boxes.pdf",
+    "page": 3,
+    "image": "/images/catalog/gifting/gifting_8_brillare_gift_b.jpg",
+    "width": 1368,
+    "height": 1385
+  },
+  {
+    "id": "gifting-9",
+    "category": "gifting",
+    "sourceFile": "Brillare Gift Boxes.pdf",
+    "page": 3,
+    "image": "/images/catalog/gifting/gifting_9_brillare_gift_b.jpg",
+    "width": 1398,
+    "height": 1074
+  },
+  {
+    "id": "gifting-10",
+    "category": "gifting",
+    "sourceFile": "Brillare Gift Boxes.pdf",
+    "page": 4,
+    "image": "/images/catalog/gifting/gifting_10_brillare_gift_b.jpg",
+    "width": 400,
+    "height": 400
+  },
+  {
+    "id": "gifting-11",
+    "category": "gifting",
+    "sourceFile": "Brillare Gift Boxes.pdf",
+    "page": 4,
+    "image": "/images/catalog/gifting/gifting_11_brillare_gift_b.jpg",
+    "width": 400,
+    "height": 400
+  },
+  {
+    "id": "gifting-12",
+    "category": "gifting",
+    "sourceFile": "Brillare Gift Boxes.pdf",
+    "page": 4,
+    "image": "/images/catalog/gifting/gifting_12_brillare_gift_b.jpg",
+    "width": 400,
+    "height": 400
+  },
+  {
+    "id": "apparel-1",
+    "category": "apparel",
+    "sourceFile": "BACKBENCHER 2025-26.pdf",
+    "page": 1,
+    "image": "/images/catalog/apparel/apparel_1_backbencher_202.jpg",
+    "width": 595,
+    "height": 860
+  },
+  {
+    "id": "apparel-2",
+    "category": "apparel",
+    "sourceFile": "BACKBENCHER 2025-26.pdf",
+    "page": 3,
+    "image": "/images/catalog/apparel/apparel_2_backbencher_202.jpg",
+    "width": 595,
+    "height": 860
+  },
+  {
+    "id": "apparel-3",
+    "category": "apparel",
+    "sourceFile": "BACKBENCHER 2025-26.pdf",
+    "page": 4,
+    "image": "/images/catalog/apparel/apparel_3_backbencher_202.jpg",
+    "width": 2481,
+    "height": 3508
+  },
+  {
+    "id": "apparel-4",
+    "category": "apparel",
+    "sourceFile": "BACKBENCHER 2025-26.pdf",
+    "page": 5,
+    "image": "/images/catalog/apparel/apparel_4_backbencher_202.jpg",
+    "width": 594,
+    "height": 995
+  },
+  {
+    "id": "apparel-5",
+    "category": "apparel",
+    "sourceFile": "BACKBENCHER 2025-26.pdf",
+    "page": 6,
+    "image": "/images/catalog/apparel/apparel_5_backbencher_202.jpg",
+    "width": 2481,
+    "height": 3780
+  },
+  {
+    "id": "apparel-6",
+    "category": "apparel",
+    "sourceFile": "BACKBENCHER 2025-26.pdf",
+    "page": 7,
+    "image": "/images/catalog/apparel/apparel_6_backbencher_202.jpg",
+    "width": 2481,
+    "height": 3780
+  },
+  {
+    "id": "apparel-7",
+    "category": "apparel",
+    "sourceFile": "BACKBENCHER 2025-26.pdf",
+    "page": 8,
+    "image": "/images/catalog/apparel/apparel_7_backbencher_202.jpg",
+    "width": 595,
+    "height": 849
+  },
+  {
+    "id": "apparel-8",
+    "category": "apparel",
+    "sourceFile": "BACKBENCHER 2025-26.pdf",
+    "page": 9,
+    "image": "/images/catalog/apparel/apparel_8_backbencher_202.jpg",
+    "width": 595,
+    "height": 849
+  },
+  {
+    "id": "apparel-9",
+    "category": "apparel",
+    "sourceFile": "BACKBENCHER 2025-26.pdf",
+    "page": 10,
+    "image": "/images/catalog/apparel/apparel_9_backbencher_202.jpg",
+    "width": 595,
+    "height": 953
+  },
+  {
+    "id": "apparel-10",
+    "category": "apparel",
+    "sourceFile": "BACKBENCHER 2025-26.pdf",
+    "page": 11,
+    "image": "/images/catalog/apparel/apparel_10_backbencher_202.jpg",
+    "width": 595,
+    "height": 953
+  },
+  {
+    "id": "apparel-11",
+    "category": "apparel",
+    "sourceFile": "BACKBENCHER 2025-26.pdf",
+    "page": 12,
+    "image": "/images/catalog/apparel/apparel_11_backbencher_202.jpg",
+    "width": 595,
+    "height": 953
+  },
+  {
+    "id": "apparel-12",
+    "category": "apparel",
+    "sourceFile": "BACKBENCHER 2025-26.pdf",
+    "page": 13,
+    "image": "/images/catalog/apparel/apparel_12_backbencher_202.jpg",
+    "width": 700,
+    "height": 1000
+  },
+  {
+    "id": "tech-1",
+    "category": "tech",
+    "sourceFile": "BrandCharger.pdf",
+    "page": 1,
+    "image": "/images/catalog/tech/tech_1_brandcharger.jpg",
+    "width": 597,
+    "height": 422
+  },
+  {
+    "id": "tech-2",
+    "category": "tech",
+    "sourceFile": "BrandCharger.pdf",
+    "page": 3,
+    "image": "/images/catalog/tech/tech_2_brandcharger.jpg",
+    "width": 595,
+    "height": 420
+  },
+  {
+    "id": "tech-3",
+    "category": "tech",
+    "sourceFile": "BrandCharger.pdf",
+    "page": 4,
+    "image": "/images/catalog/tech/tech_3_brandcharger.jpg",
+    "width": 598,
+    "height": 422
+  },
+  {
+    "id": "tech-4",
+    "category": "tech",
+    "sourceFile": "BrandCharger.pdf",
+    "page": 5,
+    "image": "/images/catalog/tech/tech_4_brandcharger.jpg",
+    "width": 554,
+    "height": 422
+  },
+  {
+    "id": "tech-5",
+    "category": "tech",
+    "sourceFile": "BrandCharger.pdf",
+    "page": 6,
+    "image": "/images/catalog/tech/tech_5_brandcharger.jpg",
+    "width": 596,
+    "height": 422
+  },
+  {
+    "id": "tech-6",
+    "category": "tech",
+    "sourceFile": "BrandCharger.pdf",
+    "page": 7,
+    "image": "/images/catalog/tech/tech_6_brandcharger.jpg",
+    "width": 552,
+    "height": 422
+  },
+  {
+    "id": "tech-7",
+    "category": "tech",
+    "sourceFile": "BrandCharger.pdf",
+    "page": 8,
+    "image": "/images/catalog/tech/tech_7_brandcharger.jpg",
+    "width": 570,
+    "height": 422
+  },
+  {
+    "id": "tech-8",
+    "category": "tech",
+    "sourceFile": "BrandCharger.pdf",
+    "page": 9,
+    "image": "/images/catalog/tech/tech_8_brandcharger.jpg",
+    "width": 598,
+    "height": 422
+  },
+  {
+    "id": "tech-9",
+    "category": "tech",
+    "sourceFile": "BrandCharger.pdf",
+    "page": 10,
+    "image": "/images/catalog/tech/tech_9_brandcharger.jpg",
+    "width": 595,
+    "height": 420
+  },
+  {
+    "id": "tech-10",
+    "category": "tech",
+    "sourceFile": "BrandCharger.pdf",
+    "page": 10,
+    "image": "/images/catalog/tech/tech_10_brandcharger.jpg",
+    "width": 319,
+    "height": 600
+  },
+  {
+    "id": "tech-11",
+    "category": "tech",
+    "sourceFile": "BrandCharger.pdf",
+    "page": 11,
+    "image": "/images/catalog/tech/tech_11_brandcharger.jpg",
+    "width": 597,
+    "height": 422
+  },
+  {
+    "id": "tech-12",
+    "category": "tech",
+    "sourceFile": "BrandCharger.pdf",
+    "page": 12,
+    "image": "/images/catalog/tech/tech_12_brandcharger.jpg",
+    "width": 596,
+    "height": 420
+  }
+]

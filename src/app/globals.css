@@ -2,15 +2,12 @@
 
 @layer base {
   :root {
-    --background: #0a0a0a;
-    --foreground: #fbfbfa;
-    --gold: #d4af37;
-    --gold-light: #f3e5ab;
-    --gold-dark: #c59b27;
-    --gold-deep: #996515;
-    --surface: #141414;
-    --surface-elevated: #1f1f1f;
-    --border: rgba(212, 175, 55, 0.2);
+    --background: #f8fafc;
+    --foreground: #0f172a;
+    --primary: #16a34a;
+    --primary-hover: #15803d;
+    --navy: #0f172a;
+    --border-subtle: #e2e8f0;
   }
 
   body {
@@ -23,82 +20,40 @@
   }
 }
 
-/* Luxury Gold & Glass Utilities (Inspired by Taste Skill & 21st.dev) */
-.gold-gradient-text {
-  background: linear-gradient(135deg, #fff2cc 0%, #d4af37 50%, #aa7c11 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+/* Modern Card & Shadow Utilities */
+.clean-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 1rem;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.gold-gradient-bg {
-  background: linear-gradient(135deg, #d4af37 0%, #c59b27 50%, #996515 100%);
+.clean-card:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.06), 0 8px 10px -6px rgba(15, 23, 42, 0.04);
 }
 
-.gold-border {
-  border: 1px solid rgba(212, 175, 55, 0.28);
+/* Vistaprint Subtle Trust Glow */
+.trust-badge {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  color: #166534;
 }
 
-.gold-border-glow {
-  border: 1px solid rgba(212, 175, 55, 0.35);
-  box-shadow: 0 0 20px -5px rgba(212, 175, 55, 0.25);
-}
-
-.glass-panel {
-  background: rgba(20, 20, 20, 0.75);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.glass-panel-gold {
-  background: rgba(20, 20, 20, 0.85);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(212, 175, 55, 0.22);
-}
-
-/* Subtle Shimmer Animation for Badges and Primary CTAs */
-@keyframes shimmer {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(200%); }
-}
-
-.animate-shimmer {
-  position: relative;
-  overflow: hidden;
-}
-
-.animate-shimmer::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 50%;
-  height: 100%;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 255, 255, 0.15),
-    transparent
-  );
-  animation: shimmer 3s infinite;
-}
-
-/* Custom Luxury Scrollbar */
+/* Modern Scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #0a0a0a;
+  background: #f1f5f9;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #242424;
+  background: #cbd5e1;
   border-radius: 4px;
-  border: 1px solid rgba(212, 175, 55, 0.15);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #d4af37;
+  background: #94a3b8;
 }
