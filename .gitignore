@@ -43,3 +43,9 @@ next-env.d.ts
 *.db
 *.db-journal
 .env
+
+# Raw client downloaded drive PDFs and scratch test artifacts
+client-drive-assets/
+test_images/
+scratch/
+*.py

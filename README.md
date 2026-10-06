@@ -105,4 +105,4 @@ cd incredible-treasures
 ```
 
 ---
-*Maintained by Priyanshu Shekhar & Antigravity for Incredible Treasures.*
+*Maintained by Engineering Team for Incredible Treasures.*
