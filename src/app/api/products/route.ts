@@ -33,7 +33,6 @@ export async function GET() {
       success: true,
       meta: {
         company: "Incredible Treasures",
-        gstin: "29AAKFI2392F1Z5",
         location: "Bangalore, India",
       },
       data: {
