@@ -1,11 +1,25 @@
 @import "tailwindcss";
 
+@theme {
+  --color-emerald-50: #faf6ee;
+  --color-emerald-100: #f5ebd7;
+  --color-emerald-200: #ead5b3;
+  --color-emerald-300: #ddbf8e;
+  --color-emerald-400: #cba768;
+  --color-emerald-500: #b88e44;
+  --color-emerald-600: #a9782b;
+  --color-emerald-700: #8e621e;
+  --color-emerald-800: #734d15;
+  --color-emerald-900: #57390f;
+  --color-emerald-950: #3c2609;
+}
+
 @layer base {
   :root {
-    --background: #f8fafc;
+    --background: #ffffff;
     --foreground: #0f172a;
-    --primary: #16a34a;
-    --primary-hover: #15803d;
+    --primary: #a9782b;
+    --primary-hover: #8e621e;
     --navy: #0f172a;
     --border-subtle: #e2e8f0;
   }
@@ -35,9 +49,9 @@
 
 /* Vistaprint Subtle Trust Glow */
 .trust-badge {
-  background: #f0fdf4;
-  border: 1px solid #bbf7d0;
-  color: #166534;
+  background: #faf6ee;
+  border: 1px solid #ead5b3;
+  color: #734d15;
 }
 
 /* Modern Scrollbar */
@@ -57,3 +71,50 @@
 ::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
 }
+
+/* Visual Search Laser Scan Animation */
+@keyframes visualLaserScan {
+  0% {
+    top: 2%;
+    opacity: 0.85;
+  }
+  50% {
+    top: 95%;
+    opacity: 1;
+  }
+  100% {
+    top: 2%;
+    opacity: 0.85;
+  }
+}
+
+.animate-laser-scan {
+  animation: visualLaserScan 2.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+/* Voice Search Sound Wave Equalizer */
+@keyframes voiceWave {
+  0%, 100% {
+    height: 6px;
+  }
+  50% {
+    height: 32px;
+  }
+}
+
+.animate-voice-wave-1 {
+  animation: voiceWave 0.75s ease-in-out infinite;
+}
+.animate-voice-wave-2 {
+  animation: voiceWave 0.75s ease-in-out 0.15s infinite;
+}
+.animate-voice-wave-3 {
+  animation: voiceWave 0.75s ease-in-out 0.3s infinite;
+}
+.animate-voice-wave-4 {
+  animation: voiceWave 0.75s ease-in-out 0.45s infinite;
+}
+.animate-voice-wave-5 {
+  animation: voiceWave 0.75s ease-in-out 0.2s infinite;
+}
+
