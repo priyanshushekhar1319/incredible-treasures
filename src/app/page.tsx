@@ -36,6 +36,8 @@ import {
   Eye,
   Sliders,
   Palette,
+  Type,
+  Italic,
   Leaf,
   Briefcase,
   Laptop,
@@ -65,6 +67,12 @@ import {
   Camera,
   ScanLine,
   FileUp,
+  AlertTriangle,
+  CheckSquare,
+  Square,
+  Ruler,
+  Scissors,
+  ZoomOut,
   Mic,
   MicOff,
   Volume2,
@@ -112,6 +120,24 @@ interface ProductTemplate {
   motifType: "botanical" | "monstera" | "wreath" | "gold-strip" | "tech-glow" | "clean";
   tag: string;
 }
+
+export interface CardFontOption {
+  id: string;
+  name: string;
+  category: "Sans" | "Serif" | "Script" | "Display" | "Mono";
+  fontFamily: string;
+}
+
+const CARD_FONTS: CardFontOption[] = [
+  { id: "jakarta", name: "Plus Jakarta (Modern Clean)", category: "Sans", fontFamily: "var(--font-sans), 'Plus Jakarta Sans', sans-serif" },
+  { id: "playfair", name: "Playfair Display (Luxury Editorial Serif)", category: "Serif", fontFamily: "'Playfair Display', Georgia, serif" },
+  { id: "montserrat", name: "Montserrat (Executive Bold Sans)", category: "Sans", fontFamily: "'Montserrat', sans-serif" },
+  { id: "cormorant", name: "Cormorant Garamond (Royal Heritage)", category: "Serif", fontFamily: "'Cormorant Garamond', Georgia, serif" },
+  { id: "dancing", name: "Dancing Script (Handwritten Cursive)", category: "Script", fontFamily: "'Dancing Script', cursive" },
+  { id: "alexbrush", name: "Alex Brush (Signature Calligraphy)", category: "Script", fontFamily: "'Alex Brush', cursive" },
+  { id: "cinzel", name: "Cinzel (Classic Roman Imperial)", category: "Display", fontFamily: "'Cinzel', serif" },
+  { id: "spacemono", name: "Space Mono (Tech Minimalist)", category: "Mono", fontFamily: "'Space Mono', monospace" },
+];
 
 // 60+ Rich Curated Product Templates across All Categories
 const PRODUCT_TEMPLATES: ProductTemplate[] = [
@@ -1344,7 +1370,14 @@ export default function VistaprintStorePage() {
   // Card finish & quantity specifications
   const [selectedStock, setSelectedStock] = useState<"matte" | "glossy" | "goldFoil" | "linen">("matte");
   const [cornerStyle, setCornerStyle] = useState<"square" | "rounded">("square");
+  const [selectedFontId, setSelectedFontId] = useState<string>("jakarta");
+  const [isFontItalic, setIsFontItalic] = useState<boolean>(false);
   const [quantity, setQuantity] = useState<number>(500);
+
+  // DAY 8: DUAL-SIDED CANVAS ENGINE & PRINT SAFETY WORKSPACE
+  const [showPrintGuides, setShowPrintGuides] = useState<boolean>(false);
+  const [canvasZoom, setCanvasZoom] = useState<number>(100);
+  const [canvasViewMode, setCanvasViewMode] = useState<"both" | "front" | "back">("both");
 
   const [selectedPvcTier, setSelectedPvcTier] = useState<PricingTier | null>(null);
 
@@ -1383,6 +1416,93 @@ export default function VistaprintStorePage() {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [showUploadModal, setShowUploadModal] = useState<boolean>(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // DAY 7: DIRECT PRINT-READY FILE UPLOAD WORKFLOW STATE
+  const directUploadInputRef = useRef<HTMLInputElement>(null);
+  const [directUploadFront, setDirectUploadFront] = useState<{
+    name: string;
+    size: number;
+    sizeFormatted: string;
+    extension: string;
+    previewUrl?: string;
+  } | null>(null);
+  const [directUploadBack, setDirectUploadBack] = useState<{
+    name: string;
+    size: number;
+    sizeFormatted: string;
+    extension: string;
+    previewUrl?: string;
+  } | null>(null);
+  const [uploadActiveSideTab, setUploadActiveSideTab] = useState<"front" | "back">("front");
+  const [isDragOverZone, setIsDragOverZone] = useState<boolean>(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [uploadQuantity, setUploadQuantity] = useState<number>(200);
+  const [uploadTargetProductId, setUploadTargetProductId] = useState<string>("pvc-regular-glossy");
+  const [preflightChecks, setPreflightChecks] = useState<{
+    resolution: boolean;
+    bleed: boolean;
+    cmyk: boolean;
+    fonts: boolean;
+  }>({
+    resolution: true,
+    bleed: true,
+    cmyk: true,
+    fonts: true,
+  });
+
+  const ALLOWED_DIRECT_EXTENSIONS = ["pdf", "ai", "psd", "cdr", "eps", "png", "jpg", "jpeg", "tiff", "webp"];
+  const BLOCKED_DIRECT_EXTENSIONS = ["exe", "bat", "sh", "cmd", "msi", "js", "vbs", "zip", "rar"];
+  const MAX_DIRECT_FILE_SIZE = 50 * 1024 * 1024; // 50MB
+
+  const handleDirectArtworkFile = (file: File, side: "front" | "back") => {
+    setUploadError(null);
+    const ext = file.name.split(".").pop()?.toLowerCase() || "";
+
+    // 1. Security Check
+    if (BLOCKED_DIRECT_EXTENSIONS.includes(ext)) {
+      setUploadError(`Security Block: Executable / script files (.${ext}) are not allowed.`);
+      return;
+    }
+
+    // 2. Format Check
+    if (!ALLOWED_DIRECT_EXTENSIONS.includes(ext)) {
+      setUploadError(`Unsupported format (.${ext}). Supported: PDF, AI, PSD, CDR, EPS, PNG, JPG, TIFF (Max 50MB).`);
+      return;
+    }
+
+    // 3. File Size Check (50MB)
+    if (file.size > MAX_DIRECT_FILE_SIZE) {
+      setUploadError(`File is too large (${(file.size / (1024 * 1024)).toFixed(1)} MB). Maximum limit is 50MB.`);
+      return;
+    }
+
+    const sizeFormatted =
+      file.size > 1024 * 1024
+        ? `${(file.size / (1024 * 1024)).toFixed(1)} MB`
+        : `${Math.round(file.size / 1024)} KB`;
+
+    let previewUrl: string | undefined = undefined;
+    if (file.type.startsWith("image/")) {
+      previewUrl = URL.createObjectURL(file);
+    }
+
+    const artworkObj = {
+      name: file.name,
+      size: file.size,
+      sizeFormatted,
+      extension: ext.toUpperCase(),
+      previewUrl,
+    };
+
+    if (side === "front") {
+      setDirectUploadFront(artworkObj);
+      setToastMessage(`✓ Front artwork "${file.name}" uploaded successfully!`);
+    } else {
+      setDirectUploadBack(artworkObj);
+      setToastMessage(`✓ Back artwork "${file.name}" uploaded successfully!`);
+    }
+    setTimeout(() => setToastMessage(null), 3500);
+  };
 
   // Google Lens & IndiaMART-Style Visual Search Analysis Engine
   const runVisualSearchAnalysis = (
@@ -1771,6 +1891,14 @@ export default function VistaprintStorePage() {
 
   const currentTemplate =
     PRODUCT_TEMPLATES.find((t) => t.id === selectedTemplateId) || PRODUCT_TEMPLATES[0];
+
+  const activeCardFont = CARD_FONTS.find((f) => f.id === selectedFontId) || CARD_FONTS[0];
+  const cardFontStyle: React.CSSProperties = {
+    "--card-font": activeCardFont.fontFamily,
+    "--card-font-style": isFontItalic ? "italic" : "normal",
+    fontFamily: activeCardFont.fontFamily,
+    fontStyle: isFontItalic ? "italic" : "normal",
+  } as React.CSSProperties;
 
   // Pricing calculation
   const pricingData = {
@@ -3819,7 +3947,7 @@ export default function VistaprintStorePage() {
             <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 mb-8 shadow-xs">
               <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
                 <div>
-                  <div className="flex items-center gap-2.5 mb-2">
+                  <div className="flex flex-wrap items-center gap-2.5 mb-2">
                     <span className="text-xs font-black uppercase tracking-widest text-emerald-800 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
                       {selectedProduct.categoryName}
                     </span>
@@ -3833,6 +3961,18 @@ export default function VistaprintStorePage() {
                         ✓ Rate Includes 18% GST
                       </span>
                     )}
+                    {/* Compact Live Price Badge (Visible at top for all products) */}
+                    <span className="text-xs font-black text-slate-900 bg-amber-50/90 border border-amber-300 px-3 py-1 rounded-full shadow-2xs inline-flex items-center gap-1.5">
+                      <span className="text-amber-800 font-extrabold uppercase text-[10px] tracking-wider">Price:</span>
+                      <span className="text-slate-900 font-black text-xs sm:text-sm">
+                        {selectedPvcTier
+                          ? `₹${selectedPvcTier.pricePerUnit.toFixed(2)}`
+                          : (selectedProduct.startingPrice.startsWith("₹") ? selectedProduct.startingPrice : `₹${selectedProduct.startingPrice}`)}
+                      </span>
+                      <span className="text-slate-500 font-semibold text-[10px]">
+                        / {selectedProduct.category === "visiting-cards" ? "card" : selectedProduct.category === "mugs" ? "mug" : selectedProduct.category === "tshirts" ? "piece" : selectedProduct.category === "letterheads" ? "sheet" : "item"}
+                      </span>
+                    </span>
                   </div>
                   <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
                     {selectedProduct.title}
@@ -3892,87 +4032,228 @@ export default function VistaprintStorePage() {
                 {/* LEFT / CENTER (7 COLUMNS): REAL-TIME DUAL-SIDE CANVAS & UPLOAD CONTROLS (STICKY IN VIEWPORT) */}
                 <div className="xl:col-span-7 xl:sticky xl:top-24 space-y-4">
                   {/* Top Bar for Canvas */}
-                  <div className="bg-white rounded-3xl border border-slate-200 p-5 shadow-xs flex flex-wrap items-center justify-between gap-4">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-black uppercase tracking-wider text-emerald-800 bg-emerald-100/90 px-3 py-1 rounded-full border border-emerald-300">
-                        Real-Time Dual-Side Proofing
-                      </span>
-                      <span className="text-xs text-slate-500 font-medium hidden sm:inline">
-                        Front (Side A) & Back (Side B) Displayed Together
-                      </span>
-                    </div>
+                  <div className="bg-white rounded-3xl border border-slate-200 p-4 sm:p-5 shadow-xs space-y-3.5">
+                    {/* Top Row: Proofing Title, Physical Specs & Canvas View Switcher & Zoom */}
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="text-xs font-black uppercase tracking-wider text-emerald-800 bg-emerald-100/90 px-3 py-1 rounded-full border border-emerald-300">
+                          Dual-Side Proofing Studio
+                        </span>
+                        <span className="text-[11px] font-bold text-slate-600 bg-slate-100 px-2.5 py-1 rounded-full border border-slate-200 flex items-center gap-1">
+                          <Ruler className="w-3 h-3 text-slate-500" />
+                          <span>3.5" × 2.0" (89×54mm) • 300 DPI</span>
+                        </span>
+                      </div>
 
-                    <div className="flex items-center gap-2">
-                      {selectedProduct.category === "visiting-cards" && (
+                      <div className="flex items-center gap-2">
+                        {/* Canvas View Switcher (Both / Front / Back) */}
                         <div className="inline-flex rounded-xl bg-slate-100 p-0.5 border border-slate-300 text-xs font-bold">
                           <button
                             type="button"
-                            onClick={() => setCardOrientation("horizontal")}
-                            className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
-                              cardOrientation === "horizontal"
-                                ? "bg-white text-emerald-700 shadow-2xs font-extrabold"
+                            id="canvas-view-both-btn"
+                            onClick={() => setCanvasViewMode("both")}
+                            className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${
+                              canvasViewMode === "both"
+                                ? "bg-white text-emerald-800 shadow-2xs font-extrabold"
                                 : "text-slate-600 hover:text-slate-900"
                             }`}
                           >
-                            <span>Horizontal</span>
+                            Both Sides
                           </button>
                           <button
                             type="button"
-                            onClick={() => setCardOrientation("vertical")}
-                            className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
-                              cardOrientation === "vertical"
-                                ? "bg-white text-emerald-700 shadow-2xs font-extrabold"
+                            id="canvas-view-front-btn"
+                            onClick={() => setCanvasViewMode("front")}
+                            className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${
+                              canvasViewMode === "front"
+                                ? "bg-white text-emerald-800 shadow-2xs font-extrabold"
                                 : "text-slate-600 hover:text-slate-900"
                             }`}
                           >
-                            <span>Vertical</span>
+                            Front
+                          </button>
+                          <button
+                            type="button"
+                            id="canvas-view-back-btn"
+                            onClick={() => setCanvasViewMode("back")}
+                            className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${
+                              canvasViewMode === "back"
+                                ? "bg-white text-emerald-800 shadow-2xs font-extrabold"
+                                : "text-slate-600 hover:text-slate-900"
+                            }`}
+                          >
+                            Back
                           </button>
                         </div>
-                      )}
 
-                      {selectedProduct.category === "visiting-cards" && (
-                        <button
-                          type="button"
-                          onClick={() => setCornerStyle(cornerStyle === "square" ? "rounded" : "square")}
-                          className="text-xs text-slate-700 hover:text-slate-900 px-3 py-1.5 rounded-xl border border-slate-300 bg-slate-50 font-bold transition cursor-pointer"
-                        >
-                          Corners: <strong className="capitalize">{cornerStyle}</strong>
-                        </button>
-                      )}
+                        {/* Zoom Control Pill */}
+                        <div className="inline-flex items-center rounded-xl bg-slate-100 p-0.5 border border-slate-300 text-xs font-bold">
+                          <button
+                            type="button"
+                            id="canvas-zoom-out-btn"
+                            onClick={() => setCanvasZoom((prev) => Math.max(75, prev - 25))}
+                            disabled={canvasZoom <= 75}
+                            className="p-1 rounded-lg text-slate-600 hover:text-slate-900 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                            title="Zoom Out"
+                          >
+                            <ZoomOut className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            id="canvas-zoom-reset-btn"
+                            onClick={() => setCanvasZoom(100)}
+                            className="px-2 py-0.5 text-[11px] font-black text-slate-700 hover:text-emerald-700 cursor-pointer"
+                            title="Reset Zoom to 100%"
+                          >
+                            {canvasZoom}%
+                          </button>
+                          <button
+                            type="button"
+                            id="canvas-zoom-in-btn"
+                            onClick={() => setCanvasZoom((prev) => Math.min(150, prev + 25))}
+                            disabled={canvasZoom >= 150}
+                            className="p-1 rounded-lg text-slate-600 hover:text-slate-900 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                            title="Zoom In"
+                          >
+                            <ZoomIn className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
 
-                      {(uploadedFrontArtwork || uploadedBackArtwork || uploadedLogo) && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setUploadedFrontArtwork(null);
-                            setUploadedBackArtwork(null);
-                            setUploadedFrontName(null);
-                            setUploadedBackName(null);
-                            setUploadedLogo(null);
-                            setToastMessage("All custom uploaded artwork & logos reset.");
-                            setTimeout(() => setToastMessage(null), 3000);
-                          }}
-                          className="text-xs text-rose-600 hover:text-rose-700 px-3 py-1.5 rounded-xl border border-rose-200 bg-rose-50 font-bold transition flex items-center gap-1 cursor-pointer"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                          <span>Reset Proof</span>
-                        </button>
-                      )}
+                    {/* Bottom Row: Controls Strip (Orientation, Corners, Font, Guides, Reset) */}
+                    <div className="flex flex-wrap items-center justify-between gap-2.5 pt-2 border-t border-slate-100">
+                      <div className="flex flex-wrap items-center gap-2">
+                        {selectedProduct.category === "visiting-cards" && (
+                          <div className="inline-flex rounded-xl bg-slate-100 p-0.5 border border-slate-300 text-xs font-bold">
+                            <button
+                              type="button"
+                              onClick={() => setCardOrientation("horizontal")}
+                              className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
+                                cardOrientation === "horizontal"
+                                  ? "bg-white text-emerald-700 shadow-2xs font-extrabold"
+                                  : "text-slate-600 hover:text-slate-900"
+                              }`}
+                            >
+                              <span>Horizontal</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setCardOrientation("vertical")}
+                              className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
+                                cardOrientation === "vertical"
+                                  ? "bg-white text-emerald-700 shadow-2xs font-extrabold"
+                                  : "text-slate-600 hover:text-slate-900"
+                              }`}
+                            >
+                              <span>Vertical</span>
+                            </button>
+                          </div>
+                        )}
+
+                        {selectedProduct.category === "visiting-cards" && (
+                          <button
+                            type="button"
+                            onClick={() => setCornerStyle(cornerStyle === "square" ? "rounded" : "square")}
+                            className="text-xs text-slate-700 hover:text-slate-900 px-2.5 py-1 rounded-xl border border-slate-300 bg-slate-50 font-bold transition cursor-pointer"
+                          >
+                            Corners: <strong className="capitalize">{cornerStyle}</strong>
+                          </button>
+                        )}
+
+                        {/* Font Dropdown & Italic Toggle */}
+                        {selectedProduct.category === "visiting-cards" && (
+                          <div className="flex items-center gap-1.5">
+                            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl border border-slate-300 bg-slate-50 text-xs font-bold text-slate-700 shadow-2xs hover:border-slate-400 transition">
+                              <Type className="w-3.5 h-3.5 text-amber-700 shrink-0" />
+                              <span className="text-slate-500 font-medium hidden sm:inline">Font:</span>
+                              <select
+                                value={selectedFontId}
+                                onChange={(e) => setSelectedFontId(e.target.value)}
+                                className="bg-transparent text-slate-900 font-black cursor-pointer focus:outline-none"
+                                style={{ fontFamily: activeCardFont.fontFamily }}
+                                title="Select Card Font"
+                              >
+                                {CARD_FONTS.map((font) => (
+                                  <option key={font.id} value={font.id} style={{ fontFamily: font.fontFamily }}>
+                                    {font.name}
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => setIsFontItalic(!isFontItalic)}
+                              className={`px-2 py-1 rounded-xl border text-xs font-black transition cursor-pointer flex items-center gap-1 shadow-2xs ${
+                                isFontItalic
+                                  ? "bg-amber-100 text-amber-950 border-amber-400 ring-2 ring-amber-300/40"
+                                  : "bg-slate-50 text-slate-700 border-slate-300 hover:bg-slate-100 hover:text-slate-900"
+                              }`}
+                              title={isFontItalic ? "Italics Active (Click to disable)" : "Make Card Text Italic"}
+                            >
+                              <Italic className="w-3.5 h-3.5" />
+                              <span className="italic font-bold">Italic</span>
+                            </button>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        {/* Print Safety Guides Toggle */}
+                        {selectedProduct.category === "visiting-cards" && (
+                          <button
+                            type="button"
+                            id="toggle-print-guides-btn"
+                            onClick={() => setShowPrintGuides(!showPrintGuides)}
+                            className={`text-xs px-3 py-1 rounded-xl border font-bold transition flex items-center gap-1.5 cursor-pointer shadow-2xs ${
+                              showPrintGuides
+                                ? "bg-emerald-700 text-white border-emerald-800 ring-2 ring-emerald-500/30"
+                                : "bg-slate-50 text-slate-700 border-slate-300 hover:bg-slate-100 hover:text-slate-900"
+                            }`}
+                            title="Toggle Print Bleed & Safe Margin Guides"
+                          >
+                            <Scissors className="w-3.5 h-3.5" />
+                            <span>Guides: <strong>{showPrintGuides ? "ON" : "OFF"}</strong></span>
+                          </button>
+                        )}
+
+                        {(uploadedFrontArtwork || uploadedBackArtwork || uploadedLogo) && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setUploadedFrontArtwork(null);
+                              setUploadedBackArtwork(null);
+                              setUploadedFrontName(null);
+                              setUploadedBackName(null);
+                              setUploadedLogo(null);
+                              setToastMessage("All custom uploaded artwork & logos reset.");
+                              setTimeout(() => setToastMessage(null), 3000);
+                            }}
+                            className="text-xs text-rose-600 hover:text-rose-700 px-2.5 py-1 rounded-xl border border-rose-200 bg-rose-50 font-bold transition flex items-center gap-1 cursor-pointer"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                            <span>Reset Proof</span>
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </div>
 
                   {/* DUAL CANVAS CONTAINER: FRONT & BACK SIDE-BY-SIDE IN SAME GRID */}
-                  <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-b from-slate-200 to-slate-300 border border-slate-300 shadow-inner">
+                  <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-b from-slate-200 to-slate-300 border border-slate-300 shadow-inner overflow-hidden">
                     <div className={`grid grid-cols-1 ${
-                      cardOrientation === "vertical"
-                        ? "sm:grid-cols-2 gap-8 max-w-2xl mx-auto"
-                        : "md:grid-cols-2 gap-6"
-                    } items-stretch`}>
+                      canvasViewMode === "both"
+                        ? cardOrientation === "vertical"
+                          ? "sm:grid-cols-2 gap-8 max-w-2xl mx-auto"
+                          : "md:grid-cols-2 gap-6"
+                        : "max-w-xl mx-auto"
+                    } items-stretch transition-all`}>
                       
                       {/* ======================================================== */}
                       {/* 1. FRONT SIDE (SIDE A) PREVIEW                           */}
                       {/* ======================================================== */}
-                      <div className="space-y-3 flex flex-col">
+                      {(canvasViewMode === "both" || canvasViewMode === "front") && (
+                        <div className="space-y-3 flex flex-col">
                         <div className="flex items-center justify-between px-1">
                           <div className="flex items-center gap-2">
                             <span className="text-xs font-black text-slate-900 bg-white px-2.5 py-1 rounded-lg border border-slate-200 shadow-2xs">
@@ -4017,9 +4298,16 @@ export default function VistaprintStorePage() {
                         </div>
 
                         {/* Front Canvas Body */}
-                        <div className="flex-1 flex items-center justify-center p-2">
+                        <div
+                          className="flex-1 flex items-center justify-center p-2 transition-transform duration-200"
+                          style={{
+                            transform: canvasZoom !== 100 ? `scale(${canvasZoom / 100})` : undefined,
+                            transformOrigin: "center center",
+                          }}
+                        >
                           <div
-                            className={`relative w-full ${
+                            style={cardFontStyle}
+                            className={`card-custom-font relative w-full ${
                               cardOrientation === "vertical"
                                 ? "max-w-[270px] sm:max-w-[290px] aspect-[1/1.65] mx-auto"
                                 : "aspect-[1.65/1]"
@@ -4630,14 +4918,40 @@ export default function VistaprintStorePage() {
                                 </div>
                               </div>
                             )}
+
+                            {/* PRINT SAFETY GUIDES OVERLAY (BLEED, TRIM, SAFE ZONE) */}
+                            {showPrintGuides && (
+                              <div className="absolute inset-0 pointer-events-none z-30 select-none">
+                                {/* 1. Bleed Margin (Outer Red Dashed Line) */}
+                                <div className="absolute inset-0 border-2 border-dashed border-rose-500/90 bg-rose-500/[0.03]">
+                                  <span className="absolute top-1 left-1.5 text-[8px] font-black uppercase tracking-wider text-rose-700 bg-white/95 backdrop-blur-xs px-1.5 py-0.5 rounded shadow-2xs border border-rose-200">
+                                    Bleed Line (2mm)
+                                  </span>
+                                </div>
+                                {/* 2. Trim Line (Cut Line) */}
+                                <div className="absolute inset-2 sm:inset-2.5 border-2 border-solid border-amber-500/95">
+                                  <span className="absolute top-1 right-1.5 text-[8px] font-black uppercase tracking-wider text-amber-800 bg-white/95 backdrop-blur-xs px-1.5 py-0.5 rounded shadow-2xs border border-amber-200 flex items-center gap-0.5">
+                                    <Scissors className="w-2.5 h-2.5 text-amber-600 inline" /> Cut Trim (3.5"×2")
+                                  </span>
+                                </div>
+                                {/* 3. Safe Zone Margin (Emerald Dashed) */}
+                                <div className="absolute inset-4 sm:inset-5 border-2 border-dashed border-emerald-600/90 bg-emerald-500/[0.02]">
+                                  <span className="absolute bottom-1 right-1.5 text-[8px] font-black uppercase tracking-wider text-emerald-800 bg-white/95 backdrop-blur-xs px-1.5 py-0.5 rounded shadow-2xs border border-emerald-200">
+                                    ✓ Safe Zone (Keep Text Inside)
+                                  </span>
+                                </div>
+                              </div>
+                            )}
                           </div>
                         </div>
                       </div>
+                    )}
 
                       {/* ======================================================== */}
                       {/* 2. BACK SIDE (SIDE B) PREVIEW - IN SAME GRID EKSATH     */}
                       {/* ======================================================== */}
-                      <div className="space-y-3 flex flex-col">
+                      {(canvasViewMode === "both" || canvasViewMode === "back") && (
+                        <div className="space-y-3 flex flex-col">
                         <div className="flex items-center justify-between px-1">
                           <div className="flex items-center gap-2">
                             <span className="text-xs font-black text-slate-900 bg-white px-2.5 py-1 rounded-lg border border-slate-200 shadow-2xs">
@@ -4682,9 +4996,16 @@ export default function VistaprintStorePage() {
                         </div>
 
                         {/* Back Canvas Body */}
-                        <div className="flex-1 flex items-center justify-center p-2">
+                        <div
+                          className="flex-1 flex items-center justify-center p-2 transition-transform duration-200"
+                          style={{
+                            transform: canvasZoom !== 100 ? `scale(${canvasZoom / 100})` : undefined,
+                            transformOrigin: "center center",
+                          }}
+                        >
                           <div
-                            className={`relative w-full ${
+                            style={cardFontStyle}
+                            className={`card-custom-font relative w-full ${
                               cardOrientation === "vertical"
                                 ? "max-w-[270px] sm:max-w-[290px] aspect-[1/1.65] mx-auto"
                                 : "aspect-[1.65/1]"
@@ -5271,11 +5592,60 @@ export default function VistaprintStorePage() {
                                 </div>
                               </div>
                             )}
+
+                            {/* PRINT SAFETY GUIDES OVERLAY (BLEED, TRIM, SAFE ZONE) */}
+                            {showPrintGuides && (
+                              <div className="absolute inset-0 pointer-events-none z-30 select-none">
+                                {/* 1. Bleed Margin (Outer Red Dashed Line) */}
+                                <div className="absolute inset-0 border-2 border-dashed border-rose-500/90 bg-rose-500/[0.03]">
+                                  <span className="absolute top-1 left-1.5 text-[8px] font-black uppercase tracking-wider text-rose-700 bg-white/95 backdrop-blur-xs px-1.5 py-0.5 rounded shadow-2xs border border-rose-200">
+                                    Bleed Line (2mm)
+                                  </span>
+                                </div>
+                                {/* 2. Trim Line (Cut Line) */}
+                                <div className="absolute inset-2 sm:inset-2.5 border-2 border-solid border-amber-500/95">
+                                  <span className="absolute top-1 right-1.5 text-[8px] font-black uppercase tracking-wider text-amber-800 bg-white/95 backdrop-blur-xs px-1.5 py-0.5 rounded shadow-2xs border border-amber-200 flex items-center gap-0.5">
+                                    <Scissors className="w-2.5 h-2.5 text-amber-600 inline" /> Cut Trim (3.5"×2")
+                                  </span>
+                                </div>
+                                {/* 3. Safe Zone Margin (Emerald Dashed) */}
+                                <div className="absolute inset-4 sm:inset-5 border-2 border-dashed border-emerald-600/90 bg-emerald-500/[0.02]">
+                                  <span className="absolute bottom-1 right-1.5 text-[8px] font-black uppercase tracking-wider text-emerald-800 bg-white/95 backdrop-blur-xs px-1.5 py-0.5 rounded shadow-2xs border border-emerald-200">
+                                    ✓ Safe Zone (Keep Text Inside)
+                                  </span>
+                                </div>
+                              </div>
+                            )}
                           </div>
                         </div>
                       </div>
+                    )}
 
                     </div>
+
+                    {/* PRINT SAFETY EXPLANATION LEGEND */}
+                    {showPrintGuides && (
+                      <div className="mt-5 p-3.5 bg-white/95 backdrop-blur-xs rounded-2xl border border-slate-300 shadow-2xs flex flex-wrap items-center justify-between gap-3 text-xs">
+                        <div className="flex items-center gap-2 text-slate-800 font-extrabold">
+                          <Ruler className="w-4 h-4 text-emerald-700" />
+                          <span>Print Safety Guide Specifications (ISO 3.5" × 2.0" / 89 × 54 mm):</span>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-4 text-[11px] font-bold">
+                          <div className="flex items-center gap-1.5 text-rose-700">
+                            <span className="w-3.5 h-1 border-t-2 border-dashed border-rose-500 inline-block"></span>
+                            <span>Bleed Line (+2mm margin to eliminate white borders)</span>
+                          </div>
+                          <div className="flex items-center gap-1.5 text-amber-700">
+                            <span className="w-3.5 h-1 border-t-2 border-solid border-amber-500 inline-block"></span>
+                            <span>Trim Line (Final precision mechanical blade cut)</span>
+                          </div>
+                          <div className="flex items-center gap-1.5 text-emerald-700">
+                            <span className="w-3.5 h-1 border-t-2 border-dashed border-emerald-600 inline-block"></span>
+                            <span>Safe Zone (Keep critical text & QR safe from blade)</span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   {/* 3-TILE UPLOADER ACTION BAR DIRECTLY BELOW DUAL PREVIEWS */}
@@ -6196,7 +6566,7 @@ Please confirm order timeline.`
                   {/* Right Column (5 cols): Specs & Fast Actions */}
                   <div className="xl:col-span-5 space-y-6">
                     <div>
-                      <div className="flex items-center gap-2 mb-2">
+                      <div className="flex flex-wrap items-center gap-2 mb-2">
                         <span className="text-xs font-black uppercase tracking-wider text-emerald-800 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
                           {selectedProduct.categoryName}
                         </span>
@@ -6205,6 +6575,18 @@ Please confirm order timeline.`
                             {selectedProduct.badge}
                           </span>
                         )}
+                        {/* Compact Live Price Badge */}
+                        <span className="text-xs font-black text-slate-900 bg-amber-50/90 border border-amber-300 px-3 py-1 rounded-full shadow-2xs inline-flex items-center gap-1.5">
+                          <span className="text-amber-800 font-extrabold uppercase text-[10px] tracking-wider">Price:</span>
+                          <span className="text-slate-900 font-black text-xs sm:text-sm">
+                            {selectedPvcTier
+                              ? `₹${selectedPvcTier.pricePerUnit.toFixed(2)}`
+                              : (selectedProduct.startingPrice.startsWith("₹") ? selectedProduct.startingPrice : `₹${selectedProduct.startingPrice}`)}
+                          </span>
+                          <span className="text-slate-500 font-semibold text-[10px]">
+                            / {selectedProduct.category === "visiting-cards" ? "card" : selectedProduct.category === "mugs" ? "mug" : selectedProduct.category === "tshirts" ? "piece" : selectedProduct.category === "letterheads" ? "sheet" : "item"}
+                          </span>
+                        </span>
                       </div>
                       <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">{selectedProduct.title}</h2>
                       <p className="text-sm text-slate-600 mt-2 leading-relaxed">{selectedProduct.specs}</p>
@@ -7187,68 +7569,423 @@ Please confirm order timeline.`
         </div>
       )}
 
-      {/* 5. Direct Print File Upload Modal */}
-      {showUploadModal && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-lg w-full p-8 shadow-2xl border border-slate-200">
-            <div className="flex items-center justify-between pb-4 border-b border-slate-100">
-              <div className="flex items-center gap-2.5">
-                <UploadCloud className="w-6 h-6 text-emerald-600" />
-                <h3 className="text-base font-bold text-slate-900">Upload Ready Artwork File</h3>
+      {/* 5. DAY 7: DIRECT PRINT-READY FILE UPLOAD & PRE-FLIGHT ENGINE MODAL */}
+      {showUploadModal && (() => {
+        const uploadTargetProduct =
+          ALL_PRODUCTS.find((p) => p.id === uploadTargetProductId) ||
+          selectedProduct ||
+          ALL_PRODUCTS[0];
+
+        // Dynamic price calculation
+        let unitRate = uploadTargetProduct.unitPrice || 12.50;
+        if (uploadTargetProduct.pricingTiers && uploadTargetProduct.pricingTiers.length > 0) {
+          const matchedTier = uploadTargetProduct.pricingTiers
+            .slice()
+            .reverse()
+            .find((t) => uploadQuantity >= t.qty);
+          if (matchedTier) {
+            unitRate = matchedTier.pricePerUnit;
+          } else {
+            unitRate = uploadTargetProduct.pricingTiers[0].pricePerUnit;
+          }
+        }
+        const calculatedBatchTotal = unitRate * uploadQuantity;
+        const activeArtworkFile = uploadActiveSideTab === "front" ? directUploadFront : directUploadBack;
+        const allPreflightChecked =
+          preflightChecks.resolution && preflightChecks.bleed && preflightChecks.cmyk && preflightChecks.fonts;
+
+        return (
+          <div className="fixed inset-0 z-50 bg-slate-900/65 backdrop-blur-xs flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
+            <div className="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl border border-slate-200 my-auto animate-in fade-in zoom-in-95 duration-200">
+              {/* Modal Header */}
+              <div className="flex items-center justify-between pb-4 border-b border-slate-100">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-amber-50 text-amber-800 flex items-center justify-center border border-amber-200 shadow-2xs">
+                    <UploadCloud className="w-5 h-5 text-emerald-600" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-black text-slate-900 leading-tight">
+                      Direct Print-Ready File Uploader
+                    </h3>
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      Upload your vector PDF, AI, PSD, CDR, or high-res artwork files
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowUploadModal(false)}
+                  className="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center transition cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
               </div>
-              <button onClick={() => setShowUploadModal(false)} className="text-slate-400 hover:text-slate-700 p-1">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
 
-            <div className="my-6 border-2 border-dashed border-slate-300 rounded-2xl p-8 text-center bg-slate-50 hover:bg-emerald-50/20 hover:border-emerald-500 transition cursor-pointer">
-              <UploadCloud className="w-10 h-10 text-slate-400 mx-auto mb-3" />
-              <p className="text-sm font-semibold text-slate-800">
-                Click or drag & drop print file here
-              </p>
-              <p className="text-xs text-slate-500 mt-1">
-                PDF, AI, PSD, CDR, EPS, high-res PNG (Max 50MB)
-              </p>
-              <div className="mt-4 inline-block px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold">
-                300 DPI Pre-Flight Check
+              {/* Target Product & Substrate Selector */}
+              <div className="mt-5 p-3.5 bg-slate-50 rounded-2xl border border-slate-200 flex flex-wrap items-center justify-between gap-3">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wider shrink-0">
+                    Product:
+                  </span>
+                  <select
+                    value={uploadTargetProductId}
+                    onChange={(e) => setUploadTargetProductId(e.target.value)}
+                    className="bg-white text-xs font-black text-slate-900 py-1.5 px-3 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-500 cursor-pointer shadow-2xs truncate max-w-[280px] sm:max-w-md"
+                  >
+                    {ALL_PRODUCTS.map((prod) => (
+                      <option key={prod.id} value={prod.id}>
+                        {prod.title} ({prod.categoryName})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <span className="text-xs font-bold text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
+                  {uploadTargetProduct.isGstIncluded ? "✓ Incl. 18% GST" : "+18% GST Extra"}
+                </span>
               </div>
-            </div>
 
-            <div className="space-y-2 text-xs text-slate-600 mb-6 bg-slate-50 p-4 rounded-xl border border-slate-200">
-              <div>• Standard Visiting Card: 89 x 54 mm (2mm bleed)</div>
-              <div>• Standard DL Envelope: 220 x 110 mm</div>
-              <div>• Color Format: CMYK recommended for offset print</div>
-            </div>
+              {/* Dual-Side Artwork Tabs */}
+              <div className="mt-5 flex items-center gap-2 border-b border-slate-200 pb-2">
+                <button
+                  type="button"
+                  onClick={() => setUploadActiveSideTab("front")}
+                  className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-extrabold transition cursor-pointer flex items-center justify-center gap-2 ${
+                    uploadActiveSideTab === "front"
+                      ? "bg-slate-900 text-white shadow-xs"
+                      : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                  }`}
+                >
+                  <span>Front Artwork (Side A)</span>
+                  <span
+                    className={`text-[10px] px-2 py-0.5 rounded-full font-black ${
+                      directUploadFront
+                        ? "bg-emerald-500 text-white"
+                        : "bg-slate-200 text-slate-700"
+                    }`}
+                  >
+                    {directUploadFront ? "✓ Attached" : "Required"}
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setUploadActiveSideTab("back")}
+                  className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-extrabold transition cursor-pointer flex items-center justify-center gap-2 ${
+                    uploadActiveSideTab === "back"
+                      ? "bg-slate-900 text-white shadow-xs"
+                      : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                  }`}
+                >
+                  <span>Back Artwork (Side B)</span>
+                  <span
+                    className={`text-[10px] px-2 py-0.5 rounded-full font-black ${
+                      directUploadBack
+                        ? "bg-emerald-500 text-white"
+                        : "bg-slate-200 text-slate-600"
+                    }`}
+                  >
+                    {directUploadBack ? "✓ Attached" : "Optional"}
+                  </span>
+                </button>
+              </div>
 
-            <div className="flex items-center justify-end gap-3">
-              <button
-                onClick={() => setShowUploadModal(false)}
-                className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => {
-                  setShowUploadModal(false);
-                  addItemToCart({
-                    productId: "custom-print-artwork",
-                    title: "Ready Print Artwork Pre-Flight Job",
-                    categoryName: "Custom Print",
-                    image: "/images/gold-foil-card.jpg",
-                    quantity: 1,
-                    unitPrice: 450,
-                    branding: "300 DPI Pre-Flight Check",
-                    specs: "Direct PDF/AI Print File Verification",
-                  });
+              {/* Error Warning Banner */}
+              {uploadError && (
+                <div className="mt-4 p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-800 flex items-center gap-2 animate-in fade-in">
+                  <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
+                  <span className="font-semibold">{uploadError}</span>
+                </div>
+              )}
+
+              {/* Hidden Native File Input */}
+              <input
+                type="file"
+                ref={directUploadInputRef}
+                onChange={(e) => {
+                  if (e.target.files && e.target.files.length > 0) {
+                    handleDirectArtworkFile(e.target.files[0], uploadActiveSideTab);
+                  }
                 }}
-                className="px-5 py-2.5 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition"
-              >
-                Confirm & Add to Cart
-              </button>
+                accept=".pdf,.ai,.psd,.cdr,.eps,.png,.jpg,.jpeg,.tiff,.webp"
+                className="hidden"
+              />
+
+              {/* Drag and Drop Zone OR Uploaded File Card */}
+              <div className="mt-4">
+                {activeArtworkFile ? (
+                  /* Uploaded File Status Card */
+                  <div className="p-5 bg-emerald-50/70 border-2 border-emerald-300 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-12 h-12 rounded-xl bg-white border border-emerald-200 shadow-xs flex items-center justify-center shrink-0">
+                        {activeArtworkFile.previewUrl ? (
+                          <img
+                            src={activeArtworkFile.previewUrl}
+                            alt="Preview"
+                            className="w-10 h-10 object-contain rounded"
+                          />
+                        ) : (
+                          <FileText className="w-6 h-6 text-emerald-700" />
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="text-xs font-black text-slate-900 truncate">
+                          {activeArtworkFile.name}
+                        </div>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className="text-[10px] font-bold text-slate-600 bg-white px-2 py-0.5 rounded border border-slate-200">
+                            {activeArtworkFile.sizeFormatted}
+                          </span>
+                          <span className="text-[10px] font-black text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded border border-emerald-300">
+                            .{activeArtworkFile.extension}
+                          </span>
+                          <span className="text-[10px] font-bold text-emerald-700 flex items-center gap-1">
+                            <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                            Verified
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">
+                      <button
+                        type="button"
+                        onClick={() => directUploadInputRef.current?.click()}
+                        className="px-3 py-1.5 text-xs font-bold rounded-lg bg-white hover:bg-slate-100 text-slate-800 border border-slate-300 shadow-2xs transition cursor-pointer"
+                      >
+                        Replace
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (uploadActiveSideTab === "front") {
+                            setDirectUploadFront(null);
+                          } else {
+                            setDirectUploadBack(null);
+                          }
+                        }}
+                        className="p-1.5 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition cursor-pointer"
+                        title="Remove this file"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  /* Active Drag-and-Drop Dropzone */
+                  <div
+                    onDragOver={(e) => {
+                      e.preventDefault();
+                      setIsDragOverZone(true);
+                    }}
+                    onDragLeave={() => setIsDragOverZone(false)}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      setIsDragOverZone(false);
+                      if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                        handleDirectArtworkFile(e.dataTransfer.files[0], uploadActiveSideTab);
+                      }
+                    }}
+                    onClick={() => directUploadInputRef.current?.click()}
+                    className={`border-2 border-dashed rounded-2xl p-7 text-center transition cursor-pointer ${
+                      isDragOverZone
+                        ? "border-emerald-600 bg-emerald-50/80 scale-[1.01]"
+                        : "border-slate-300 bg-slate-50/70 hover:bg-emerald-50/30 hover:border-emerald-400"
+                    }`}
+                  >
+                    <UploadCloud className="w-10 h-10 text-emerald-600 mx-auto mb-2 animate-bounce-subtle" />
+                    <p className="text-sm font-extrabold text-slate-900">
+                      Drag & drop your {uploadActiveSideTab === "front" ? "Front (Side A)" : "Back (Side B)"} artwork file here
+                    </p>
+                    <p className="text-xs text-slate-500 mt-1">
+                      or <span className="text-emerald-700 font-bold underline">click to browse</span> from your computer
+                    </p>
+                    <div className="mt-3 flex flex-wrap items-center justify-center gap-1.5 text-[10px] font-bold text-slate-600">
+                      <span className="bg-white px-2 py-0.5 rounded border border-slate-200">PDF Vector (Recommended)</span>
+                      <span className="bg-white px-2 py-0.5 rounded border border-slate-200">AI</span>
+                      <span className="bg-white px-2 py-0.5 rounded border border-slate-200">PSD</span>
+                      <span className="bg-white px-2 py-0.5 rounded border border-slate-200">CDR</span>
+                      <span className="bg-white px-2 py-0.5 rounded border border-slate-200">300 DPI PNG</span>
+                      <span className="bg-amber-100 text-amber-900 px-2 py-0.5 rounded border border-amber-300">Max 50MB</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Interactive 4-Point Print Pre-Flight Checklist */}
+              <div className="mt-5 p-4 bg-slate-50 rounded-2xl border border-slate-200">
+                <div className="flex items-center justify-between pb-2 mb-3 border-b border-slate-200/80">
+                  <div className="flex items-center gap-1.5">
+                    <FileCheck2 className="w-4 h-4 text-emerald-700" />
+                    <span className="text-xs font-black text-slate-900 uppercase tracking-wider">
+                      Print Safety Pre-Flight Checklist
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const allOn = !allPreflightChecked;
+                      setPreflightChecks({
+                        resolution: allOn,
+                        bleed: allOn,
+                        cmyk: allOn,
+                        fonts: allOn,
+                      });
+                    }}
+                    className="text-[11px] font-bold text-emerald-700 hover:underline cursor-pointer"
+                  >
+                    {allPreflightChecked ? "Uncheck All" : "Verify All (4/4)"}
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
+                  <label className="flex items-start gap-2 p-2 rounded-xl bg-white border border-slate-200 hover:border-slate-300 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={preflightChecks.resolution}
+                      onChange={(e) =>
+                        setPreflightChecks((prev) => ({ ...prev, resolution: e.target.checked }))
+                      }
+                      className="mt-0.5 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer"
+                    />
+                    <div>
+                      <strong className="block text-slate-900">300 DPI Resolution</strong>
+                      <span className="text-[10px] text-slate-500">Artwork is crisp with no pixelation</span>
+                    </div>
+                  </label>
+
+                  <label className="flex items-start gap-2 p-2 rounded-xl bg-white border border-slate-200 hover:border-slate-300 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={preflightChecks.bleed}
+                      onChange={(e) =>
+                        setPreflightChecks((prev) => ({ ...prev, bleed: e.target.checked }))
+                      }
+                      className="mt-0.5 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer"
+                    />
+                    <div>
+                      <strong className="block text-slate-900">2mm Bleed & Cut Margins</strong>
+                      <span className="text-[10px] text-slate-500">Text is inside safety cutting zone</span>
+                    </div>
+                  </label>
+
+                  <label className="flex items-start gap-2 p-2 rounded-xl bg-white border border-slate-200 hover:border-slate-300 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={preflightChecks.cmyk}
+                      onChange={(e) =>
+                        setPreflightChecks((prev) => ({ ...prev, cmyk: e.target.checked }))
+                      }
+                      className="mt-0.5 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer"
+                    />
+                    <div>
+                      <strong className="block text-slate-900">CMYK Color Mode</strong>
+                      <span className="text-[10px] text-slate-500">Ready for offset / digital print</span>
+                    </div>
+                  </label>
+
+                  <label className="flex items-start gap-2 p-2 rounded-xl bg-white border border-slate-200 hover:border-slate-300 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={preflightChecks.fonts}
+                      onChange={(e) =>
+                        setPreflightChecks((prev) => ({ ...prev, fonts: e.target.checked }))
+                      }
+                      className="mt-0.5 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer"
+                    />
+                    <div>
+                      <strong className="block text-slate-900">Fonts Outlined / Curves</strong>
+                      <span className="text-[10px] text-slate-500">All text converted to vector paths</span>
+                    </div>
+                  </label>
+                </div>
+              </div>
+
+              {/* Quantity Tier Selector & Live Price Banner */}
+              <div className="mt-5 p-4 bg-slate-900 text-white rounded-2xl flex flex-wrap items-center justify-between gap-4">
+                <div>
+                  <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">
+                    Select Quantity:
+                  </span>
+                  <div className="flex items-center gap-1.5 mt-1">
+                    {[200, 500, 1000, 2500].map((qty) => (
+                      <button
+                        key={qty}
+                        type="button"
+                        onClick={() => setUploadQuantity(qty)}
+                        className={`px-2.5 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
+                          uploadQuantity === qty
+                            ? "bg-amber-400 text-slate-950 font-black shadow-xs"
+                            : "bg-slate-800 text-slate-300 hover:bg-slate-700"
+                        }`}
+                      >
+                        {qty} pcs
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="text-right">
+                  <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">
+                    Calculated Rate ({uploadQuantity} pcs):
+                  </span>
+                  <div className="flex items-baseline gap-2 mt-0.5 justify-end">
+                    <span className="text-2xl font-black text-white">
+                      ₹{calculatedBatchTotal.toLocaleString("en-IN")}
+                    </span>
+                    <span className="text-xs text-amber-300 font-bold">
+                      (₹{unitRate.toFixed(2)}/item)
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="mt-6 flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setShowUploadModal(false)}
+                  className="px-5 py-2.5 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 transition cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  disabled={!directUploadFront}
+                  onClick={() => {
+                    const frontFileName = directUploadFront?.name || "Ready Artwork";
+                    const backFileName = directUploadBack?.name ? `Back: ${directUploadBack.name}` : "Single-Sided Print";
+
+                    addItemToCart({
+                      productId: uploadTargetProduct.id,
+                      title: `${uploadTargetProduct.title} (Direct Upload - ${uploadQuantity} pcs)`,
+                      categoryName: uploadTargetProduct.categoryName,
+                      image: uploadTargetProduct.image,
+                      quantity: uploadQuantity,
+                      unitPrice: unitRate,
+                      branding: "Print-Ready Customer Artwork",
+                      specs: `Front: ${frontFileName} • ${backFileName} • 300 DPI Pre-Flight Approved`,
+                    });
+                    setShowUploadModal(false);
+                    setIsCartOpen(true);
+                    setToastMessage(`✓ Added ${uploadQuantity} pcs print job with your custom artwork to cart!`);
+                    setTimeout(() => setToastMessage(null), 4000);
+                  }}
+                  className={`px-6 py-3 rounded-full text-xs font-black transition shadow-md flex items-center gap-2 cursor-pointer ${
+                    directUploadFront
+                      ? "bg-emerald-600 hover:bg-emerald-700 text-white"
+                      : "bg-slate-200 text-slate-400 cursor-not-allowed"
+                  }`}
+                  title={!directUploadFront ? "Please upload Front artwork first" : "Add print order to cart"}
+                >
+                  <UploadCloud className="w-4 h-4" />
+                  <span>
+                    Confirm Artwork & Add to Cart (₹{calculatedBatchTotal.toLocaleString("en-IN")})
+                  </span>
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* ========================================================================= */}
       {/* DAY 4: WRITE A REVIEW MODAL                                               */}
