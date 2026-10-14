@@ -302,11 +302,32 @@
 - **Realistic Miniature Card Thumbnails in Sidebar:**
   - Starter layouts display miniature business card replicas with gilded inset borders, foil headers, and layout lines.
 
+## 🎨 14. PERSONALIZED FULL CARD BACKGROUND ARTWORK ENGINE (COMPLETED)
+- **Separation of Background Artwork vs Floating Logo:**
+  - Distinct Section 1: **Custom Card Background (Full Artwork / Wallpaper)**.
+  - Distinct Section 2: **Floating Logo / Graphic Element** (movable & resizable on top).
+- **Z-Index Layer Architecture:**
+  - Custom background sits at `z-3` right above the substrate base color, underneath tactile paper textures (`z-5`), draggable elements/logos (`z-20`), and 3D specular sheen reflections (`z-35`).
+- **Granular Per-Side Independence:**
+  - Front (Side A) and Back (Side B) can have completely separate backgrounds, opacities, and scaling modes.
+  - **`[x] Apply to both Front & Back faces`** checkbox allows 1-click synchronization across both card sides.
+- **Opacity Slider & Fit Controls:**
+  - Real-time opacity slider from 10% to 100% allowing background transparency so typography remains crisp.
+  - Sizing fit modes: `COVER`, `CONTAIN`, and `REPEAT`.
+- **4 Instant Curated Luxury Wallpapers:**
+  - *Obsidian Gold* (Dark carbon geometric with gold orbital rings)
+  - *Royal Navy Line* (Deep blue architectural grid)
+  - *Imperial Emerald* (Malachite luxury rings)
+  - *Milky Guilloche* (Ivory curved banknote security waves)
+- **High-Res Proof Modal Sync:**
+  - Proof export tracks and displays custom background status for prepress production.
+
 ---
 
-## 🚀 14. ROADMAP FOR NEXT MILESTONES
-1. **Day 11:** Advanced Image Controls (Freeform corner drag handles, crop, transparency slider).
-2. **Day 12:** Real-Time DPI Quality Meter on user-uploaded bitmap logos (🟢 300+ DPI Crisp vs 🔴 Blurry Warning).
-3. **Day 13:** Multi-card batch generation (CSV upload for team member cards).
+## 🚀 15. ROADMAP FOR NEXT MILESTONES
+1. **Day 11:** Real-Time DPI Quality Meter on user-uploaded bitmap logos (🟢 300+ DPI Crisp vs 🔴 Blurry Warning).
+2. **Day 12:** Multi-card batch generation (CSV upload for team member cards).
+3. **Day 13:** Direct SVG Vector Export for laser engraving and selective foil stamping.
+
 
 

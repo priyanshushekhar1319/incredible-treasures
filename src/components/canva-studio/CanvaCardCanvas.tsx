@@ -35,6 +35,9 @@ interface Props {
   onToggle3DFlip?: () => void;
   cardTexture?: CardTexture;
   gildedEdge?: boolean;
+  backgroundImage?: string;
+  backgroundOpacity?: number;
+  backgroundFit?: "cover" | "contain" | "repeat";
 }
 
 export const CanvaCardCanvas: React.FC<Props> = ({
@@ -56,6 +59,9 @@ export const CanvaCardCanvas: React.FC<Props> = ({
   onToggle3DFlip,
   cardTexture = "smooth",
   gildedEdge = false,
+  backgroundImage,
+  backgroundOpacity = 1,
+  backgroundFit = "cover",
 }) => {
   const cardRef = useRef<HTMLDivElement>(null);
   const deskRef = useRef<HTMLDivElement>(null);
@@ -360,6 +366,33 @@ export const CanvaCardCanvas: React.FC<Props> = ({
 
         {/* Background Click Layer */}
         <div id="card-bg" className="absolute inset-0 pointer-events-none" />
+
+        {/* Custom Uploaded Background Image Layer */}
+        {backgroundImage && (
+          <div
+            style={{ opacity: backgroundOpacity ?? 1 }}
+            className="absolute inset-0 pointer-events-none z-3 overflow-hidden transition-opacity duration-150"
+          >
+            {backgroundFit === "repeat" ? (
+              <div
+                style={{
+                  backgroundImage: `url("${backgroundImage}")`,
+                  backgroundRepeat: "repeat",
+                  backgroundSize: "auto",
+                }}
+                className="w-full h-full"
+              />
+            ) : (
+              <img
+                src={backgroundImage}
+                alt="Card Custom Background"
+                className={`w-full h-full pointer-events-none select-none ${
+                  backgroundFit === "contain" ? "object-contain" : "object-cover"
+                }`}
+              />
+            )}
+          </div>
+        )}
 
         {/* Substrate Texture Overlay */}
         <div className={`absolute inset-0 pointer-events-none z-5 ${getSubstrateAndTextureOverlay()}`} />

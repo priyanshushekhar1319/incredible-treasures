@@ -91,4 +91,10 @@ export interface CardState {
   cornerStyle: "square" | "rounded";
   cardTexture?: CardTexture;
   gildedEdge?: boolean;
+  frontBackgroundImage?: string;
+  backBackgroundImage?: string;
+  frontBackgroundOpacity?: number;
+  backBackgroundOpacity?: number;
+  frontBackgroundFit?: "cover" | "contain" | "repeat";
+  backBackgroundFit?: "cover" | "contain" | "repeat";
 }
