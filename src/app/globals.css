@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Alex+Brush&family=Cinzel:wght@500;600;700;800;900&family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600;1,700&family=Dancing+Script:wght@500;600;700&family=Montserrat:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500;1,600;1,700&family=Playfair+Display:ital,wght@0,500;0,600;0,700;0,800;0,900;1,500;1,600;1,700&family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Alex+Brush&family=Cinzel:wght@500;600;700;800;900&family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600;1,700&family=Dancing+Script:wght@500;600;700&family=Inter:wght@400;500;600;700;800&family=Montserrat:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500;1,600;1,700&family=Playfair+Display:ital,wght@0,500;0,600;0,700;0,800;0,900;1,500;1,600;1,700&family=Poppins:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,600&family=Roboto:ital,wght@0,400;0,500;0,700;1,400;1,700&family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap');
 @import "tailwindcss";
 
 @theme {
@@ -120,10 +120,73 @@
 }
 
 /* Dynamic Card Studio Typography Engine */
-.card-custom-font,
-.card-custom-font *:not(.keep-font):not(svg):not(path) {
-  font-family: var(--card-font, inherit) !important;
+.card-custom-font {
+  font-family: var(--card-font, inherit);
   font-style: var(--card-font-style, inherit);
+}
+
+/* Individual Field Typography & Color Engine */
+.font-companyName,
+.font-companyName *,
+[data-field="companyName"],
+[data-field="companyName"] * {
+  font-family: var(--font-companyName, inherit) !important;
+  font-style: var(--style-companyName, normal) !important;
+  color: var(--color-companyName, inherit) !important;
+}
+
+.font-customerName,
+.font-customerName *,
+[data-field="customerName"],
+[data-field="customerName"] * {
+  font-family: var(--font-customerName, inherit) !important;
+  font-style: var(--style-customerName, normal) !important;
+  color: var(--color-customerName, inherit) !important;
+}
+
+.font-customerDesignation,
+.font-customerDesignation *,
+[data-field="customerDesignation"],
+[data-field="customerDesignation"] * {
+  font-family: var(--font-customerDesignation, inherit) !important;
+  font-style: var(--style-customerDesignation, normal) !important;
+  color: var(--color-customerDesignation, inherit) !important;
+}
+
+.font-phone,
+.font-phone *,
+[data-field="phone"],
+[data-field="phone"] * {
+  font-family: var(--font-phone, inherit) !important;
+  font-style: var(--style-phone, normal) !important;
+  color: var(--color-phone, inherit) !important;
+}
+
+.font-email,
+.font-email *,
+[data-field="email"],
+[data-field="email"] * {
+  font-family: var(--font-email, inherit) !important;
+  font-style: var(--style-email, normal) !important;
+  color: var(--color-email, inherit) !important;
+}
+
+.font-website,
+.font-website *,
+[data-field="website"],
+[data-field="website"] * {
+  font-family: var(--font-website, inherit) !important;
+  font-style: var(--style-website, normal) !important;
+  color: var(--color-website, inherit) !important;
+}
+
+.font-address,
+.font-address *,
+[data-field="address"],
+[data-field="address"] * {
+  font-family: var(--font-address, inherit) !important;
+  font-style: var(--style-address, normal) !important;
+  color: var(--color-address, inherit) !important;
 }
 
 

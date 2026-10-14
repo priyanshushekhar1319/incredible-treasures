@@ -38,6 +38,11 @@ import {
   Palette,
   Type,
   Italic,
+  Bold,
+  Underline,
+  AlignLeft,
+  AlignCenter,
+  AlignRight,
   Leaf,
   Briefcase,
   Laptop,
@@ -130,13 +135,37 @@ export interface CardFontOption {
 
 const CARD_FONTS: CardFontOption[] = [
   { id: "jakarta", name: "Plus Jakarta (Modern Clean)", category: "Sans", fontFamily: "var(--font-sans), 'Plus Jakarta Sans', sans-serif" },
-  { id: "playfair", name: "Playfair Display (Luxury Editorial Serif)", category: "Serif", fontFamily: "'Playfair Display', Georgia, serif" },
-  { id: "montserrat", name: "Montserrat (Executive Bold Sans)", category: "Sans", fontFamily: "'Montserrat', sans-serif" },
+  { id: "poppins", name: "Poppins (Geometric Modern)", category: "Sans", fontFamily: "'Poppins', sans-serif" },
+  { id: "montserrat", name: "Montserrat (Executive Bold)", category: "Sans", fontFamily: "'Montserrat', sans-serif" },
+  { id: "inter", name: "Inter (Digital Swiss)", category: "Sans", fontFamily: "'Inter', sans-serif" },
+  { id: "roboto", name: "Roboto (Clean Neo-Grotesque)", category: "Sans", fontFamily: "'Roboto', sans-serif" },
+  { id: "playfair", name: "Playfair Display (Luxury Serif)", category: "Serif", fontFamily: "'Playfair Display', Georgia, serif" },
   { id: "cormorant", name: "Cormorant Garamond (Royal Heritage)", category: "Serif", fontFamily: "'Cormorant Garamond', Georgia, serif" },
   { id: "dancing", name: "Dancing Script (Handwritten Cursive)", category: "Script", fontFamily: "'Dancing Script', cursive" },
   { id: "alexbrush", name: "Alex Brush (Signature Calligraphy)", category: "Script", fontFamily: "'Alex Brush', cursive" },
   { id: "cinzel", name: "Cinzel (Classic Roman Imperial)", category: "Display", fontFamily: "'Cinzel', serif" },
   { id: "spacemono", name: "Space Mono (Tech Minimalist)", category: "Mono", fontFamily: "'Space Mono', monospace" },
+];
+
+interface CardColorOption {
+  id: string;
+  name: string;
+}
+
+const CARD_PRINT_COLORS: CardColorOption[] = [
+  { id: "#0F172A", name: "Executive Black" },
+  { id: "#2563EB", name: "Royal Blue" },
+  { id: "#1E3A8A", name: "Deep Navy" },
+  { id: "#C59B27", name: "Imperial Gold" },
+  { id: "#B88E44", name: "Luxury Gold" },
+  { id: "#475569", name: "Slate Grey" },
+  { id: "#334155", name: "Dark Charcoal" },
+  { id: "#FFFFFF", name: "Pure White" },
+  { id: "#059669", name: "Emerald Green" },
+  { id: "#DC2626", name: "Crimson Red" },
+  { id: "#D97706", name: "Amber Bronze" },
+  { id: "#7C3AED", name: "Violet Purple" },
+  { id: "#78350F", name: "Walnut Brown" },
 ];
 
 // 60+ Rich Curated Product Templates across All Categories
@@ -1106,13 +1135,219 @@ export default function VistaprintStorePage() {
     address: "back",
   });
 
+  // INDIVIDUAL FIELD TYPOGRAPHY ENGINE (Independent font & italic for each detail)
+  const [detailFonts, setDetailFonts] = useState<{
+    companyName: string;
+    customerName: string;
+    customerDesignation: string;
+    phone: string;
+    email: string;
+    website: string;
+    address: string;
+  }>({
+    companyName: "jakarta",
+    customerName: "playfair",
+    customerDesignation: "jakarta",
+    phone: "jakarta",
+    email: "jakarta",
+    website: "jakarta",
+    address: "jakarta",
+  });
+
+  const [detailItalics, setDetailItalics] = useState<{
+    companyName: boolean;
+    customerName: boolean;
+    customerDesignation: boolean;
+    phone: boolean;
+    email: boolean;
+    website: boolean;
+    address: boolean;
+  }>({
+    companyName: false,
+    customerName: false,
+    customerDesignation: false,
+    phone: false,
+    email: false,
+    website: false,
+    address: false,
+  });
+
+  // INDEPENDENT COLOR CONTROLS & INDUSTRY COLOR HARMONY PALETTES
+  // Specifically tailored for Businessmen / Corporate, Luxury Gold, Tech Startup, etc.
+  const [detailColors, setDetailColors] = useState<{
+    companyName: string;
+    customerName: string;
+    customerDesignation: string;
+    phone: string;
+    email: string;
+    website: string;
+    address: string;
+  }>({
+    companyName: "#1E3A8A",        // Executive Navy
+    customerName: "#0F172A",       // Executive Deep Slate / Black
+    customerDesignation: "#2563EB",// Royal Corporate Blue
+    phone: "#475569",              // Professional Slate Grey
+    email: "#475569",              // Professional Slate Grey
+    website: "#475569",            // Professional Slate Grey
+    address: "#475569",            // Professional Slate Grey
+  });
+
+  const INDUSTRY_PALETTES = [
+    {
+      id: "businessman",
+      name: "Businessman / Executive",
+      icon: "👔",
+      badge: "Recommended",
+      desc: "Deep Slate Name • Royal Blue Role • Slate Grey Email/Phone",
+      colors: {
+        companyName: "#1E3A8A",
+        customerName: "#0F172A",
+        customerDesignation: "#2563EB",
+        phone: "#475569",
+        email: "#475569",
+        website: "#475569",
+        address: "#475569",
+      },
+    },
+    {
+      id: "luxury-gold",
+      name: "Luxury Gold Foil",
+      icon: "👑",
+      badge: "VIP Elite",
+      desc: "Imperial Gold Name • Amber Role • Deep Bronze Contacts",
+      colors: {
+        companyName: "#B88E44",
+        customerName: "#C59B27",
+        customerDesignation: "#D97706",
+        phone: "#78350F",
+        email: "#78350F",
+        website: "#78350F",
+        address: "#78350F",
+      },
+    },
+    {
+      id: "tech-startup",
+      name: "Tech Startup / Founder",
+      icon: "🚀",
+      badge: "Modern",
+      desc: "Midnight Slate Name • Electric Violet Role • Steel Contacts",
+      colors: {
+        companyName: "#4338CA",
+        customerName: "#0F172A",
+        customerDesignation: "#7C3AED",
+        phone: "#64748B",
+        email: "#64748B",
+        website: "#64748B",
+        address: "#64748B",
+      },
+    },
+    {
+      id: "dark-executive",
+      name: "Dark Executive Card",
+      icon: "🌙",
+      badge: "High Contrast",
+      desc: "Crisp White Name • Sky Blue Role • Silver Grey Contacts",
+      colors: {
+        companyName: "#93C5FD",
+        customerName: "#FFFFFF",
+        customerDesignation: "#60A5FA",
+        phone: "#CBD5E1",
+        email: "#CBD5E1",
+        website: "#CBD5E1",
+        address: "#CBD5E1",
+      },
+    },
+    {
+      id: "doctor",
+      name: "Doctor / Healthcare",
+      icon: "🩺",
+      badge: "Clinical",
+      desc: "Deep Slate Name • Surgical Teal Role • Clean Slate Contacts",
+      colors: {
+        companyName: "#0284C7",
+        customerName: "#0F172A",
+        customerDesignation: "#0D9488",
+        phone: "#475569",
+        email: "#475569",
+        website: "#475569",
+        address: "#475569",
+      },
+    },
+    {
+      id: "boutique",
+      name: "Boutique / Warm Studio",
+      icon: "☕",
+      badge: "Artisanal",
+      desc: "Espresso Name • Warm Caramel Role • Walnut Contacts",
+      colors: {
+        companyName: "#78350F",
+        customerName: "#292524",
+        customerDesignation: "#B45309",
+        phone: "#57534E",
+        email: "#57534E",
+        website: "#57534E",
+        address: "#57534E",
+      },
+    },
+  ];
+
+  const [activePaletteId, setActivePaletteId] = useState<string>("businessman");
+
+  const applyIndustryPalette = (paletteId: string) => {
+    const pal = INDUSTRY_PALETTES.find((p) => p.id === paletteId);
+    if (!pal) return;
+    setActivePaletteId(paletteId);
+    setDetailColors(pal.colors);
+    setToastMessage(`Applied ${pal.name} Color Harmony Theme!`);
+    setTimeout(() => setToastMessage(null), 2500);
+  };
+
+  const getFieldFontObj = (field: keyof typeof detailFonts) => {
+    const fontId = detailFonts[field] || "jakarta";
+    return CARD_FONTS.find((f) => f.id === fontId) || CARD_FONTS[0];
+  };
+
+  const getFieldFontStyle = (field: keyof typeof detailFonts): React.CSSProperties => {
+    const fontObj = getFieldFontObj(field);
+    const isItalic = detailItalics[field] || false;
+    const color = detailColors[field] || "#0F172A";
+    return {
+      fontFamily: fontObj.fontFamily,
+      fontStyle: isItalic ? "italic" : "normal",
+      color: color,
+    };
+  };
+
+  const renderField = (
+    field: keyof typeof detailFonts,
+    value?: string | null,
+    fallback = "",
+    isUpper = false
+  ) => {
+    const text = value || fallback || "";
+    const color = detailColors[field] || "#0F172A";
+    return (
+      <span
+        data-field={field}
+        className={`font-${field}`}
+        style={{
+          ...getFieldFontStyle(field),
+          color: color,
+        }}
+      >
+        {isUpper ? text.toUpperCase() : text}
+      </span>
+    );
+  };
+
+
   const showFront = (field: keyof typeof detailPlacements) =>
     detailPlacements[field] === "front" || detailPlacements[field] === "both";
 
   const showBack = (field: keyof typeof detailPlacements) =>
     detailPlacements[field] === "back" || detailPlacements[field] === "both";
 
-  // Reusable Placement Selector Component (Front / Back / Both)
+  // Reusable Placement Header Component (Label + Front/Back/Both Toggle)
   const PlacementSelector = ({
     field,
     label,
@@ -1123,22 +1358,25 @@ export default function VistaprintStorePage() {
     icon?: React.ElementType;
   }) => {
     const current = detailPlacements[field];
+
     return (
-      <div className="flex items-center justify-between gap-1 mb-1.5">
-        <label className="font-bold text-slate-700 flex items-center gap-1.5 text-xs truncate">
+      <div className="flex items-center justify-between gap-2 mb-1.5">
+        <label className="font-bold text-slate-800 flex items-center gap-1.5 text-xs truncate">
           {Icon && <Icon className="w-3.5 h-3.5 text-slate-400 shrink-0" />}
           <span className="truncate">{label}</span>
         </label>
-        <div className="inline-flex rounded-lg bg-slate-100 p-0.5 border border-slate-200 text-[10px] font-bold shrink-0">
+
+        {/* Clean Placement Switcher (Front / Back / Both) */}
+        <div className="inline-flex rounded-lg bg-slate-100 p-0.5 border border-slate-200/90 text-[10px] font-semibold shrink-0">
           <button
             type="button"
             onClick={() => setDetailPlacements((prev) => ({ ...prev, [field]: "front" }))}
             className={`px-2 py-0.5 rounded-md transition-all cursor-pointer ${
               current === "front"
-                ? "bg-emerald-600 text-white shadow-2xs font-extrabold"
+                ? "bg-slate-900 text-white shadow-2xs font-extrabold"
                 : "text-slate-500 hover:text-slate-900"
             }`}
-            title="Print on Front Side (Side A)"
+            title="Print on Front (Side A)"
           >
             Front
           </button>
@@ -1150,7 +1388,7 @@ export default function VistaprintStorePage() {
                 ? "bg-indigo-600 text-white shadow-2xs font-extrabold"
                 : "text-slate-500 hover:text-slate-900"
             }`}
-            title="Print on Back Side (Side B)"
+            title="Print on Back (Side B)"
           >
             Back
           </button>
@@ -1159,12 +1397,78 @@ export default function VistaprintStorePage() {
             onClick={() => setDetailPlacements((prev) => ({ ...prev, [field]: "both" }))}
             className={`px-2 py-0.5 rounded-md transition-all cursor-pointer ${
               current === "both"
-                ? "bg-slate-900 text-white shadow-2xs font-extrabold"
+                ? "bg-emerald-600 text-white shadow-2xs font-extrabold"
                 : "text-slate-500 hover:text-slate-900"
             }`}
             title="Print on Both Front & Back"
           >
             Both
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  // Reusable Field Styling Sub-Bar (Clean Color Dropdown + Font Dropdown + Italic)
+  const FieldStylingBar = ({ field }: { field: keyof typeof detailPlacements }) => {
+    const currentFontId = detailFonts[field] || "jakarta";
+    const currentFontObj = getFieldFontObj(field);
+    const isItalic = detailItalics[field] || false;
+    const currentColor = detailColors[field] || "#0F172A";
+
+    return (
+      <div className="flex items-center justify-between gap-1.5 mt-1.5 px-0.5 text-[10px]">
+        {/* Color Dropdown (Simple, Clean, No Hex, No Dot) */}
+        <div className="inline-flex items-center gap-1.5 bg-slate-50 hover:bg-slate-100 border border-slate-200/90 rounded-md px-1.5 py-0.5 text-[10px] font-semibold text-slate-700 transition">
+          <Palette className="w-2.5 h-2.5 text-slate-500 shrink-0" />
+          <span className="text-[10px] font-bold text-slate-500">Color:</span>
+          <select
+            value={currentColor}
+            onChange={(e) => setDetailColors((prev) => ({ ...prev, [field]: e.target.value }))}
+            className="bg-transparent text-slate-900 font-bold cursor-pointer focus:outline-none text-[10px] max-w-[110px] truncate"
+            title="Select Print Color"
+          >
+            {CARD_PRINT_COLORS.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
+            {!CARD_PRINT_COLORS.some((c) => c.id.toLowerCase() === currentColor.toLowerCase()) && (
+              <option value={currentColor}>Current Color</option>
+            )}
+          </select>
+        </div>
+
+        {/* Font Selector & Italic */}
+        <div className="inline-flex items-center gap-1 shrink-0">
+          <div className="inline-flex items-center gap-1 bg-slate-50 hover:bg-slate-100 border border-slate-200/90 rounded-md px-1.5 py-0.5 text-[10px] font-semibold text-slate-700 transition">
+            <Type className="w-2.5 h-2.5 text-amber-700 shrink-0" />
+            <span className="text-[10px] font-bold text-slate-500">Font:</span>
+            <select
+              value={currentFontId}
+              onChange={(e) => setDetailFonts((prev) => ({ ...prev, [field]: e.target.value }))}
+              className="bg-transparent text-slate-900 font-bold cursor-pointer focus:outline-none text-[10px] max-w-[85px] truncate"
+              style={{ fontFamily: currentFontObj.fontFamily }}
+              title="Change Font"
+            >
+              {CARD_FONTS.map((font) => (
+                <option key={font.id} value={font.id} style={{ fontFamily: font.fontFamily }}>
+                  {font.name.split(" (")[0]}
+                </option>
+              ))}
+            </select>
+          </div>
+          <button
+            type="button"
+            onClick={() => setDetailItalics((prev) => ({ ...prev, [field]: !prev[field] }))}
+            className={`p-1 rounded-md border text-[10px] transition cursor-pointer ${
+              isItalic
+                ? "bg-amber-100 border-amber-300 text-amber-950 font-black shadow-2xs"
+                : "border-slate-200/90 bg-slate-50 text-slate-400 hover:text-slate-700"
+            }`}
+            title={isItalic ? "Italic Active (Click to disable)" : "Make Text Italic"}
+          >
+            <Italic className="w-2.5 h-2.5" />
           </button>
         </div>
       </div>
@@ -1370,8 +1674,6 @@ export default function VistaprintStorePage() {
   // Card finish & quantity specifications
   const [selectedStock, setSelectedStock] = useState<"matte" | "glossy" | "goldFoil" | "linen">("matte");
   const [cornerStyle, setCornerStyle] = useState<"square" | "rounded">("square");
-  const [selectedFontId, setSelectedFontId] = useState<string>("jakarta");
-  const [isFontItalic, setIsFontItalic] = useState<boolean>(false);
   const [quantity, setQuantity] = useState<number>(500);
 
   // DAY 8: DUAL-SIDED CANVAS ENGINE & PRINT SAFETY WORKSPACE
@@ -1892,12 +2194,31 @@ export default function VistaprintStorePage() {
   const currentTemplate =
     PRODUCT_TEMPLATES.find((t) => t.id === selectedTemplateId) || PRODUCT_TEMPLATES[0];
 
-  const activeCardFont = CARD_FONTS.find((f) => f.id === selectedFontId) || CARD_FONTS[0];
   const cardFontStyle: React.CSSProperties = {
-    "--card-font": activeCardFont.fontFamily,
-    "--card-font-style": isFontItalic ? "italic" : "normal",
-    fontFamily: activeCardFont.fontFamily,
-    fontStyle: isFontItalic ? "italic" : "normal",
+    "--card-font": "var(--font-sans), 'Plus Jakarta Sans', sans-serif",
+    "--card-font-style": "normal",
+    "--font-companyName": getFieldFontObj("companyName").fontFamily,
+    "--style-companyName": detailItalics.companyName ? "italic" : "normal",
+    "--color-companyName": detailColors.companyName,
+    "--font-customerName": getFieldFontObj("customerName").fontFamily,
+    "--style-customerName": detailItalics.customerName ? "italic" : "normal",
+    "--color-customerName": detailColors.customerName,
+    "--font-customerDesignation": getFieldFontObj("customerDesignation").fontFamily,
+    "--style-customerDesignation": detailItalics.customerDesignation ? "italic" : "normal",
+    "--color-customerDesignation": detailColors.customerDesignation,
+    "--font-phone": getFieldFontObj("phone").fontFamily,
+    "--style-phone": detailItalics.phone ? "italic" : "normal",
+    "--color-phone": detailColors.phone,
+    "--font-email": getFieldFontObj("email").fontFamily,
+    "--style-email": detailItalics.email ? "italic" : "normal",
+    "--color-email": detailColors.email,
+    "--font-website": getFieldFontObj("website").fontFamily,
+    "--style-website": detailItalics.website ? "italic" : "normal",
+    "--color-website": detailColors.website,
+    "--font-address": getFieldFontObj("address").fontFamily,
+    "--style-address": detailItalics.address ? "italic" : "normal",
+    "--color-address": detailColors.address,
+    fontFamily: "var(--font-sans), 'Plus Jakarta Sans', sans-serif",
   } as React.CSSProperties;
 
   // Pricing calculation
@@ -4161,41 +4482,6 @@ export default function VistaprintStorePage() {
                           </button>
                         )}
 
-                        {/* Font Dropdown & Italic Toggle */}
-                        {selectedProduct.category === "visiting-cards" && (
-                          <div className="flex items-center gap-1.5">
-                            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl border border-slate-300 bg-slate-50 text-xs font-bold text-slate-700 shadow-2xs hover:border-slate-400 transition">
-                              <Type className="w-3.5 h-3.5 text-amber-700 shrink-0" />
-                              <span className="text-slate-500 font-medium hidden sm:inline">Font:</span>
-                              <select
-                                value={selectedFontId}
-                                onChange={(e) => setSelectedFontId(e.target.value)}
-                                className="bg-transparent text-slate-900 font-black cursor-pointer focus:outline-none"
-                                style={{ fontFamily: activeCardFont.fontFamily }}
-                                title="Select Card Font"
-                              >
-                                {CARD_FONTS.map((font) => (
-                                  <option key={font.id} value={font.id} style={{ fontFamily: font.fontFamily }}>
-                                    {font.name}
-                                  </option>
-                                ))}
-                              </select>
-                            </div>
-                            <button
-                              type="button"
-                              onClick={() => setIsFontItalic(!isFontItalic)}
-                              className={`px-2 py-1 rounded-xl border text-xs font-black transition cursor-pointer flex items-center gap-1 shadow-2xs ${
-                                isFontItalic
-                                  ? "bg-amber-100 text-amber-950 border-amber-400 ring-2 ring-amber-300/40"
-                                  : "bg-slate-50 text-slate-700 border-slate-300 hover:bg-slate-100 hover:text-slate-900"
-                              }`}
-                              title={isFontItalic ? "Italics Active (Click to disable)" : "Make Card Text Italic"}
-                            >
-                              <Italic className="w-3.5 h-3.5" />
-                              <span className="italic font-bold">Italic</span>
-                            </button>
-                          </div>
-                        )}
                       </div>
 
                       <div className="flex items-center gap-2">
@@ -4330,12 +4616,12 @@ export default function VistaprintStorePage() {
                                   <div className="h-[36%] bg-gradient-to-br from-[#A81D24] via-[#851117] to-[#1E232A] p-3.5 text-white flex items-center justify-between relative shrink-0">
                                     <div className="flex items-center gap-2.5 min-w-0">
                                       <div className="w-8 h-8 rounded-lg bg-amber-400 flex items-center justify-center font-black text-slate-950 text-sm shrink-0 shadow-2xs">
-                                        {companyName ? companyName.charAt(0).toUpperCase() : "I"}
+                                        {renderField("companyName", companyName ? companyName.charAt(0) : "I", "", true)}
                                       </div>
                                       <div className="min-w-0">
                                         {showFront("companyName") && (
                                           <div className="text-xs font-black tracking-tight leading-tight uppercase truncate">
-                                            {companyName || "INCREDIBLE TREASURES"}
+                                            {renderField("companyName", companyName, "INCREDIBLE TREASURES")}
                                           </div>
                                         )}
                                         <div className="text-[7.5px] text-amber-200/90 font-semibold tracking-wider uppercase">
@@ -4359,12 +4645,12 @@ export default function VistaprintStorePage() {
                                       <div className="min-w-0">
                                         {showFront("customerName") && (
                                           <div className="text-xs sm:text-sm font-black text-slate-900 truncate">
-                                            {customerName || "Mahi Kapoor"}
+                                            {renderField("customerName", customerName, "Mahi Kapoor")}
                                           </div>
                                         )}
                                         {showFront("customerDesignation") && (
                                           <div className="text-[10px] font-bold text-slate-500 truncate">
-                                            {customerDesignation || "Managing Director"}
+                                            {renderField("customerDesignation", customerDesignation, "Managing Director")}
                                           </div>
                                         )}
                                         {!showFront("customerName") && !showFront("customerDesignation") && (
@@ -4380,25 +4666,25 @@ export default function VistaprintStorePage() {
                                       {showFront("phone") && (
                                         <div className="flex items-center gap-1.5 truncate">
                                           <Phone className="w-2.5 h-2.5 text-slate-400 shrink-0" />
-                                          <span>{phone || "+91 99450 39266"}</span>
+                                          <span>{renderField("phone", phone, "+91 99450 39266")}</span>
                                         </div>
                                       )}
                                       {showFront("email") && (
                                         <div className="flex items-center gap-1.5 truncate">
                                           <Mail className="w-2.5 h-2.5 text-slate-400 shrink-0" />
-                                          <span className="truncate">{email || "contact@incredible-treasures.com"}</span>
+                                          <span className="truncate">{renderField("email", email, "contact@incredible-treasures.com")}</span>
                                         </div>
                                       )}
                                       {showFront("website") && (
                                         <div className="flex items-center gap-1.5 truncate">
                                           <ExternalLink className="w-2.5 h-2.5 text-slate-400 shrink-0" />
-                                          <span className="truncate">{website || "www.incredible-treasures.com"}</span>
+                                          <span className="truncate">{renderField("website", website, "www.incredible-treasures.com")}</span>
                                         </div>
                                       )}
                                       {showFront("address") && (
                                         <div className="flex items-center gap-1.5 truncate">
                                           <MapPin className="w-2.5 h-2.5 text-slate-400 shrink-0" />
-                                          <span className="truncate">{address || "Bengaluru, Karnataka"}</span>
+                                          <span className="truncate">{renderField("address", address, "Bengaluru, Karnataka")}</span>
                                         </div>
                                       )}
                                     </div>
@@ -4419,12 +4705,12 @@ export default function VistaprintStorePage() {
                                       <div className="min-w-0">
                                         {showFront("customerName") && (
                                           <div className="text-xs sm:text-sm font-black text-slate-900 truncate">
-                                            {customerName || "Mahi Kapoor"}
+                                            {renderField("customerName", customerName, "Mahi Kapoor")}
                                           </div>
                                         )}
                                         {showFront("customerDesignation") && (
                                           <div className="text-[10px] font-bold text-slate-500 truncate">
-                                            {customerDesignation || "Creative Director"}
+                                            {renderField("customerDesignation", customerDesignation, "Creative Director")}
                                           </div>
                                         )}
                                         {!showFront("customerName") && !showFront("customerDesignation") && (
@@ -4438,25 +4724,25 @@ export default function VistaprintStorePage() {
                                       {showFront("phone") && (
                                         <div className="flex items-center gap-1.5 truncate">
                                           <Phone className="w-2.5 h-2.5 text-slate-400 shrink-0" />
-                                          <span>{phone || "+91 9001-4546"}</span>
+                                          <span>{renderField("phone", phone, "+91 9001-4546")}</span>
                                         </div>
                                       )}
                                       {showFront("email") && (
                                         <div className="flex items-center gap-1.5 truncate">
                                           <Mail className="w-2.5 h-2.5 text-slate-400 shrink-0" />
-                                          <span>{email || "name@company.com"}</span>
+                                          <span>{renderField("email", email, "name@company.com")}</span>
                                         </div>
                                       )}
                                       {showFront("address") && (
                                         <div className="flex items-center gap-1.5 truncate">
                                           <MapPin className="w-2.5 h-2.5 text-slate-400 shrink-0" />
-                                          <span>{address || "Bengaluru, Karnataka"}</span>
+                                          <span>{renderField("address", address, "Bengaluru, Karnataka")}</span>
                                         </div>
                                       )}
                                       {showFront("website") && (
                                         <div className="flex items-center gap-1.5 truncate">
                                           <ExternalLink className="w-2.5 h-2.5 text-slate-400 shrink-0" />
-                                          <span>{website || "www.company.com"}</span>
+                                          <span>{renderField("website", website, "www.company.com")}</span>
                                         </div>
                                       )}
                                     </div>
@@ -4466,10 +4752,10 @@ export default function VistaprintStorePage() {
                                       {showFront("companyName") ? (
                                         <>
                                           <div className="w-6 h-6 rounded bg-amber-400 flex items-center justify-center font-black text-slate-950 text-xs">
-                                            {companyName.charAt(0) || "S"}
+                                            {renderField("companyName", companyName ? companyName.charAt(0) : "S", "", true)}
                                           </div>
                                           <div className="text-xs sm:text-sm font-black tracking-tight leading-tight uppercase">
-                                            {companyName || "SQUARE DESIGN"}
+                                            {renderField("companyName", companyName, "SQUARE DESIGN")}
                                           </div>
                                         </>
                                       ) : (
@@ -4494,7 +4780,7 @@ export default function VistaprintStorePage() {
                                   <div>
                                     {showFront("companyName") && (
                                       <div className="text-sm sm:text-base font-serif italic text-white/95">
-                                        {companyName || "Discount voucher"}
+                                        {renderField("companyName", companyName, "Discount voucher")}
                                       </div>
                                     )}
                                     <div className="text-[10px] text-fuchsia-300 font-bold uppercase tracking-wider">
@@ -4510,11 +4796,11 @@ export default function VistaprintStorePage() {
                                 <div className="relative z-10 space-y-0.5">
                                   {showFront("customerName") && (
                                     <div className="text-xs sm:text-sm font-black text-white">
-                                      {customerName || "Mahi Kapoor"}
+                                      {renderField("customerName", customerName, "Mahi Kapoor")}
                                     </div>
                                   )}
                                   <div className="text-[10px] text-amber-300 font-semibold flex items-center gap-1.5 flex-wrap">
-                                    {showFront("customerDesignation") && <span>{customerDesignation || "VIP Cardholder"}</span>}
+                                    {showFront("customerDesignation") && <span>{renderField("customerDesignation", customerDesignation, "VIP Cardholder")}</span>}
                                     {showFront("phone") && <span>• {phone}</span>}
                                     {showFront("email") && <span>• {email}</span>}
                                   </div>
@@ -4529,7 +4815,7 @@ export default function VistaprintStorePage() {
                                     <div className="min-w-0">
                                       {showFront("companyName") && (
                                         <div className="text-[11px] sm:text-xs font-black tracking-tight uppercase leading-tight truncate">
-                                          {companyName || "WISDOM OAK ENGLISH SCHOOL"}
+                                          {renderField("companyName", companyName, "WISDOM OAK ENGLISH SCHOOL")}
                                         </div>
                                       )}
                                       <div className="text-[8px] text-slate-600 font-bold tracking-widest uppercase">
@@ -4551,12 +4837,12 @@ export default function VistaprintStorePage() {
                                       )}
                                     </div>
                                     <div className="space-y-0.5 text-[9px] text-slate-800 font-semibold w-full">
-                                      {showFront("customerName") && <div className="text-xs font-black text-slate-950 truncate">{customerName || "Mahi Kapoor"}</div>}
-                                      {showFront("customerDesignation") && <div className="text-[9.5px] font-bold text-slate-600 truncate">{customerDesignation || "Class IX A"}</div>}
+                                      {showFront("customerName") && <div className="text-xs font-black text-slate-950 truncate">{renderField("customerName", customerName, "Mahi Kapoor")}</div>}
+                                      {showFront("customerDesignation") && <div className="text-[9.5px] font-bold text-slate-600 truncate">{renderField("customerDesignation", customerDesignation, "Class IX A")}</div>}
                                       <div className="pt-1.5 space-y-0.5 text-[8.5px] text-left border-t border-slate-300/80 mt-1">
-                                        {showFront("phone") && <div className="truncate">Emergency: <span>{phone}</span></div>}
-                                        {showFront("email") && <div className="truncate">Email: <span>{email}</span></div>}
-                                        {showFront("address") && <div className="truncate">Address: <span>{address}</span></div>}
+                                        {showFront("phone") && <div className="truncate">Emergency: <span>{renderField("phone", phone, "+91 99450 39266")}</span></div>}
+                                        {showFront("email") && <div className="truncate">Email: <span>{renderField("email", email, "contact@incredible-treasures.com")}</span></div>}
+                                        {showFront("address") && <div className="truncate">Address: <span>{renderField("address", address, "Bengaluru, Karnataka")}</span></div>}
                                       </div>
                                     </div>
                                   </div>
@@ -4570,11 +4856,11 @@ export default function VistaprintStorePage() {
                                       )}
                                     </div>
                                     <div className="space-y-0.5 text-[9px] sm:text-[10px] text-slate-800 font-semibold">
-                                      {showFront("customerName") && <div>Name: <strong className="text-slate-950 font-black">{customerName || "Mahi Kapoor"}</strong></div>}
-                                      {showFront("customerDesignation") && <div>Role/Class: <span>{customerDesignation || "Class IX A"}</span></div>}
-                                      {showFront("phone") && <div>Emergency: <span>{phone}</span></div>}
-                                      {showFront("address") && <div className="truncate max-w-[150px]">Address: <span>{address}</span></div>}
-                                      {showFront("email") && <div className="truncate max-w-[150px]">Email: <span>{email}</span></div>}
+                                      {showFront("customerName") && <div>Name: <strong className="text-slate-950 font-black">{renderField("customerName", customerName, "Mahi Kapoor")}</strong></div>}
+                                      {showFront("customerDesignation") && <div>Role/Class: <span>{renderField("customerDesignation", customerDesignation, "Class IX A")}</span></div>}
+                                      {showFront("phone") && <div>Emergency: <span>{renderField("phone", phone, "+91 99450 39266")}</span></div>}
+                                      {showFront("address") && <div className="truncate max-w-[150px]">Address: <span>{renderField("address", address, "Bengaluru, Karnataka")}</span></div>}
+                                      {showFront("email") && <div className="truncate max-w-[150px]">Email: <span>{renderField("email", email, "contact@incredible-treasures.com")}</span></div>}
                                     </div>
                                   </div>
                                 )}
@@ -4589,12 +4875,12 @@ export default function VistaprintStorePage() {
                                   <div>
                                     {showFront("customerName") && (
                                       <div className="text-xs sm:text-sm font-black text-slate-900">
-                                        {customerName || "Mahi Kapoor"}
+                                        {renderField("customerName", customerName, "Mahi Kapoor")}
                                       </div>
                                     )}
                                     {showFront("customerDesignation") && (
                                       <div className="text-[10px] font-bold text-emerald-800">
-                                        {customerDesignation || "Manager"}
+                                        {renderField("customerDesignation", customerDesignation, "Manager")}
                                       </div>
                                     )}
                                   </div>
@@ -4607,7 +4893,7 @@ export default function VistaprintStorePage() {
                                 <div className="text-center py-1">
                                   {showFront("companyName") && (
                                     <div className="text-sm sm:text-base font-black tracking-wide text-slate-950 uppercase">
-                                      {companyName || "NAVEEN'S DELIGHTS"}
+                                      {renderField("companyName", companyName, "NAVEEN'S DELIGHTS")}
                                     </div>
                                   )}
                                   <div className="text-[9px] font-bold text-amber-900">
@@ -4615,7 +4901,7 @@ export default function VistaprintStorePage() {
                                   </div>
                                 </div>
                                 <div className="flex items-center justify-between text-[9px] font-semibold text-slate-700 pt-1 border-t border-slate-900/10">
-                                  {showFront("phone") && <span>{phone}</span>}
+                                  {showFront("phone") && <span>{renderField("phone", phone, "+91 99450 39266")}</span>}
                                   {showFront("website") && <span className="truncate max-w-[140px]">{website || "www.naveensdosa.com"}</span>}
                                   {showFront("email") && <span className="truncate max-w-[140px]">{email}</span>}
                                 </div>
@@ -4628,19 +4914,19 @@ export default function VistaprintStorePage() {
                                 <div className="pt-1">
                                   {showFront("customerName") && (
                                     <div className="text-sm sm:text-base font-black tracking-wider text-slate-950 uppercase">
-                                      {customerName?.toUpperCase() || "MAHI KAPOOR"}
+                                      {renderField("customerName", customerName, "MAHI KAPOOR", true)}
                                     </div>
                                   )}
                                   {showFront("customerDesignation") && (
                                     <div className="text-[10px] font-extrabold text-slate-700 tracking-wider uppercase">
-                                      {customerDesignation || "DIRECTOR - OPERATIONS"}
+                                      {renderField("customerDesignation", customerDesignation, "DIRECTOR - OPERATIONS", true)}
                                     </div>
                                   )}
                                 </div>
                                 <div className="py-1">
                                   {showFront("companyName") && (
                                     <div className="text-xs font-black text-slate-900">
-                                      {companyName || "INCREDIBLE TREASURES"}
+                                      {renderField("companyName", companyName, "INCREDIBLE TREASURES")}
                                     </div>
                                   )}
                                   <div className="text-[9px] text-slate-600 font-medium">
@@ -4661,7 +4947,7 @@ export default function VistaprintStorePage() {
                                     <div>
                                       {showFront("companyName") && (
                                         <div className="text-xs sm:text-sm font-black text-slate-900">
-                                          {companyName || "CREATIVE MIND"}
+                                          {renderField("companyName", companyName, "CREATIVE MIND")}
                                         </div>
                                       )}
                                       <div className="text-[10px] font-bold text-amber-800">
@@ -4676,18 +4962,18 @@ export default function VistaprintStorePage() {
                                   </div>
                                   {showFront("customerName") && (
                                     <div className="mt-2 text-xs font-black text-slate-950">
-                                      {customerName || "Mahi Kapoor"}
+                                      {renderField("customerName", customerName, "Mahi Kapoor")}
                                     </div>
                                   )}
                                   {showFront("customerDesignation") && (
                                     <div className="text-[10px] font-bold text-amber-900">
-                                      {customerDesignation || "Design Director"}
+                                      {renderField("customerDesignation", customerDesignation, "Design Director")}
                                     </div>
                                   )}
                                 </div>
                                 <div className="text-[9px] font-bold text-slate-900 flex justify-between items-center">
-                                  {showFront("phone") && <span>{phone}</span>}
-                                  {showFront("email") && <span>{email}</span>}
+                                  {showFront("phone") && <span>{renderField("phone", phone, "+91 99450 39266")}</span>}
+                                  {showFront("email") && <span>{renderField("email", email, "contact@incredible-treasures.com")}</span>}
                                   {showFront("website") && <span>{website}</span>}
                                 </div>
                               </div>
@@ -4706,24 +4992,24 @@ export default function VistaprintStorePage() {
                                 <div className="py-1">
                                   {showFront("customerName") && (
                                     <div className="text-xs sm:text-sm font-black tracking-widest uppercase text-slate-800 drop-shadow-[1px_1px_1px_rgba(0,0,0,0.5)]">
-                                      {customerName?.toUpperCase() || "MAHI KAPOOR"}
+                                      {renderField("customerName", customerName, "MAHI KAPOOR", true)}
                                     </div>
                                   )}
                                   {showFront("customerDesignation") && (
                                     <div className="text-[10px] font-bold tracking-wider uppercase text-slate-600 drop-shadow-[1px_1px_0px_rgba(255,255,255,0.8)]">
-                                      {customerDesignation || "MANAGING DIRECTOR"}
+                                      {renderField("customerDesignation", customerDesignation, "MANAGING DIRECTOR", true)}
                                     </div>
                                   )}
                                   {showFront("companyName") && (
                                     <div className="text-[10px] font-bold tracking-wider uppercase text-slate-800 mt-0.5">
-                                      {companyName || "SMART ENTERPRISES"}
+                                      {renderField("companyName", companyName, "SMART ENTERPRISES")}
                                     </div>
                                   )}
                                 </div>
                                 <div className="text-[9px] font-mono text-slate-700 flex justify-between">
-                                  {showFront("phone") && <span>{phone}</span>}
-                                  {showFront("website") && <span>{website || "www.smart.com"}</span>}
-                                  {showFront("email") && <span>{email}</span>}
+                                  {showFront("phone") && <span>{renderField("phone", phone, "+91 99450 39266")}</span>}
+                                  {showFront("website") && <span>{renderField("website", website, "www.smart.com")}</span>}
+                                  {showFront("email") && <span>{renderField("email", email, "contact@incredible-treasures.com")}</span>}
                                 </div>
                               </div>
                             ) : selectedProduct.id === "pvc-matt-foiling" ? (
@@ -4740,23 +5026,23 @@ export default function VistaprintStorePage() {
                                 <div>
                                   {showFront("customerName") && (
                                     <div className="text-sm sm:text-base font-serif font-black tracking-wide bg-gradient-to-r from-amber-200 via-yellow-400 to-amber-200 bg-clip-text text-transparent">
-                                      {customerName?.toUpperCase() || "MAHI KAPOOR"}
+                                      {renderField("customerName", customerName, "MAHI KAPOOR", true)}
                                     </div>
                                   )}
                                   {showFront("customerDesignation") && (
                                     <div className="text-[10px] font-serif tracking-widest text-amber-200/80 uppercase">
-                                      {customerDesignation || "LONDON BESPOKE DIRECT"}
+                                      {renderField("customerDesignation", customerDesignation, "LONDON BESPOKE DIRECT", true)}
                                     </div>
                                   )}
                                   {showFront("companyName") && (
                                     <div className="text-xs font-bold text-neutral-300 mt-1">
-                                      {companyName || "EARNAMTH LUXURY"}
+                                      {renderField("companyName", companyName, "EARNAMTH LUXURY")}
                                     </div>
                                   )}
                                 </div>
                                 <div className="text-[9px] text-neutral-400 font-mono flex justify-between">
-                                  {showFront("phone") && <span>{phone}</span>}
-                                  {showFront("email") && <span>{email}</span>}
+                                  {showFront("phone") && <span>{renderField("phone", phone, "+91 99450 39266")}</span>}
+                                  {showFront("email") && <span>{renderField("email", email, "contact@incredible-treasures.com")}</span>}
                                   {showFront("website") && <span>{website}</span>}
                                 </div>
                               </div>
@@ -4776,19 +5062,19 @@ export default function VistaprintStorePage() {
                                 <div className="text-center py-1">
                                   {showFront("companyName") && (
                                     <div className="text-base sm:text-lg font-serif font-black tracking-tight text-slate-950">
-                                      {companyName || "Allen Solly"}
+                                      {renderField("companyName", companyName, "Allen Solly")}
                                     </div>
                                   )}
                                   {showFront("customerName") && (
                                     <div className="text-[10px] font-bold text-slate-900 tracking-wider">
-                                      {customerName || "Mahi Kapoor"}
+                                      {renderField("customerName", customerName, "Mahi Kapoor")}
                                     </div>
                                   )}
                                 </div>
                                 <div className="text-[9px] font-bold text-slate-900 flex justify-between">
-                                  {showFront("phone") && <span>{phone}</span>}
-                                  {showFront("customerDesignation") && <span>{customerDesignation || "Official Store"}</span>}
-                                  {showFront("email") && <span>{email}</span>}
+                                  {showFront("phone") && <span>{renderField("phone", phone, "+91 99450 39266")}</span>}
+                                  {showFront("customerDesignation") && <span>{renderField("customerDesignation", customerDesignation, "Official Store")}</span>}
+                                  {showFront("email") && <span>{renderField("email", email, "contact@incredible-treasures.com")}</span>}
                                 </div>
                               </div>
                             ) : selectedProduct.category === "mugs" ? (
@@ -4802,12 +5088,12 @@ export default function VistaprintStorePage() {
                                   )}
                                   {showFront("companyName") && (
                                     <div className="text-[10px] font-black text-slate-900 leading-tight truncate w-full">
-                                      {companyName || "Corporate Mug"}
+                                      {renderField("companyName", companyName, "Corporate Mug")}
                                     </div>
                                   )}
                                   {showFront("customerName") && (
                                     <div className="text-[8px] text-slate-500 font-bold mt-0.5">
-                                      {customerName || "Full Color Print"}
+                                      {renderField("customerName", customerName, "Full Color Print")}
                                     </div>
                                   )}
                                 </div>
@@ -4826,7 +5112,7 @@ export default function VistaprintStorePage() {
                                   )}
                                   {showFront("companyName") && (
                                     <div className="text-xs font-black text-white">
-                                      {companyName || "Corporate Team"}
+                                      {renderField("companyName", companyName, "Corporate Team")}
                                     </div>
                                   )}
                                   {showFront("customerName") && (
@@ -4842,7 +5128,7 @@ export default function VistaprintStorePage() {
                                 <div className="flex items-center justify-between border-b border-emerald-600 pb-1.5">
                                   {showFront("companyName") && (
                                     <div className="text-xs font-black text-emerald-800">
-                                      {companyName || "Incredible Treasures"}
+                                      {renderField("companyName", companyName, "Incredible Treasures")}
                                     </div>
                                   )}
                                   {uploadedLogo ? (
@@ -4857,8 +5143,8 @@ export default function VistaprintStorePage() {
                                   <div className="h-1 bg-slate-100 rounded w-4/6" />
                                 </div>
                                 <div className="text-[8px] text-slate-500 flex justify-between border-t border-slate-100 pt-1">
-                                  {showFront("phone") && <span>{phone}</span>}
-                                  {showFront("address") && <span>{address}</span>}
+                                  {showFront("phone") && <span>{renderField("phone", phone, "+91 99450 39266")}</span>}
+                                  {showFront("address") && <span>{renderField("address", address, "Bengaluru, Karnataka")}</span>}
                                 </div>
                               </div>
                             ) : selectedProduct.category === "labels" ? (
@@ -4871,7 +5157,7 @@ export default function VistaprintStorePage() {
                                 )}
                                 {showFront("companyName") && (
                                   <div className="text-xs font-black text-slate-900">
-                                    {companyName || "Premium Product Label"}
+                                    {renderField("companyName", companyName, "Premium Product Label")}
                                   </div>
                                 )}
                                 <div className="text-[9px] text-slate-600 font-semibold mt-0.5">
@@ -4885,7 +5171,7 @@ export default function VistaprintStorePage() {
                                   <div>
                                     {showFront("companyName") && (
                                       <div className={`text-xs sm:text-sm font-black ${currentTemplate.textColor}`}>
-                                        {companyName || "Your Company"}
+                                        {renderField("companyName", companyName, "Your Company")}
                                       </div>
                                     )}
                                     <div className={`text-[9px] font-bold uppercase tracking-wider ${currentTemplate.subColor}`}>
@@ -4901,12 +5187,12 @@ export default function VistaprintStorePage() {
                                 <div>
                                   {showFront("customerName") && (
                                     <div className={`text-xs sm:text-sm font-black ${currentTemplate.textColor}`}>
-                                      {customerName || "Mahi Kapoor"}
+                                      {renderField("customerName", customerName, "Mahi Kapoor")}
                                     </div>
                                   )}
                                   {showFront("customerDesignation") && (
                                     <div className={`text-[10px] font-bold ${currentTemplate.accentColor}`}>
-                                      {customerDesignation || "Designation"}
+                                      {renderField("customerDesignation", customerDesignation, "Designation")}
                                     </div>
                                   )}
                                 </div>
@@ -4914,7 +5200,7 @@ export default function VistaprintStorePage() {
                                   {showFront("phone") && <div>Phone: {phone}</div>}
                                   {showFront("email") && <div className="truncate">Email: {email}</div>}
                                   {showFront("website") && <div className="truncate">Web: {website}</div>}
-                                  {showFront("address") && <div className="truncate">Addr: {address}</div>}
+                                  {showFront("address") && <div className="truncate">Addr: {renderField("address", address, "Bengaluru, Karnataka")}</div>}
                                 </div>
                               </div>
                             )}
@@ -4942,6 +5228,7 @@ export default function VistaprintStorePage() {
                                 </div>
                               </div>
                             )}
+
                           </div>
                         </div>
                       </div>
@@ -5029,10 +5316,10 @@ export default function VistaprintStorePage() {
                                     {showBack("companyName") && (
                                       <div className="flex items-center gap-2">
                                         <div className="w-6 h-6 rounded bg-amber-400 flex items-center justify-center font-black text-slate-950 text-xs shadow-2xs">
-                                          {companyName ? companyName.charAt(0).toUpperCase() : "I"}
+                                          {renderField("companyName", companyName ? companyName.charAt(0) : "I", "", true)}
                                         </div>
                                         <div className="text-xs font-black tracking-wide text-white uppercase truncate">
-                                          {companyName || "INCREDIBLE TREASURES"}
+                                          {renderField("companyName", companyName, "INCREDIBLE TREASURES")}
                                         </div>
                                       </div>
                                     )}
@@ -5048,12 +5335,12 @@ export default function VistaprintStorePage() {
                                       <div>
                                         {showBack("customerName") && (
                                           <div className="text-xs sm:text-sm font-black text-amber-200 truncate">
-                                            {customerName || "Mahi Kapoor"}
+                                            {renderField("customerName", customerName, "Mahi Kapoor")}
                                           </div>
                                         )}
                                         {showBack("customerDesignation") && (
                                           <div className="text-[9.5px] text-slate-300 font-medium truncate">
-                                            {customerDesignation || "Managing Director"}
+                                            {renderField("customerDesignation", customerDesignation, "Managing Director")}
                                           </div>
                                         )}
                                       </div>
@@ -5074,24 +5361,24 @@ export default function VistaprintStorePage() {
                                     {showBack("phone") && (
                                       <div className="flex items-center justify-between">
                                         <span className="text-slate-400">Phone:</span>
-                                        <span className="font-bold text-white">{phone}</span>
+                                        <span className="font-bold text-white">{renderField("phone", phone, "+91 99450 39266")}</span>
                                       </div>
                                     )}
                                     {showBack("website") && (
                                       <div className="flex items-center justify-between">
                                         <span className="text-slate-400">Web:</span>
-                                        <span className="text-amber-200 truncate ml-2">{website}</span>
+                                        <span className="text-amber-200 truncate ml-2">{renderField("website", website, "www.incredible-treasures.com")}</span>
                                       </div>
                                     )}
                                     {showBack("email") && (
                                       <div className="flex items-center justify-between text-[8px]">
                                         <span className="text-slate-400">Email:</span>
-                                        <span className="truncate ml-2">{email}</span>
+                                        <span className="truncate ml-2">{renderField("email", email, "contact@incredible-treasures.com")}</span>
                                       </div>
                                     )}
                                     {showBack("address") && (
                                       <div className="text-[8px] text-slate-400 truncate pt-0.5 border-t border-white/5">
-                                        {address}
+                                        {renderField("address", address, "Bengaluru, Karnataka")}
                                       </div>
                                     )}
                                   </div>
@@ -5103,10 +5390,10 @@ export default function VistaprintStorePage() {
                                     {showBack("companyName") && (
                                       <div className="flex items-center gap-2">
                                         <div className="w-6 h-6 rounded bg-amber-400 flex items-center justify-center font-black text-slate-950 text-xs">
-                                          {companyName.charAt(0) || "S"}
+                                          {renderField("companyName", companyName ? companyName.charAt(0) : "S", "", true)}
                                         </div>
                                         <div className="text-xs font-black tracking-wide text-white uppercase">
-                                          {companyName || "SQUARE DESIGN"}
+                                          {renderField("companyName", companyName, "SQUARE DESIGN")}
                                         </div>
                                       </div>
                                     )}
@@ -5118,12 +5405,12 @@ export default function VistaprintStorePage() {
                                         <div>
                                           {showBack("customerName") && (
                                             <div className="text-xs sm:text-sm font-black text-amber-200 truncate">
-                                              {customerName || "Mahi Kapoor"}
+                                              {renderField("customerName", customerName, "Mahi Kapoor")}
                                             </div>
                                           )}
                                           {showBack("customerDesignation") && (
                                             <div className="text-[9px] text-slate-300 font-medium truncate">
-                                              {customerDesignation || "Creative Director"}
+                                              {renderField("customerDesignation", customerDesignation, "Creative Director")}
                                             </div>
                                           )}
                                         </div>
@@ -5144,13 +5431,13 @@ export default function VistaprintStorePage() {
                                   </div>
                                   <div className="text-[9px] font-bold text-slate-300 border-t border-white/10 pt-1 space-y-0.5">
                                     <div className="flex justify-between items-center gap-2">
-                                      {showBack("website") && <span className="truncate">{website || "www.squaredesign.in"}</span>}
-                                      {showBack("phone") && <span className="shrink-0">{phone}</span>}
+                                      {showBack("website") && <span className="truncate">{renderField("website", website, "www.squaredesign.in")}</span>}
+                                      {showBack("phone") && <span className="shrink-0">{renderField("phone", phone, "+91 99450 39266")}</span>}
                                     </div>
                                     {(showBack("email") || showBack("address")) && (
                                       <div className="flex justify-between items-center gap-2 text-[8px] text-slate-400">
-                                        {showBack("email") && <span className="truncate">{email}</span>}
-                                        {showBack("address") && <span className="truncate">{address}</span>}
+                                        {showBack("email") && <span className="truncate">{renderField("email", email, "contact@incredible-treasures.com")}</span>}
+                                        {showBack("address") && <span className="truncate">{renderField("address", address, "Bengaluru, Karnataka")}</span>}
                                       </div>
                                     )}
                                   </div>
@@ -5162,17 +5449,17 @@ export default function VistaprintStorePage() {
                                 <div className="text-center space-y-1">
                                   {showBack("companyName") && (
                                     <div className="text-xs sm:text-sm font-serif font-black text-amber-300">
-                                      {companyName || "TERMS & REDEMPTION"}
+                                      {renderField("companyName", companyName, "TERMS & REDEMPTION")}
                                     </div>
                                   )}
                                   {showBack("customerName") && (
                                     <div className="text-xs sm:text-sm font-bold text-white tracking-wide">
-                                      {customerName || "Mahi Kapoor"}
+                                      {renderField("customerName", customerName, "Mahi Kapoor")}
                                     </div>
                                   )}
                                   {showBack("customerDesignation") && (
                                     <div className="text-[9px] text-fuchsia-300 font-semibold">
-                                      {customerDesignation || "VIP Cardholder"}
+                                      {renderField("customerDesignation", customerDesignation, "VIP Cardholder")}
                                     </div>
                                   )}
                                   {!showBack("customerName") && !showBack("customerDesignation") && (
@@ -5188,13 +5475,13 @@ export default function VistaprintStorePage() {
                                 </div>
                                 <div className="text-center text-[9px] font-semibold text-white/80 border-t border-white/10 pt-1 space-y-0.5">
                                   <div className="flex justify-center items-center gap-3">
-                                    {showBack("website") && <span>{website || "www.incredible-treasures.com"}</span>}
-                                    {showBack("phone") && <span>• Helpline: {phone}</span>}
+                                    {showBack("website") && <span>{renderField("website", website, "www.incredible-treasures.com")}</span>}
+                                    {showBack("phone") && <span>• Helpline: {renderField("phone", phone, "+91 99450 39266")}</span>}
                                   </div>
                                   {(showBack("email") || showBack("address")) && (
                                     <div className="flex justify-center items-center gap-2 text-[8px] text-fuchsia-200/80">
-                                      {showBack("email") && <span>{email}</span>}
-                                      {showBack("address") && <span>• {address}</span>}
+                                      {showBack("email") && <span>{renderField("email", email, "contact@incredible-treasures.com")}</span>}
+                                      {showBack("address") && <span>• {renderField("address", address, "Bengaluru, Karnataka")}</span>}
                                     </div>
                                   )}
                                 </div>
@@ -5208,12 +5495,12 @@ export default function VistaprintStorePage() {
                                   </span>
                                 </div>
                                 <div className="space-y-0.5 text-[9px] text-slate-800 font-semibold">
-                                  {showBack("customerName") && <div>Name: <strong className="text-slate-950 font-black">{customerName || "Mahi Kapoor"}</strong></div>}
-                                  {showBack("customerDesignation") && <div>Role: <span>{customerDesignation || "Class IX A"}</span></div>}
-                                  {showBack("companyName") && <div>1. Property of: {companyName || "the School"}.</div>}
-                                  {showBack("address") && <div>2. If found, return to: {address}.</div>}
-                                  {showBack("phone") && <div>3. Helpline: <strong>{phone}</strong></div>}
-                                  {showBack("email") && <div>4. Email: <span>{email}</span></div>}
+                                  {showBack("customerName") && <div>Name: <strong className="text-slate-950 font-black">{renderField("customerName", customerName, "Mahi Kapoor")}</strong></div>}
+                                  {showBack("customerDesignation") && <div>Role: <span>{renderField("customerDesignation", customerDesignation, "Class IX A")}</span></div>}
+                                  {showBack("companyName") && <div>1. Property of: {renderField("companyName", companyName, "the School")}.</div>}
+                                  {showBack("address") && <div>2. If found, return to: {renderField("address", address, "Bengaluru, Karnataka")}.</div>}
+                                  {showBack("phone") && <div>3. Helpline: <strong>{renderField("phone", phone, "+91 99450 39266")}</strong></div>}
+                                  {showBack("email") && <div>4. Email: <span>{renderField("email", email, "contact@incredible-treasures.com")}</span></div>}
                                   {showBack("website") && <div>5. Web: <span>{website}</span></div>}
                                 </div>
                                 <div className="flex items-center justify-between border-t border-slate-400 pt-1">
@@ -5231,17 +5518,17 @@ export default function VistaprintStorePage() {
                                 <div className="text-center space-y-0.5">
                                   {showBack("customerName") && (
                                     <div className="text-xs sm:text-sm font-black text-slate-950 uppercase">
-                                      {customerName || "Mahi Kapoor"}
+                                      {renderField("customerName", customerName, "Mahi Kapoor")}
                                     </div>
                                   )}
                                   {showBack("customerDesignation") && (
                                     <div className="text-[10px] font-bold text-emerald-900">
-                                      {customerDesignation || "Manager"}
+                                      {renderField("customerDesignation", customerDesignation, "Manager")}
                                     </div>
                                   )}
                                   {!showBack("customerName") && (
                                     <div className="text-xs font-black text-slate-950 uppercase">
-                                      {showBack("companyName") ? (companyName || "DIGITAL MENU & INSTANT BOOKINGS") : "DIGITAL MENU & INSTANT BOOKINGS"}
+                                      {showBack("companyName") ? renderField("companyName", companyName, "DIGITAL MENU & INSTANT BOOKINGS") : "DIGITAL MENU & INSTANT BOOKINGS"}
                                     </div>
                                   )}
                                   <div className="text-[9px] font-bold text-amber-900">
@@ -5255,13 +5542,13 @@ export default function VistaprintStorePage() {
                                 </div>
                                 <div className="text-[9px] font-bold text-slate-800 text-center border-t border-slate-900/10 pt-1 space-y-0.5">
                                   <div className="flex justify-center items-center gap-3">
-                                    {showBack("website") && <span>{website || "www.naveensdosa.com"}</span>}
-                                    {showBack("phone") && <span>• Reservations: {phone}</span>}
+                                    {showBack("website") && <span>{renderField("website", website, "www.naveensdosa.com")}</span>}
+                                    {showBack("phone") && <span>• Reservations: {renderField("phone", phone, "+91 99450 39266")}</span>}
                                   </div>
                                   {(showBack("email") || showBack("address")) && (
                                     <div className="flex justify-center items-center gap-2 text-[8px] text-slate-700">
-                                      {showBack("email") && <span>{email}</span>}
-                                      {showBack("address") && <span>• {address}</span>}
+                                      {showBack("email") && <span>{renderField("email", email, "contact@incredible-treasures.com")}</span>}
+                                      {showBack("address") && <span>• {renderField("address", address, "Bengaluru, Karnataka")}</span>}
                                     </div>
                                   )}
                                 </div>
@@ -5275,11 +5562,11 @@ export default function VistaprintStorePage() {
                                   {showBack("customerName") ? (
                                     <>
                                       <div className="text-xs sm:text-sm font-black tracking-wider text-slate-950 uppercase">
-                                        {customerName?.toUpperCase() || "MAHI KAPOOR"}
+                                        {renderField("customerName", customerName, "MAHI KAPOOR", true)}
                                       </div>
                                       {showBack("customerDesignation") && (
                                         <div className="text-[10px] font-bold text-slate-700 uppercase">
-                                          {customerDesignation || "DIRECTOR - OPERATIONS"}
+                                          {renderField("customerDesignation", customerDesignation, "DIRECTOR - OPERATIONS", true)}
                                         </div>
                                       )}
                                     </>
@@ -5301,13 +5588,13 @@ export default function VistaprintStorePage() {
                                 </div>
                                 <div className="text-center text-[9px] font-bold text-slate-800 pb-1 space-y-0.5">
                                   <div className="flex justify-center items-center gap-3">
-                                    {showBack("website") && <span>{website || "www.incredible-treasures.com"}</span>}
+                                    {showBack("website") && <span>{renderField("website", website, "www.incredible-treasures.com")}</span>}
                                     {showBack("phone") && <span>• {phone}</span>}
                                   </div>
                                   {(showBack("email") || showBack("address")) && (
                                     <div className="flex justify-center items-center gap-2 text-[8px] text-slate-600 font-medium">
-                                      {showBack("email") && <span>{email}</span>}
-                                      {showBack("address") && <span>• {address}</span>}
+                                      {showBack("email") && <span>{renderField("email", email, "contact@incredible-treasures.com")}</span>}
+                                      {showBack("address") && <span>• {renderField("address", address, "Bengaluru, Karnataka")}</span>}
                                     </div>
                                   )}
                                 </div>
@@ -5318,17 +5605,17 @@ export default function VistaprintStorePage() {
                                 <div className="text-center space-y-0.5">
                                   {showBack("companyName") && (
                                     <div className="text-xs sm:text-sm font-black text-slate-950 uppercase">
-                                      {companyName || "CREATIVE MIND"}
+                                      {renderField("companyName", companyName, "CREATIVE MIND")}
                                     </div>
                                   )}
                                   {showBack("customerName") && (
                                     <div className="text-xs sm:text-sm font-black text-slate-950">
-                                      {customerName || "Mahi Kapoor"}
+                                      {renderField("customerName", customerName, "Mahi Kapoor")}
                                     </div>
                                   )}
                                   {showBack("customerDesignation") && (
                                     <div className="text-[10px] font-bold text-amber-950">
-                                      {customerDesignation || "Artist Director"}
+                                      {renderField("customerDesignation", customerDesignation, "Artist Director")}
                                     </div>
                                   )}
                                   {!showBack("customerName") && (
@@ -5344,13 +5631,13 @@ export default function VistaprintStorePage() {
                                 </div>
                                 <div className="text-center text-[9px] font-bold text-slate-950 border-t border-amber-600/30 pt-1 space-y-0.5">
                                   <div className="flex justify-center items-center gap-3">
-                                    {showBack("website") && <span>{website || "www.creativemind.com"}</span>}
+                                    {showBack("website") && <span>{renderField("website", website, "www.creativemind.com")}</span>}
                                     {showBack("phone") && <span>• {phone}</span>}
                                   </div>
                                   {(showBack("email") || showBack("address")) && (
                                     <div className="flex justify-center items-center gap-2 text-[8px] text-amber-900">
-                                      {showBack("email") && <span>{email}</span>}
-                                      {showBack("address") && <span>• {address}</span>}
+                                      {showBack("email") && <span>{renderField("email", email, "contact@incredible-treasures.com")}</span>}
+                                      {showBack("address") && <span>• {renderField("address", address, "Bengaluru, Karnataka")}</span>}
                                     </div>
                                   )}
                                 </div>
@@ -5368,16 +5655,16 @@ export default function VistaprintStorePage() {
                                     <span className="text-[8px] font-mono text-slate-400 block">SIGNATURE PANEL</span>
                                     {showBack("customerName") && (
                                       <span className="text-[10px] font-serif italic font-bold text-slate-900 block truncate">
-                                        {customerName || "Mahi Kapoor"}
+                                        {renderField("customerName", customerName, "Mahi Kapoor")}
                                       </span>
                                     )}
                                   </div>
                                   <span className="text-[9px] font-mono font-bold text-slate-800 shrink-0">CVV: 704</span>
                                 </div>
                                 <div className="text-[9px] font-mono text-slate-700 flex flex-wrap justify-between gap-1 pt-1">
-                                  {showBack("phone") && <span>24x7: {phone}</span>}
-                                  {showBack("website") && <span>{website || "www.smart.com"}</span>}
-                                  {showBack("email") && <span className="w-full text-[8px] text-slate-500 truncate">{email}</span>}
+                                  {showBack("phone") && <span>24x7: {renderField("phone", phone, "+91 99450 39266")}</span>}
+                                  {showBack("website") && <span>{renderField("website", website, "www.smart.com")}</span>}
+                                  {showBack("email") && <span className="w-full text-[8px] text-slate-500 truncate">{renderField("email", email, "contact@incredible-treasures.com")}</span>}
                                 </div>
                               </div>
                             ) : selectedProduct.id === "pvc-matt-foiling" ? (
@@ -5385,16 +5672,16 @@ export default function VistaprintStorePage() {
                               <div className="w-full h-full bg-[#121214] text-white p-4 sm:p-5 flex flex-col justify-between border border-neutral-800 relative">
                                 <div className="text-center space-y-0.5">
                                   <div className="text-xs font-serif font-black tracking-widest uppercase bg-gradient-to-r from-amber-200 via-yellow-400 to-amber-200 bg-clip-text text-transparent">
-                                    {showBack("companyName") ? (companyName || "BESPOKE PRIVILEGE") : "BESPOKE PRIVILEGE"}
+                                    {showBack("companyName") ? renderField("companyName", companyName, "BESPOKE PRIVILEGE") : "BESPOKE PRIVILEGE"}
                                   </div>
                                   {showBack("customerName") && (
                                     <div className="text-xs sm:text-sm font-serif font-black text-amber-200">
-                                      {customerName?.toUpperCase() || "MAHI KAPOOR"}
+                                      {renderField("customerName", customerName, "MAHI KAPOOR", true)}
                                     </div>
                                   )}
                                   {showBack("customerDesignation") && (
                                     <div className="text-[9px] font-serif tracking-widest text-amber-200/80 uppercase">
-                                      {customerDesignation || "LONDON BESPOKE DIRECT"}
+                                      {renderField("customerDesignation", customerDesignation, "LONDON BESPOKE DIRECT", true)}
                                     </div>
                                   )}
                                   {!showBack("customerName") && (
@@ -5410,13 +5697,13 @@ export default function VistaprintStorePage() {
                                 </div>
                                 <div className="text-center text-[9px] text-amber-200/80 font-mono border-t border-neutral-800 pt-1 space-y-0.5">
                                   <div className="flex justify-center items-center gap-3">
-                                    {showBack("phone") && <span>Concierge: {phone}</span>}
-                                    {showBack("website") && <span>• {website || "www.luxury.com"}</span>}
+                                    {showBack("phone") && <span>Concierge: {renderField("phone", phone, "+91 99450 39266")}</span>}
+                                    {showBack("website") && <span>• {renderField("website", website, "www.luxury.com")}</span>}
                                   </div>
                                   {(showBack("email") || showBack("address")) && (
                                     <div className="flex justify-center items-center gap-2 text-[8px] text-neutral-400">
-                                      {showBack("email") && <span>{email}</span>}
-                                      {showBack("address") && <span>• {address}</span>}
+                                      {showBack("email") && <span>{renderField("email", email, "contact@incredible-treasures.com")}</span>}
+                                      {showBack("address") && <span>• {renderField("address", address, "Bengaluru, Karnataka")}</span>}
                                     </div>
                                   )}
                                 </div>
@@ -5426,16 +5713,16 @@ export default function VistaprintStorePage() {
                               <div className="w-full h-full bg-[#C79A3B] text-slate-900 p-4 sm:p-5 flex flex-col justify-between border border-[#A67E28] relative">
                                 <div className="text-center space-y-0.5">
                                   <div className="text-xs font-black tracking-wide text-slate-950 uppercase">
-                                    {showBack("companyName") ? (companyName || "CRAFTED EXCELLENCE") : "CRAFTED EXCELLENCE"}
+                                    {showBack("companyName") ? renderField("companyName", companyName, "CRAFTED EXCELLENCE") : "CRAFTED EXCELLENCE"}
                                   </div>
                                   {showBack("customerName") && (
                                     <div className="text-xs sm:text-sm font-black text-slate-950">
-                                      {customerName || "Mahi Kapoor"}
+                                      {renderField("customerName", customerName, "Mahi Kapoor")}
                                     </div>
                                   )}
                                   {showBack("customerDesignation") && (
                                     <div className="text-[10px] font-bold text-slate-900">
-                                      {customerDesignation || "Official Store"}
+                                      {renderField("customerDesignation", customerDesignation, "Official Store")}
                                     </div>
                                   )}
                                   {!showBack("customerName") && (
@@ -5451,13 +5738,13 @@ export default function VistaprintStorePage() {
                                 </div>
                                 <div className="text-center text-[9px] font-bold text-slate-950 border-t border-slate-950/20 pt-1 space-y-0.5">
                                   <div className="flex justify-center items-center gap-3">
-                                    {showBack("phone") && <span>Customer Service: {phone}</span>}
-                                    {showBack("website") && <span>• {website}</span>}
+                                    {showBack("phone") && <span>Customer Service: {renderField("phone", phone, "+91 99450 39266")}</span>}
+                                    {showBack("website") && <span>• {renderField("website", website, "www.incredible-treasures.com")}</span>}
                                   </div>
                                   {(showBack("email") || showBack("address")) && (
                                     <div className="flex justify-center items-center gap-2 text-[8px] text-slate-800 font-semibold">
-                                      {showBack("email") && <span>{email}</span>}
-                                      {showBack("address") && <span>• {address}</span>}
+                                      {showBack("email") && <span>{renderField("email", email, "contact@incredible-treasures.com")}</span>}
+                                      {showBack("address") && <span>• {renderField("address", address, "Bengaluru, Karnataka")}</span>}
                                     </div>
                                   )}
                                 </div>
@@ -5477,7 +5764,7 @@ export default function VistaprintStorePage() {
                                   </div>
                                   {showBack("website") && (
                                     <div className="text-[8px] text-slate-400 font-mono truncate w-full">
-                                      {website || "www.company.com"}
+                                      {renderField("website", website, "www.company.com")}
                                     </div>
                                   )}
                                 </div>
@@ -5488,7 +5775,7 @@ export default function VistaprintStorePage() {
                                 <div className="text-center space-y-1 border border-white/20 p-3 rounded-xl max-w-[200px] w-full">
                                   {showBack("companyName") && (
                                     <div className="text-sm font-black text-amber-300 uppercase tracking-wider">
-                                      {companyName || "TEAM INCREDIBLE"}
+                                      {renderField("companyName", companyName, "TEAM INCREDIBLE")}
                                     </div>
                                   )}
                                   {showBack("customerName") && (
@@ -5516,7 +5803,7 @@ export default function VistaprintStorePage() {
                                 </div>
                                 <div className="flex flex-col items-center justify-center py-1">
                                   <div className="w-9 h-9 rounded-full bg-amber-700 text-amber-100 flex items-center justify-center font-serif text-sm font-black shadow-md mb-1">
-                                    {companyName.charAt(0) || "IT"}
+                                    {renderField("companyName", companyName ? companyName.charAt(0) : "IT", "", true)}
                                   </div>
                                   {showBack("customerName") && (
                                     <div className="text-[9px] font-bold text-slate-800">
@@ -5525,7 +5812,7 @@ export default function VistaprintStorePage() {
                                   )}
                                 </div>
                                 <div className="text-[8px] text-slate-600 text-center border-t border-slate-200 pt-1">
-                                  {showBack("address") && <div>Return Address: {address}</div>}
+                                  {showBack("address") && <div>Return Address: {renderField("address", address, "Bengaluru, Karnataka")}</div>}
                                   {showBack("phone") && <div>Help: {phone}</div>}
                                 </div>
                               </div>
@@ -5557,7 +5844,7 @@ export default function VistaprintStorePage() {
                                   )}
                                   {showBack("companyName") && (
                                     <div className={`text-xs sm:text-sm font-black ${currentTemplate.textColor}`}>
-                                      {companyName || "Your Company"}
+                                      {renderField("companyName", companyName, "Your Company")}
                                     </div>
                                   )}
                                 </div>
@@ -5565,12 +5852,12 @@ export default function VistaprintStorePage() {
                                 <div className="my-1 text-center">
                                   {showBack("customerName") && (
                                     <div className={`text-xs sm:text-sm font-black ${currentTemplate.textColor}`}>
-                                      {customerName || "Mahi Kapoor"}
+                                      {renderField("customerName", customerName, "Mahi Kapoor")}
                                     </div>
                                   )}
                                   {showBack("customerDesignation") && (
                                     <div className={`text-[10px] font-bold ${currentTemplate.accentColor}`}>
-                                      {customerDesignation || "Designation"}
+                                      {renderField("customerDesignation", customerDesignation, "Designation")}
                                     </div>
                                   )}
                                   <div className="mt-1 flex justify-center">
@@ -5580,13 +5867,13 @@ export default function VistaprintStorePage() {
 
                                 <div className={`text-[8px] sm:text-[9px] ${currentTemplate.subColor} font-semibold w-full border-t border-black/10 pt-1 space-y-0.5`}>
                                   <div className="flex justify-between items-center gap-2">
-                                    {showBack("website") && <span className="truncate">{website || "www.yourwebsite.com"}</span>}
-                                    {showBack("phone") && <span className="shrink-0">{phone}</span>}
+                                    {showBack("website") && <span className="truncate">{renderField("website", website, "www.yourwebsite.com")}</span>}
+                                    {showBack("phone") && <span className="shrink-0">{renderField("phone", phone, "+91 99450 39266")}</span>}
                                   </div>
                                   {(showBack("email") || showBack("address")) && (
                                     <div className="flex justify-between items-center gap-2 text-[7px] sm:text-[8px] opacity-80">
-                                      {showBack("email") && <span className="truncate">{email}</span>}
-                                      {showBack("address") && <span className="truncate">{address}</span>}
+                                      {showBack("email") && <span className="truncate">{renderField("email", email, "contact@incredible-treasures.com")}</span>}
+                                      {showBack("address") && <span className="truncate">{renderField("address", address, "Bengaluru, Karnataka")}</span>}
                                     </div>
                                   )}
                                 </div>
@@ -5616,6 +5903,7 @@ export default function VistaprintStorePage() {
                                 </div>
                               </div>
                             )}
+
                           </div>
                         </div>
                       </div>
@@ -5824,8 +6112,10 @@ export default function VistaprintStorePage() {
                           value={companyName}
                           onChange={(e) => setCompanyName(e.target.value)}
                           placeholder="e.g. Incredible Treasures"
-                          className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-300 rounded-xl focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                          style={getFieldFontStyle("companyName")}
+                          className="font-companyName w-full px-3.5 py-2 text-sm bg-white border border-slate-200 rounded-xl focus:border-amber-500 focus:ring-2 focus:ring-amber-500/15 focus:outline-none transition-all shadow-2xs font-semibold"
                         />
+                        <FieldStylingBar field="companyName" />
                       </div>
 
                       <div>
@@ -5834,9 +6124,11 @@ export default function VistaprintStorePage() {
                           type="text"
                           value={customerName}
                           onChange={(e) => setCustomerName(e.target.value)}
-                          placeholder="e.g. Aditya Verma"
-                          className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-300 rounded-xl focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                          placeholder="e.g. Vikram Singhania"
+                          style={getFieldFontStyle("customerName")}
+                          className="font-customerName w-full px-3.5 py-2 text-sm bg-white border border-slate-200 rounded-xl focus:border-amber-500 focus:ring-2 focus:ring-amber-500/15 focus:outline-none transition-all shadow-2xs font-bold"
                         />
+                        <FieldStylingBar field="customerName" />
                       </div>
 
                       <div>
@@ -5845,9 +6137,11 @@ export default function VistaprintStorePage() {
                           type="text"
                           value={customerDesignation}
                           onChange={(e) => setCustomerDesignation(e.target.value)}
-                          placeholder="e.g. Managing Director"
-                          className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-300 rounded-xl focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                          placeholder="e.g. Managing Director & CEO"
+                          style={getFieldFontStyle("customerDesignation")}
+                          className="font-customerDesignation w-full px-3.5 py-2 text-sm bg-white border border-slate-200 rounded-xl focus:border-amber-500 focus:ring-2 focus:ring-amber-500/15 focus:outline-none transition-all shadow-2xs font-bold"
                         />
+                        <FieldStylingBar field="customerDesignation" />
                       </div>
 
                       <div>
@@ -5857,8 +6151,10 @@ export default function VistaprintStorePage() {
                           value={phone}
                           onChange={(e) => setPhone(e.target.value)}
                           placeholder="+91 99450 39266"
-                          className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-300 rounded-xl focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                          style={getFieldFontStyle("phone")}
+                          className="font-phone w-full px-3.5 py-2 text-sm bg-white border border-slate-200 rounded-xl focus:border-amber-500 focus:ring-2 focus:ring-amber-500/15 focus:outline-none transition-all shadow-2xs font-medium"
                         />
+                        <FieldStylingBar field="phone" />
                       </div>
 
                       <div>
@@ -5868,8 +6164,10 @@ export default function VistaprintStorePage() {
                           value={email}
                           onChange={(e) => setEmail(e.target.value)}
                           placeholder="contact@company.com"
-                          className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-300 rounded-xl focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                          style={getFieldFontStyle("email")}
+                          className="font-email w-full px-3.5 py-2 text-sm bg-white border border-slate-200 rounded-xl focus:border-amber-500 focus:ring-2 focus:ring-amber-500/15 focus:outline-none transition-all shadow-2xs font-medium"
                         />
+                        <FieldStylingBar field="email" />
                       </div>
 
                       <div>
@@ -5879,8 +6177,10 @@ export default function VistaprintStorePage() {
                           value={website}
                           onChange={(e) => setWebsite(e.target.value)}
                           placeholder="www.company.com"
-                          className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-300 rounded-xl focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                          style={getFieldFontStyle("website")}
+                          className="font-website w-full px-3.5 py-2 text-sm bg-white border border-slate-200 rounded-xl focus:border-amber-500 focus:ring-2 focus:ring-amber-500/15 focus:outline-none transition-all shadow-2xs font-medium"
                         />
+                        <FieldStylingBar field="website" />
                       </div>
 
                       <div className="sm:col-span-2">
@@ -5890,9 +6190,36 @@ export default function VistaprintStorePage() {
                           value={address}
                           onChange={(e) => setAddress(e.target.value)}
                           placeholder="Yelahanka, Bengaluru – 560064"
-                          className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-300 rounded-xl focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                          style={getFieldFontStyle("address")}
+                          className="font-address w-full px-3.5 py-2 text-sm bg-white border border-slate-200 rounded-xl focus:border-amber-500 focus:ring-2 focus:ring-amber-500/15 focus:outline-none transition-all shadow-2xs font-medium"
                         />
+                        <FieldStylingBar field="address" />
                       </div>
+                    </div>
+                  </div>
+
+                  {/* ADVANCED DESIGN STUDIO LAUNCH CALLOUT */}
+                  <div className="bg-gradient-to-br from-slate-900 via-[#1e150a] to-slate-950 rounded-3xl p-5 sm:p-6 text-white border border-[#ead5b3]/30 shadow-md relative overflow-hidden group mb-6">
+                    <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                      <div className="space-y-1.5 max-w-md">
+                        <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#a9782b]/20 border border-[#a9782b]/40 text-[#cba768] text-[10px] font-black uppercase tracking-wider">
+                          <Sparkles className="w-3 h-3 text-amber-400" />
+                          <span>Advanced Design Studio</span>
+                        </div>
+                        <h3 className="text-base sm:text-lg font-black text-white leading-tight">
+                          Want to build your card with custom fonts, colors & QR code?
+                        </h3>
+                        <p className="text-xs text-slate-300">
+                          Launch our dedicated full-screen Design Studio to add custom typography, geometric divider shapes, and live UPI / WhatsApp QR codes on a separate distraction-free workspace.
+                        </p>
+                      </div>
+                      <a
+                        href="/studio"
+                        id="open-full-studio-btn"
+                        className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-gradient-to-r from-[#a9782b] to-[#8e621e] hover:from-[#8e621e] hover:to-[#734d15] text-white text-xs font-black shadow-lg hover:shadow-xl transition-all cursor-pointer whitespace-nowrap shrink-0 group-hover:scale-102"
+                      >
+                        <span>Open Complete Design Studio →</span>
+                      </a>
                     </div>
                   </div>
 
