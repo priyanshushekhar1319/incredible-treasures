@@ -27,6 +27,7 @@ import {
   Trash2,
   Copy,
   Smile,
+  Image as ImageIcon,
 } from "lucide-react";
 
 export type SidebarTabId =
@@ -59,9 +60,57 @@ interface Props {
   onDeleteElement: (id: string) => void;
   onDuplicateElement: (id: string) => void;
   onReorderElement: (id: string, direction: "up" | "down") => void;
+
+  // Custom Full Card Background support
+  activeSide: "front" | "back";
+  currentBgImage?: string;
+  currentBgOpacity?: number;
+  currentBgFit?: "cover" | "contain" | "repeat";
+  onUploadBackgroundImage: (src: string, applyBothSides?: boolean) => void;
+  onChangeBgOpacity?: (opacity: number) => void;
+  onChangeBgFit?: (fit: "cover" | "contain" | "repeat") => void;
+  onRemoveBgImage?: () => void;
 }
 
 const VISITING_CARDS = ALL_PRODUCTS.filter((p) => p.category === "visiting-cards");
+
+const toSvgDataUri = (svgStr: string) =>
+  `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgStr)}`;
+
+const PRESET_LUXURY_WALLPAPERS = [
+  {
+    id: "obsidian-gold",
+    name: "Obsidian Gold",
+    previewBg: "from-slate-900 via-neutral-900 to-amber-950",
+    dataUrl: toSvgDataUri(
+      `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="240" viewBox="0 0 400 240"><rect width="400" height="240" fill="#0B0F19"/><defs><linearGradient id="g1" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#CBA768" stop-opacity="0.35"/><stop offset="100%" stop-color="#8E621E" stop-opacity="0.08"/></linearGradient></defs><path d="M-50,0 L200,240 L450,0 Z" fill="url(#g1)"/><circle cx="320" cy="60" r="120" fill="none" stroke="#CBA768" stroke-width="0.75" opacity="0.3"/><circle cx="80" cy="180" r="90" fill="none" stroke="#CBA768" stroke-width="0.5" opacity="0.2"/></svg>`
+    ),
+  },
+  {
+    id: "royal-navy",
+    name: "Royal Navy Line",
+    previewBg: "from-blue-950 via-slate-900 to-indigo-950",
+    dataUrl: toSvgDataUri(
+      `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="240" viewBox="0 0 400 240"><rect width="400" height="240" fill="#081426"/><g stroke="#38BDF8" stroke-width="0.75" opacity="0.25"><line x1="0" y1="40" x2="400" y2="40"/><line x1="0" y1="80" x2="400" y2="80"/><line x1="0" y1="120" x2="400" y2="120"/><line x1="0" y1="160" x2="400" y2="160"/><line x1="0" y1="200" x2="400" y2="200"/><line x1="80" y1="0" x2="80" y2="240"/><line x1="160" y1="0" x2="160" y2="240"/><line x1="240" y1="0" x2="240" y2="240"/><line x1="320" y1="0" x2="320" y2="240"/></g></svg>`
+    ),
+  },
+  {
+    id: "imperial-emerald",
+    name: "Imperial Emerald",
+    previewBg: "from-emerald-950 via-slate-900 to-teal-950",
+    dataUrl: toSvgDataUri(
+      `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="240" viewBox="0 0 400 240"><rect width="400" height="240" fill="#04201A"/><circle cx="200" cy="120" r="180" fill="none" stroke="#10B981" stroke-width="1.2" opacity="0.25"/><circle cx="200" cy="120" r="130" fill="none" stroke="#34D399" stroke-width="0.9" opacity="0.3"/><circle cx="200" cy="120" r="80" fill="none" stroke="#6EE7B7" stroke-width="0.6" opacity="0.35"/></svg>`
+    ),
+  },
+  {
+    id: "milky-guilloche",
+    name: "Milky Guilloche",
+    previewBg: "from-amber-50 via-white to-stone-100",
+    dataUrl: toSvgDataUri(
+      `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="240" viewBox="0 0 400 240"><rect width="400" height="240" fill="#FAF8F5"/><g fill="none" stroke="#CBA768" stroke-width="0.85" opacity="0.35"><ellipse cx="200" cy="120" rx="160" ry="90"/><ellipse cx="200" cy="120" rx="130" ry="70"/><ellipse cx="200" cy="120" rx="100" ry="50"/><ellipse cx="200" cy="120" rx="70" ry="30"/></g></svg>`
+    ),
+  },
+];
 
 export const CanvaSidebar: React.FC<Props> = ({
   activeTab,
@@ -81,8 +130,17 @@ export const CanvaSidebar: React.FC<Props> = ({
   onDeleteElement,
   onDuplicateElement,
   onReorderElement,
+  activeSide,
+  currentBgImage,
+  currentBgOpacity = 1,
+  currentBgFit = "cover",
+  onUploadBackgroundImage,
+  onChangeBgOpacity,
+  onChangeBgFit,
+  onRemoveBgImage,
 }) => {
   const [selectedIconCategory, setSelectedIconCategory] = useState<string>("all");
+  const [applyBothSides, setApplyBothSides] = useState<boolean>(false);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -436,20 +494,190 @@ export const CanvaSidebar: React.FC<Props> = ({
           </div>
         )}
 
-        {/* TAB 6: UPLOADS */}
+        {/* TAB 6: UPLOADS & CUSTOM BACKGROUND */}
         {activeTab === "uploads" && (
           <div className="space-y-4">
             <div>
-              <h3 className="text-xs font-black uppercase tracking-wider text-slate-900">Upload Your Artwork</h3>
-              <p className="text-[10px] text-slate-500">Add logos, personal artwork or photos to your card.</p>
+              <h3 className="text-xs font-black uppercase tracking-wider text-slate-900">Uploads & Background</h3>
+              <p className="text-[10px] text-slate-500">Upload personalized full card background or company logos.</p>
             </div>
 
-            <label className="p-6 border-2 border-dashed border-[#E5E0D8] hover:border-[#A9782B] rounded-2xl bg-[#FAF8F5] hover:bg-[#FAF6EE] transition flex flex-col items-center justify-center text-center gap-2 cursor-pointer shadow-2xs">
-              <UploadCloud className="w-7 h-7 text-[#A9782B]" />
-              <span className="text-xs font-bold text-slate-800 block">Click to upload Image / Logo</span>
-              <span className="text-[10px] text-slate-500 block">PNG, JPG, WebP or SVG up to 15MB</span>
-              <input type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
-            </label>
+            {/* SECTION 1: PERSONALIZED FULL CARD BACKGROUND */}
+            <div className="p-3.5 rounded-2xl bg-[#FAF8F5] border border-[#E5E0D8] space-y-3 shadow-2xs">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5">
+                  <ImageIcon className="w-3.5 h-3.5 text-[#A9782B]" />
+                  <span className="text-xs font-black text-slate-900">
+                    Custom Card Background
+                  </span>
+                </div>
+                <span className="text-[8px] font-bold uppercase bg-[#FAF6EE] text-[#A9782B] px-1.5 py-0.2 rounded border border-[#EAD5B3]">
+                  Side {activeSide.toUpperCase()}
+                </span>
+              </div>
+
+              {currentBgImage ? (
+                <div className="space-y-2.5">
+                  {/* Thumbnail Preview */}
+                  <div className="relative h-20 rounded-xl overflow-hidden border border-slate-300 shadow-xs group">
+                    <img
+                      src={currentBgImage}
+                      alt="Custom Background"
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center gap-2">
+                      <button
+                        type="button"
+                        onClick={onRemoveBgImage}
+                        className="px-2.5 py-1 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-[10px] font-bold transition flex items-center gap-1 shadow-sm cursor-pointer"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                        <span>Remove</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Opacity Slider */}
+                  <div className="space-y-1">
+                    <div className="flex justify-between text-[10px] font-bold text-slate-600">
+                      <span>Background Opacity:</span>
+                      <span className="font-mono text-[#A9782B]">
+                        {Math.round((currentBgOpacity ?? 1) * 100)}%
+                      </span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0.1"
+                      max="1"
+                      step="0.05"
+                      value={currentBgOpacity ?? 1}
+                      onChange={(e) => onChangeBgOpacity?.(parseFloat(e.target.value))}
+                      className="w-full accent-[#A9782B] cursor-pointer"
+                    />
+                  </div>
+
+                  {/* Scaling Fit */}
+                  <div className="space-y-1">
+                    <span className="text-[10px] font-bold text-slate-600 block">Fit Mode:</span>
+                    <div className="grid grid-cols-3 gap-1">
+                      {(["cover", "contain", "repeat"] as const).map((fit) => (
+                        <button
+                          key={fit}
+                          type="button"
+                          onClick={() => onChangeBgFit?.(fit)}
+                          className={`py-1 rounded-lg text-[10px] font-bold uppercase transition cursor-pointer ${
+                            currentBgFit === fit
+                              ? "bg-[#A9782B] text-white shadow-2xs font-black"
+                              : "bg-white border border-[#E5E0D8] text-slate-700 hover:bg-slate-50"
+                          }`}
+                        >
+                          {fit}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Replace Button */}
+                  <label className="w-full py-1.5 rounded-xl border border-[#E5E0D8] bg-white hover:bg-slate-50 text-slate-700 text-center block text-[11px] font-bold cursor-pointer transition">
+                    Replace Background Image
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        const r = new FileReader();
+                        r.onload = (ev) => {
+                          const res = ev.target?.result as string;
+                          if (res) onUploadBackgroundImage(res, applyBothSides);
+                        };
+                        r.readAsDataURL(file);
+                      }}
+                      className="hidden"
+                    />
+                  </label>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <label className="p-4 border-2 border-dashed border-[#E5E0D8] hover:border-[#A9782B] rounded-xl bg-white hover:bg-[#FAF6EE] transition flex flex-col items-center justify-center text-center gap-1.5 cursor-pointer shadow-2xs">
+                    <UploadCloud className="w-6 h-6 text-[#A9782B]" />
+                    <span className="text-xs font-bold text-slate-800 block">
+                      Upload Custom Card Background
+                    </span>
+                    <span className="text-[9px] text-slate-500 block">
+                      High-Res PNG, JPG, or SVG (Applied as wallpaper behind all elements)
+                    </span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        const r = new FileReader();
+                        r.onload = (ev) => {
+                          const res = ev.target?.result as string;
+                          if (res) onUploadBackgroundImage(res, applyBothSides);
+                        };
+                        r.readAsDataURL(file);
+                      }}
+                      className="hidden"
+                    />
+                  </label>
+
+                  {/* Apply to both faces toggle */}
+                  <label className="flex items-center gap-2 text-[11px] text-slate-700 font-bold cursor-pointer select-none px-1">
+                    <input
+                      type="checkbox"
+                      checked={applyBothSides}
+                      onChange={(e) => setApplyBothSides(e.target.checked)}
+                      className="rounded text-[#A9782B] focus:ring-[#A9782B] accent-[#A9782B]"
+                    />
+                    <span>Apply to both Front & Back faces</span>
+                  </label>
+
+                  {/* Quick Preset Luxury Wallpapers */}
+                  <div className="space-y-1.5 pt-1">
+                    <span className="text-[10px] font-black uppercase text-slate-500 tracking-wider block">
+                      Or Choose Curated Background:
+                    </span>
+                    <div className="grid grid-cols-2 gap-2">
+                      {PRESET_LUXURY_WALLPAPERS.map((wp) => (
+                        <button
+                          key={wp.id}
+                          type="button"
+                          onClick={() => onUploadBackgroundImage(wp.dataUrl, applyBothSides)}
+                          className="p-1.5 rounded-xl border border-[#E5E0D8] hover:border-[#A9782B] bg-white hover:bg-[#FAF6EE] transition cursor-pointer text-left flex items-center gap-2 shadow-2xs group"
+                        >
+                          <div
+                            className={`w-6 h-6 rounded-lg bg-gradient-to-tr ${wp.previewBg} border border-slate-300 shadow-2xs shrink-0 group-hover:scale-105 transition-transform`}
+                          />
+                          <span className="text-[10px] font-bold text-slate-700 truncate">
+                            {wp.name}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* SECTION 2: FLOATING LOGO / GRAPHIC ARTWORK */}
+            <div className="p-3.5 rounded-2xl bg-[#FAF8F5] border border-[#E5E0D8] space-y-2 shadow-2xs">
+              <span className="text-xs font-black text-slate-900 block">
+                Upload Logo / Floating Element
+              </span>
+              <p className="text-[10px] text-slate-500">
+                Adds a movable, draggable logo or icon layer on the card.
+              </p>
+
+              <label className="p-3 border-2 border-dashed border-[#E5E0D8] hover:border-[#A9782B] rounded-xl bg-white hover:bg-[#FAF6EE] transition flex flex-col items-center justify-center text-center gap-1 cursor-pointer">
+                <UploadCloud className="w-5 h-5 text-slate-500" />
+                <span className="text-xs font-bold text-slate-800">Choose Logo File</span>
+                <span className="text-[9px] text-slate-500">Transparent PNG recommended</span>
+                <input type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
+              </label>
+            </div>
           </div>
         )}
 

@@ -76,6 +76,14 @@ export default function VisitingCardStudioCanvaPage() {
     STARTER_TEMPLATES[0].backElements
   );
 
+  // Personalized Full Card Background Artwork / Wallpaper
+  const [frontBgImage, setFrontBgImage] = useState<string | undefined>(undefined);
+  const [backBgImage, setBackBgImage] = useState<string | undefined>(undefined);
+  const [frontBgOpacity, setFrontBgOpacity] = useState<number>(1);
+  const [backBgOpacity, setBackBgOpacity] = useState<number>(1);
+  const [frontBgFit, setFrontBgFit] = useState<"cover" | "contain" | "repeat">("cover");
+  const [backBgFit, setBackBgFit] = useState<"cover" | "contain" | "repeat">("cover");
+
   // Undo / Redo History Stack
   const [history, setHistory] = useState<HistorySnapshot[]>([
     {
@@ -321,6 +329,47 @@ export default function VisitingCardStudioCanvaPage() {
     setCurrentElements((prev) => [...prev, newEl]);
     setSelectedId(id);
     triggerToast("Image added! Drag & place anywhere.");
+  };
+
+  // Personalized Background Image Handlers
+  const handleUploadBackgroundImage = (src: string, applyBothSides: boolean = false) => {
+    if (applyBothSides) {
+      setFrontBgImage(src);
+      setBackBgImage(src);
+      triggerToast("✓ Custom background applied to both sides!");
+    } else if (activeSide === "front") {
+      setFrontBgImage(src);
+      triggerToast("✓ Front card background updated!");
+    } else {
+      setBackBgImage(src);
+      triggerToast("✓ Back card background updated!");
+    }
+  };
+
+  const handleChangeBgOpacity = (opacity: number) => {
+    if (activeSide === "front") {
+      setFrontBgOpacity(opacity);
+    } else {
+      setBackBgOpacity(opacity);
+    }
+  };
+
+  const handleChangeBgFit = (fit: "cover" | "contain" | "repeat") => {
+    if (activeSide === "front") {
+      setFrontBgFit(fit);
+    } else {
+      setBackBgFit(fit);
+    }
+  };
+
+  const handleRemoveBgImage = () => {
+    if (activeSide === "front") {
+      setFrontBgImage(undefined);
+      triggerToast("Front background removed");
+    } else {
+      setBackBgImage(undefined);
+      triggerToast("Back background removed");
+    }
   };
 
   // Update selected element
@@ -796,6 +845,14 @@ export default function VisitingCardStudioCanvaPage() {
           onDeleteElement={handleDeleteElement}
           onDuplicateElement={handleDuplicateElement}
           onReorderElement={handleReorderElement}
+          activeSide={activeSide}
+          currentBgImage={activeSide === "front" ? frontBgImage : backBgImage}
+          currentBgOpacity={activeSide === "front" ? frontBgOpacity : backBgOpacity}
+          currentBgFit={activeSide === "front" ? frontBgFit : backBgFit}
+          onUploadBackgroundImage={handleUploadBackgroundImage}
+          onChangeBgOpacity={handleChangeBgOpacity}
+          onChangeBgFit={handleChangeBgFit}
+          onRemoveBgImage={handleRemoveBgImage}
         />
 
         {/* Center / Right: Spacious Studio Milky Desk */}
@@ -869,6 +926,9 @@ export default function VisitingCardStudioCanvaPage() {
               onToggle3DFlip={handle3DFlipTurnaround}
               cardTexture={cardTexture}
               gildedEdge={gildedEdge}
+              backgroundImage={activeSide === "front" ? frontBgImage : backBgImage}
+              backgroundOpacity={activeSide === "front" ? frontBgOpacity : backBgOpacity}
+              backgroundFit={activeSide === "front" ? frontBgFit : backBgFit}
             />
           </div>
 
@@ -1094,8 +1154,16 @@ export default function VisitingCardStudioCanvaPage() {
                 <strong className="text-slate-900">{frontElements.length} layers</strong>
               </div>
               <div className="flex justify-between text-slate-700">
+                <span>Front Background:</span>
+                <strong className="text-slate-900">{frontBgImage ? "Custom Upload (HD Artwork)" : "Standard Substrate"}</strong>
+              </div>
+              <div className="flex justify-between text-slate-700">
                 <span>Back Elements:</span>
                 <strong className="text-slate-900">{backElements.length} layers</strong>
+              </div>
+              <div className="flex justify-between text-slate-700">
+                <span>Back Background:</span>
+                <strong className="text-slate-900">{backBgImage ? "Custom Upload (HD Artwork)" : "Standard Substrate"}</strong>
               </div>
             </div>
 
