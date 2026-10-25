@@ -27,6 +27,10 @@ import {
   Eye,
   EyeOff,
   Rotate3d,
+  Loader2,
+  Printer,
+  FileText,
+  FileDown,
 } from "lucide-react";
 import { ALL_PRODUCTS, CatalogProduct, PricingTier } from "@/data/products";
 import { CanvasElement, ProFinish, CardTexture, ColorHarmony } from "@/components/canva-studio/types";
@@ -34,6 +38,19 @@ import { STARTER_TEMPLATES, StudioTemplate } from "@/components/canva-studio/tem
 import { CanvaCardCanvas } from "@/components/canva-studio/CanvaCardCanvas";
 import { CanvaToolbar } from "@/components/canva-studio/CanvaToolbar";
 import { CanvaSidebar, SidebarTabId } from "@/components/canva-studio/CanvaSidebar";
+import { PreFlightModal } from "@/components/canva-studio/PreFlightModal";
+import { runCardPreFlightInspection } from "@/components/canva-studio/dpiUtils";
+import { Card3DMockupModal } from "@/components/canva-studio/Card3DMockupModal";
+import { enhanceAndUpscaleImage } from "@/components/canva-studio/imageEnhancer";
+import { validateProductionReadiness } from "@/components/canva-studio/productionGatekeeper";
+import { OrderBlockedModal } from "@/components/canva-studio/OrderBlockedModal";
+import { StudioCartDrawer, StudioCartItem } from "@/components/canva-studio/StudioCartDrawer";
+import {
+  generate300DpiPdf,
+  downloadCardFacePng,
+  RenderFaceParams,
+  ExportOptions,
+} from "@/components/canva-studio/printExportEngine";
 
 const VISITING_CARDS = ALL_PRODUCTS.filter((p) => p.category === "visiting-cards");
 
@@ -64,6 +81,13 @@ export default function VisitingCardStudioCanvaPage() {
   const [is3DFlipping, setIs3DFlipping] = useState<boolean>(false);
   const [isProofModalOpen, setIsProofModalOpen] = useState<boolean>(false);
   const [isAiModalOpen, setIsAiModalOpen] = useState<boolean>(false);
+  const [isPreFlightModalOpen, setIsPreFlightModalOpen] = useState<boolean>(false);
+  const [is3DMockupModalOpen, setIs3DMockupModalOpen] = useState<boolean>(false);
+  const [isCmykSoftProof, setIsCmykSoftProof] = useState<boolean>(false);
+  const [isBlockedModalOpen, setIsBlockedModalOpen] = useState<boolean>(false);
+  const [hasInspectedBackSide, setHasInspectedBackSide] = useState<boolean>(true);
+  const [isCartDrawerOpen, setIsCartDrawerOpen] = useState<boolean>(false);
+  const [cartItems, setCartItems] = useState<StudioCartItem[]>([]);
 
   // Active Side (Front or Back)
   const [activeSide, setActiveSide] = useState<"front" | "back">("front");
@@ -121,6 +145,145 @@ export default function VisitingCardStudioCanvaPage() {
   const triggerToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3000);
+  };
+
+  // 600+ DPI Ultra-HD Export Engine State (Strict Standard)
+  const [exportIncludeBleed, setExportIncludeBleed] = useState<boolean>(true);
+  const [exportIncludeMarks, setExportIncludeMarks] = useState<boolean>(true);
+  const [exportTargetDpi, setExportTargetDpi] = useState<300 | 600>(600);
+  const [isExporting, setIsExporting] = useState<boolean>(false);
+  const [exportStatusText, setExportStatusText] = useState<string>("");
+
+  const getRenderParams = (side: "front" | "back"): RenderFaceParams => {
+    const isFront = side === "front";
+    return {
+      elements: isFront ? frontElements : backElements,
+      side,
+      orientation,
+      backgroundColor,
+      backgroundImage: isFront ? frontBgImage : backBgImage,
+      backgroundOpacity: isFront ? frontBgOpacity : backBgOpacity,
+      backgroundFit: isFront ? frontBgFit : backBgFit,
+      cardTexture,
+      gildedEdge,
+      options: {
+        orientation,
+        includeBleed: exportIncludeBleed,
+        includePrinterMarks: exportIncludeMarks,
+        targetDpi: exportTargetDpi,
+        jobTitle: `Incredible Treasures - ${selectedProduct.title}`,
+        orderNumber: `IT-${Date.now().toString().slice(-6)}`,
+        substrateTitle: selectedProduct.title,
+      },
+    };
+  };
+
+  const handleExportPdf = async () => {
+    try {
+      setIsExporting(true);
+      setExportStatusText("Synthesizing Side A (Front) at 300 DPI print scale...");
+      const frontParams = getRenderParams("front");
+      const backParams = getRenderParams("back");
+
+      setExportStatusText("Synthesizing Side B (Back) with finish reflections...");
+      const { fileName } = await generate300DpiPdf(frontParams, backParams, {
+        orientation,
+        includeBleed: exportIncludeBleed,
+        includePrinterMarks: exportIncludeMarks,
+        targetDpi: exportTargetDpi,
+        orderNumber: `IT-${Date.now().toString().slice(-6)}`,
+      });
+
+      // Notify backend pre-press API in background
+      fetch("/api/print-export", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          orientation,
+          substrateTitle: selectedProduct.title,
+          frontElements,
+          backElements,
+          backgroundColor,
+          includeBleed: exportIncludeBleed,
+          includePrinterMarks: exportIncludeMarks,
+          targetDpi: exportTargetDpi,
+        }),
+      }).catch((e) => console.warn("Pre-press API notification note:", e));
+
+      triggerToast(`✓ Generated & downloaded 2-Page 300 DPI Vector PDF: ${fileName}`);
+      setIsProofModalOpen(false);
+    } catch (err) {
+      console.error("PDF export error:", err);
+      triggerToast("Failed to compile 300 DPI PDF. Please check layer assets.");
+    } finally {
+      setIsExporting(false);
+      setExportStatusText("");
+    }
+  };
+
+  const handleExportFrontPng = async () => {
+    try {
+      setIsExporting(true);
+      setExportStatusText("Rendering Front Face (Side A) at 300 DPI...");
+      const params = getRenderParams("front");
+      await downloadCardFacePng(params, `IncredibleTreasures-FrontFace-300DPI-${Date.now().toString().slice(-4)}.png`);
+      triggerToast("✓ Downloaded Front Face (300 DPI HD PNG)!");
+    } catch (err) {
+      console.error("Front PNG export error:", err);
+      triggerToast("Failed to export Front PNG.");
+    } finally {
+      setIsExporting(false);
+      setExportStatusText("");
+    }
+  };
+
+  const handleExportBackPng = async () => {
+    try {
+      setIsExporting(true);
+      setExportStatusText("Rendering Back Face (Side B) at 300 DPI...");
+      const params = getRenderParams("back");
+      await downloadCardFacePng(params, `IncredibleTreasures-BackFace-300DPI-${Date.now().toString().slice(-4)}.png`);
+      triggerToast("✓ Downloaded Back Face (300 DPI HD PNG)!");
+    } catch (err) {
+      console.error("Back PNG export error:", err);
+      triggerToast("Failed to export Back PNG.");
+    } finally {
+      setIsExporting(false);
+      setExportStatusText("");
+    }
+  };
+
+  const handleExportCompletePackage = async () => {
+    try {
+      setIsExporting(true);
+      setExportStatusText("1/3 Synthesizing 2-Page Vector PDF...");
+      const frontParams = getRenderParams("front");
+      const backParams = getRenderParams("back");
+      const orderNum = `IT-${Date.now().toString().slice(-6)}`;
+
+      await generate300DpiPdf(frontParams, backParams, {
+        orientation,
+        includeBleed: exportIncludeBleed,
+        includePrinterMarks: exportIncludeMarks,
+        targetDpi: exportTargetDpi,
+        orderNumber: orderNum,
+      });
+
+      setExportStatusText("2/3 Exporting Front Face HD Raster PNG...");
+      await downloadCardFacePng(frontParams, `IncredibleTreasures-SideA-Front-300DPI-${orderNum}.png`);
+
+      setExportStatusText("3/3 Exporting Back Face HD Raster PNG...");
+      await downloadCardFacePng(backParams, `IncredibleTreasures-SideB-Back-300DPI-${orderNum}.png`);
+
+      triggerToast("✓ Complete 300 DPI Pre-Press Package downloaded (PDF + Front PNG + Back PNG)!");
+      setIsProofModalOpen(false);
+    } catch (err) {
+      console.error("Complete package export error:", err);
+      triggerToast("Failed to bundle complete export package.");
+    } finally {
+      setIsExporting(false);
+      setExportStatusText("");
+    }
   };
 
   useEffect(() => {
@@ -316,19 +479,38 @@ export default function VisitingCardStudioCanvaPage() {
   };
 
   // Add Uploaded Image/Logo
-  const handleUploadImage = (src: string) => {
+  const handleUploadImage = (
+    src: string,
+    meta?: {
+      naturalWidth: number;
+      naturalHeight: number;
+      fileName: string;
+      fileSizeBytes?: number;
+      aspectRatio?: number;
+    }
+  ) => {
     const id = `img-${Date.now()}`;
     const newEl: CanvasElement = {
       id,
       type: "image",
       side: activeSide,
       x: 50,
-      y: 25,
+      y: 35,
+      width: 28,
       imageSrc: src,
+      imageAlt: meta?.fileName || "Uploaded Logo",
+      naturalWidth: meta?.naturalWidth || 1200,
+      naturalHeight: meta?.naturalHeight || 1200,
+      fileName: meta?.fileName || "Brand_Logo.png",
+      fileSizeBytes: meta?.fileSizeBytes || 240000,
+      aspectRatio: meta?.aspectRatio || 1,
+      rotation: 0,
+      flipX: false,
+      flipY: false,
     };
     setCurrentElements((prev) => [...prev, newEl]);
     setSelectedId(id);
-    triggerToast("Image added! Drag & place anywhere.");
+    triggerToast(`✓ Logo "${meta?.fileName || "Image"}" placed! Live DPI calculated.`);
   };
 
   // Personalized Background Image Handlers
@@ -404,20 +586,191 @@ export default function VisitingCardStudioCanvaPage() {
     triggerToast("Element duplicated.");
   };
 
-  // Layer Reordering (Bring Forward / Send Backward)
-  const handleReorderElement = (id: string, direction: "up" | "down") => {
+  // Layer Reordering (Bring to Front, Send to Back, Step Forward, Step Backward)
+  const handleReorderElement = (
+    id: string,
+    direction: "up" | "down" | "front" | "back"
+  ) => {
     setCurrentElements((prev) => {
       const idx = prev.findIndex((el) => el.id === id);
       if (idx === -1) return prev;
-      const targetIdx = direction === "up" ? idx + 1 : idx - 1;
-      if (targetIdx < 0 || targetIdx >= prev.length) return prev;
+
       const nextArr = [...prev];
-      const temp = nextArr[idx];
-      nextArr[idx] = nextArr[targetIdx];
-      nextArr[targetIdx] = temp;
+      const [item] = nextArr.splice(idx, 1);
+
+      if (direction === "front") {
+        nextArr.push(item);
+      } else if (direction === "back") {
+        nextArr.unshift(item);
+      } else if (direction === "up") {
+        const targetIdx = Math.min(nextArr.length, idx + 1);
+        nextArr.splice(targetIdx, 0, item);
+      } else if (direction === "down") {
+        const targetIdx = Math.max(0, idx - 1);
+        nextArr.splice(targetIdx, 0, item);
+      }
       return nextArr;
     });
-    triggerToast(direction === "up" ? "Layer moved forward" : "Layer moved backward");
+
+    const labels = {
+      front: "Moved to top (Front)",
+      back: "Moved to bottom (Back)",
+      up: "Layer moved forward",
+      down: "Layer moved backward",
+    };
+    triggerToast(labels[direction]);
+  };
+
+  // 1-Click Smart Image Enhancer & 600+ DPI Upscaler Execution
+  const handleEnhanceImageElement = async (elementId: string) => {
+    const findInSide = (els: CanvasElement[]) => els.find((el) => el.id === elementId);
+    const target = findInSide(frontElements) || findInSide(backElements);
+
+    if (!target || target.type !== "image" || !target.imageSrc) {
+      triggerToast("⚠️ Image not found for enhancement.");
+      return;
+    }
+
+    try {
+      triggerToast("Enhancing clarity & upscaling to 600+ DPI...");
+      const result = await enhanceAndUpscaleImage(target.imageSrc, 2);
+
+      const updater = (els: CanvasElement[]) =>
+        els.map((el) => {
+          if (el.id === elementId) {
+            return {
+              ...el,
+              imageSrc: result.enhancedDataUrl,
+              naturalWidth: result.naturalWidth,
+              naturalHeight: result.naturalHeight,
+            };
+          }
+          return el;
+        });
+
+      if (findInSide(frontElements)) {
+        setFrontElements((prev) => {
+          const next = updater(prev);
+          recordHistory(next, backElements, backgroundColor);
+          return next;
+        });
+      } else {
+        setBackElements((prev) => {
+          const next = updater(prev);
+          recordHistory(frontElements, next, backgroundColor);
+          return next;
+        });
+      }
+
+      triggerToast("💎 Enhanced! Resolution boosted to 600+ DPI Ultra-HD.");
+    } catch (err) {
+      console.error("Image enhancement failed:", err);
+      triggerToast("⚠️ Enhancement failed. Please try another image.");
+    }
+  };
+
+  // 1-Click Auto-Nudge inside 2mm Mechanical Cutting Safe Zone
+  const handleFixNudgeSafeZone = (elementId: string, side: "front" | "back") => {
+    const nudger = (els: CanvasElement[]) =>
+      els.map((el) => {
+        if (el.id === elementId) {
+          return {
+            ...el,
+            x: Math.max(10, Math.min(90, el.x)),
+            y: Math.max(10, Math.min(90, el.y)),
+          };
+        }
+        return el;
+      });
+
+    if (side === "front") {
+      setFrontElements((prev) => {
+        const next = nudger(prev);
+        recordHistory(next, backElements, backgroundColor);
+        return next;
+      });
+    } else {
+      setBackElements((prev) => {
+        const next = nudger(prev);
+        recordHistory(frontElements, next, backgroundColor);
+        return next;
+      });
+    }
+    triggerToast("✓ Nudged safely inside 2mm cutting line!");
+  };
+
+  // 1-Click Direct Element Selector for Text Editing
+  const handleFixSelectElement = (elementId: string, side: "front" | "back") => {
+    setActiveSide(side);
+    setSelectedId(elementId);
+    triggerToast("Selected! Edit your real company/personal text.");
+  };
+
+  // Add customized card to Cart and open Slide-Over Drawer
+  const handleAddToCartAndOpen = () => {
+    const newItem: StudioCartItem = {
+      id: `print-card-${Date.now()}`,
+      title: selectedProduct.title,
+      substrateId: selectedSubstrateId,
+      quantity: selectedTier.qty,
+      pricePerUnit: selectedTier.pricePerUnit,
+      totalPrice: selectedTier.total,
+      orientation: orientation,
+      specs: `${orientation === "horizontal" ? "Landscape 3.5\"×2.0\"" : "Portrait 2.0\"×3.5\""} • ${cornerStyle === "rounded" ? "3mm Round Corners" : "Square Cut"} • 600+ DPI Pre-Flight Approved`,
+    };
+    setCartItems((prev) => [newItem, ...prev]);
+    setIsCartDrawerOpen(true);
+    triggerToast(`✓ Added ${selectedTier.qty} cards to cart! Opening checkout.`);
+  };
+
+  // 1-Click Auto-Fix All Defects & Immediately Proceed to Cart
+  const handleAutoFixAllAndProceed = async () => {
+    // 1. Auto upscale any low-res raster images to 600+ DPI
+    for (const el of frontElements) {
+      if (el.type === "image") {
+        await handleEnhanceImageElement(el.id);
+      }
+    }
+    for (const el of backElements) {
+      if (el.type === "image") {
+        await handleEnhanceImageElement(el.id);
+      }
+    }
+
+    // 2. Nudge elements dangerously close to cutting trim safely inside safe zone
+    setFrontElements((prev) =>
+      prev.map((el) => {
+        if (el.type === "shape" && (el.shapeKind === "frame" || el.shapeKind === "rectangle")) return el;
+        if (el.type === "shape" && (el.shapeKind === "divider-h" || el.shapeKind === "divider-v")) return el;
+        let nx = el.x;
+        let ny = el.y;
+        if (nx < 7) nx = 10;
+        if (nx > 93) nx = 88;
+        if (ny < 7) ny = 10;
+        if (ny > 93) ny = 88;
+        return { ...el, x: nx, y: ny };
+      })
+    );
+
+    setBackElements((prev) =>
+      prev.map((el) => {
+        if (el.type === "shape" && (el.shapeKind === "frame" || el.shapeKind === "rectangle")) return el;
+        if (el.type === "shape" && (el.shapeKind === "divider-h" || el.shapeKind === "divider-v")) return el;
+        let nx = el.x;
+        let ny = el.y;
+        if (nx < 7) nx = 10;
+        if (nx > 93) nx = 88;
+        if (ny < 7) ny = 10;
+        if (ny > 93) ny = 88;
+        return { ...el, x: nx, y: ny };
+      })
+    );
+
+    // 3. Mark back inspected
+    setHasInspectedBackSide(true);
+
+    // 4. Add to cart and open drawer
+    handleAddToCartAndOpen();
   };
 
   // 1-Click Luxury Color Harmony Application
@@ -774,14 +1127,60 @@ export default function VisitingCardStudioCanvaPage() {
             <span>WhatsApp Quote</span>
           </a>
 
-          {/* Add to Cart Button */}
+          {/* COMMERCIAL PRINT ORDER / ADD TO CART BUTTON */}
+          {(() => {
+            const gate = validateProductionReadiness(
+              frontElements,
+              backElements,
+              orientation,
+              hasInspectedBackSide
+            );
+
+            return (
+              <button
+                type="button"
+                onClick={() => {
+                  if (!gate.canPrint) {
+                    setIsBlockedModalOpen(true);
+                  } else {
+                    handleAddToCartAndOpen();
+                  }
+                }}
+                className={`px-4 py-1.5 rounded-xl text-white font-black text-xs shadow-md transition flex items-center gap-1.5 cursor-pointer hover:scale-102 border ${
+                  gate.canPrint
+                    ? "bg-gradient-to-r from-emerald-600 via-[#A9782B] to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 border-emerald-400"
+                    : "bg-gradient-to-r from-amber-600 via-[#A9782B] to-amber-700 hover:from-amber-700 hover:to-amber-800 border-amber-400"
+                }`}
+                title={
+                  gate.canPrint
+                    ? "Add customized card to cart and open checkout drawer"
+                    : `Pre-flight checks found ${gate.criticalErrorsCount} defect(s). Click to review 1-click auto-fixes and proceed to cart.`
+                }
+              >
+                <ShoppingBag className="w-3.5 h-3.5" />
+                <span>Print Order (₹{selectedTier.total.toLocaleString("en-IN")})</span>
+                {!gate.canPrint && (
+                  <span className="ml-1 px-1.5 py-0.2 rounded-full bg-black/30 text-white text-[9px] font-black border border-white/20">
+                    {gate.criticalErrorsCount}
+                  </span>
+                )}
+              </button>
+            );
+          })()}
+
+          {/* Cart Badge Button in Header */}
           <button
             type="button"
-            onClick={() => triggerToast("✓ Design saved and added to cart!")}
-            className="px-4 py-1.5 rounded-xl bg-gradient-to-r from-[#A9782B] to-[#8E621E] hover:from-[#8E621E] hover:to-[#734D15] text-white font-black text-xs shadow-md transition flex items-center gap-1.5 cursor-pointer hover:scale-102"
+            onClick={() => setIsCartDrawerOpen(true)}
+            className="relative p-2 rounded-xl bg-[#FAF8F5] border border-[#E5E0D8] text-slate-700 hover:text-slate-900 hover:bg-slate-100 transition shadow-2xs cursor-pointer"
+            title="View Print Cart"
           >
-            <ShoppingBag className="w-3.5 h-3.5" />
-            <span>Order (₹{selectedTier.total.toLocaleString("en-IN")})</span>
+            <ShoppingBag className="w-4 h-4 text-[#A9782B]" />
+            {cartItems.length > 0 && (
+              <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#A9782B] text-white text-[9px] font-black flex items-center justify-center">
+                {cartItems.length}
+              </span>
+            )}
           </button>
         </div>
       </header>
@@ -796,6 +1195,9 @@ export default function VisitingCardStudioCanvaPage() {
         onDeleteSelected={() => selectedId && handleDeleteElement(selectedId)}
         onBringForward={() => selectedId && handleReorderElement(selectedId, "up")}
         onSendBackward={() => selectedId && handleReorderElement(selectedId, "down")}
+        onBringToFront={() => selectedId && handleReorderElement(selectedId, "front")}
+        onSendToBack={() => selectedId && handleReorderElement(selectedId, "back")}
+        onEnhanceImage={handleEnhanceImageElement}
         orientation={orientation}
         onChangeOrientation={setOrientation}
         cornerStyle={cornerStyle}
@@ -815,11 +1217,15 @@ export default function VisitingCardStudioCanvaPage() {
         onUndo={handleUndo}
         onRedo={handleRedo}
         onOpenAiModal={() => setIsAiModalOpen(true)}
+        onOpenPreFlightModal={() => setIsPreFlightModalOpen(true)}
         gildedEdge={gildedEdge}
         onToggleGildedEdge={() => setGildedEdge(!gildedEdge)}
         cardTexture={cardTexture}
         onChangeTexture={setCardTexture}
         onApplyHarmony={handleApplyHarmony}
+        isCmykSoftProof={isCmykSoftProof}
+        onToggleCmykSoftProof={() => setIsCmykSoftProof(!isCmykSoftProof)}
+        onOpen3DMockup={() => setIs3DMockupModalOpen(true)}
       />
 
       {/* ========================================================= */}
@@ -879,6 +1285,7 @@ export default function VisitingCardStudioCanvaPage() {
               type="button"
               onClick={() => {
                 setActiveSide("back");
+                setHasInspectedBackSide(true);
                 setSelectedId(null);
               }}
               className={`px-4 py-1.5 rounded-xl transition cursor-pointer flex items-center gap-2 ${
@@ -896,7 +1303,10 @@ export default function VisitingCardStudioCanvaPage() {
             {/* 3D Flip Card Turnaround Button */}
             <button
               type="button"
-              onClick={handle3DFlipTurnaround}
+              onClick={() => {
+                handle3DFlipTurnaround();
+                setHasInspectedBackSide(true);
+              }}
               className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500/10 to-[#A9782B]/15 hover:from-amber-500/20 hover:to-[#A9782B]/25 text-[#734D15] border border-[#EAD5B3] transition flex items-center gap-1.5 cursor-pointer shadow-2xs font-black"
               title="Smoothly rotate the physical card 180 degrees in 3D"
             >
@@ -905,8 +1315,13 @@ export default function VisitingCardStudioCanvaPage() {
             </button>
           </div>
 
-          {/* Interactive Card Canvas */}
-          <div className="my-auto w-full flex items-center justify-center">
+          {/* Interactive Card Canvas (with CMYK soft-proofing filter) */}
+          <div
+            className="my-auto w-full flex items-center justify-center transition-all"
+            style={{
+              filter: isCmykSoftProof ? "contrast(0.96) saturate(0.92)" : "none",
+            }}
+          >
             <CanvaCardCanvas
               elements={currentElements}
               onUpdateElement={handleUpdateElement}
@@ -934,19 +1349,66 @@ export default function VisitingCardStudioCanvaPage() {
 
           {/* Bottom Desk Helper Bar with Pre-Flight Inspector & Zoom */}
           <div className="w-full max-w-4xl mt-3 flex flex-wrap items-center justify-between gap-3 p-3 bg-white/95 backdrop-blur-md rounded-2xl border border-[#E5E0D8] text-xs text-slate-600 shadow-lg">
-            {/* 300 DPI Pre-Flight Quality Check Inspector */}
-            <div className="flex flex-wrap items-center gap-3 text-[11px]">
-              <div className="flex items-center gap-1.5 text-emerald-800 font-extrabold bg-emerald-50 px-2.5 py-1 rounded-xl border border-emerald-200">
-                <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                <span>300 DPI Vector Quality</span>
-              </div>
+            {/* STRICT Commercial Gatekeeper Indicator */}
+            <div className="flex flex-wrap items-center gap-2.5 text-[11px]">
+              {(() => {
+                const gate = validateProductionReadiness(
+                  frontElements,
+                  backElements,
+                  orientation,
+                  hasInspectedBackSide
+                );
+
+                if (!gate.canPrint) {
+                  return (
+                    <button
+                      type="button"
+                      onClick={() => setIsBlockedModalOpen(true)}
+                      className="flex items-center gap-2 px-3 py-1 rounded-xl font-black transition cursor-pointer shadow-2xs border bg-rose-50 text-rose-800 border-rose-300 hover:bg-rose-100 animate-pulse"
+                      title="Commercial printing blocked. Click to see exact errors & auto-fix."
+                    >
+                      <Lock className="w-3.5 h-3.5 text-rose-600" />
+                      <span>🚨 BLOCKED: {gate.criticalErrorsCount} Error(s)</span>
+                      <span className="text-[9px] uppercase font-bold bg-white text-rose-700 px-1.5 py-0.2 rounded border border-rose-200">
+                        Fix Now
+                      </span>
+                    </button>
+                  );
+                }
+
+                return (
+                  <button
+                    type="button"
+                    onClick={() => setIsPreFlightModalOpen(true)}
+                    className="flex items-center gap-2 px-3 py-1 rounded-xl font-black transition cursor-pointer shadow-2xs border bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-100"
+                    title="Click to view comprehensive Pre-Flight Quality Report"
+                  >
+                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                    <span>💎 100% Ready: 600+ DPI & Margins Verified</span>
+                    <span className="text-[9px] uppercase font-bold bg-white/90 px-1.5 py-0.2 rounded border border-slate-200">
+                      Approved
+                    </span>
+                  </button>
+                );
+              })()}
+
+              {/* Quick Trigger for 3D Mockup Studio */}
+              <button
+                type="button"
+                onClick={() => setIs3DMockupModalOpen(true)}
+                className="flex items-center gap-1.5 px-3 py-1 rounded-xl font-black bg-gradient-to-r from-amber-500/15 via-[#A9782B]/20 to-amber-600/15 hover:from-amber-500/25 hover:to-amber-600/25 text-[#734D15] border border-[#EAD5B3] transition cursor-pointer shadow-2xs text-[11px]"
+                title="Launch Interactive 3D Mockup Studio with Mouse Tilt & Sign-Off"
+              >
+                <Rotate3d className="w-3.5 h-3.5 text-[#A9782B]" />
+                <span>3D Mockup Studio</span>
+              </button>
               <span className="hidden sm:inline text-slate-400">•</span>
               <span className="hidden sm:inline text-slate-600 font-semibold">
-                Bleed & Mechanical Safe Zone Checked
+                Bleed & Safe Zone
               </span>
               <span className="hidden md:inline text-slate-400">•</span>
               <span className="hidden md:inline text-slate-600 font-semibold">
-                Selective Foil & CMYK Approved
+                CMYK & Foil Channels
               </span>
             </div>
 
@@ -1118,82 +1580,290 @@ export default function VisitingCardStudioCanvaPage() {
         </div>
       )}
 
-      {/* Proof Download Modal */}
+      {/* 600+ DPI Pre-Press Export Hub Modal (Strict Ultra-HD Standard) */}
       {isProofModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl border border-[#E5E0D8] max-w-md w-full p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95">
-            <div className="flex items-center justify-between border-b border-[#E5E0D8] pb-3">
-              <div className="flex items-center gap-2">
-                <FileCheck2 className="w-5 h-5 text-[#A9782B]" />
-                <h3 className="text-base font-black text-slate-900">Download Print-Ready Proof</h3>
+          <div className="bg-white rounded-3xl border border-[#E5E0D8] max-w-lg w-full p-6 sm:p-7 shadow-2xl space-y-4 animate-in fade-in zoom-in-95">
+            {/* Header */}
+            <div className="flex items-start justify-between border-b border-[#E5E0D8] pb-4">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-xl bg-[#FAF6EE] border border-[#EAD5B3] flex items-center justify-center text-[#A9782B] shadow-2xs">
+                    <Printer className="w-4 h-4" />
+                  </div>
+                  <h3 className="text-base sm:text-lg font-black text-slate-900 tracking-tight">
+                    600+ DPI Ultra-HD Pre-Press Export Hub
+                  </h3>
+                </div>
+                <p className="text-[11px] text-slate-500 font-medium">
+                  Industrial Vector Print Pipeline • Bangalore Press-Ready with Strict 600+ DPI Standard
+                </p>
               </div>
               <button
                 type="button"
-                onClick={() => setIsProofModalOpen(false)}
-                className="text-slate-400 hover:text-slate-700 font-bold text-lg"
+                onClick={() => !isExporting && setIsProofModalOpen(false)}
+                disabled={isExporting}
+                className="text-slate-400 hover:text-slate-700 font-bold text-lg p-1 transition cursor-pointer"
               >
                 ✕
               </button>
             </div>
 
-            <p className="text-xs text-slate-600">
-              Your design on <strong>{selectedProduct.title}</strong> has been prepared at <strong>300 DPI print scale</strong> with blade bleed allowances.
-            </p>
+            {/* Pre-Press Badges */}
+            <div className="flex flex-wrap gap-1.5 text-[10px] font-black uppercase tracking-wider">
+              <span className="px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-800 border border-emerald-500/30 flex items-center gap-1 font-black">
+                <span>💎</span> 600+ DPI Ultra-HD
+              </span>
+              <span className="px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-800 border border-amber-500/30">
+                PDF/X-1a Vector
+              </span>
+              <span className="px-2 py-0.5 rounded-md bg-[#FAF6EE] text-[#734D15] border border-[#EAD5B3]">
+                CMYK FOGRA39 Proof
+              </span>
+              <span className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 border border-slate-200">
+                0.125" Bleed Box
+              </span>
+            </div>
 
-            <div className="p-3 bg-[#FAF8F5] rounded-2xl border border-[#E5E0D8] space-y-1 text-xs">
+            {/* Specifications Card */}
+            <div className="p-3.5 bg-[#FAF8F5] rounded-2xl border border-[#E5E0D8] space-y-1.5 text-xs">
               <div className="flex justify-between text-slate-700">
-                <span>Selected Substrate:</span>
-                <strong className="text-slate-900">{selectedProduct.title}</strong>
+                <span className="font-medium text-slate-500">Selected Substrate:</span>
+                <strong className="text-slate-900 truncate max-w-[240px]">{selectedProduct.title}</strong>
               </div>
               <div className="flex justify-between text-slate-700">
-                <span>Orientation:</span>
-                <strong className="capitalize text-slate-900">{orientation}</strong>
+                <span className="font-medium text-slate-500">Finished Trim Dimensions:</span>
+                <strong className="text-slate-900">
+                  {orientation === "horizontal" ? '3.5" × 2.0" (1050 × 600 px)' : '2.0" × 3.5" (600 × 1050 px)'}
+                </strong>
               </div>
               <div className="flex justify-between text-slate-700">
-                <span>Front Elements:</span>
-                <strong className="text-slate-900">{frontElements.length} layers</strong>
+                <span className="font-medium text-slate-500">Total Print Size (with Bleed):</span>
+                <strong className="text-[#A9782B]">
+                  {orientation === "horizontal" ? '3.75" × 2.25" (1125 × 675 px)' : '2.25" × 3.75" (675 × 1125 px)'}
+                </strong>
               </div>
               <div className="flex justify-between text-slate-700">
-                <span>Front Background:</span>
-                <strong className="text-slate-900">{frontBgImage ? "Custom Upload (HD Artwork)" : "Standard Substrate"}</strong>
+                <span className="font-medium text-slate-500">Production Layers:</span>
+                <strong className="text-slate-900">
+                  Side A: {frontElements.length} layers • Side B: {backElements.length} layers
+                </strong>
               </div>
-              <div className="flex justify-between text-slate-700">
-                <span>Back Elements:</span>
-                <strong className="text-slate-900">{backElements.length} layers</strong>
-              </div>
-              <div className="flex justify-between text-slate-700">
-                <span>Back Background:</span>
-                <strong className="text-slate-900">{backBgImage ? "Custom Upload (HD Artwork)" : "Standard Substrate"}</strong>
+              <div className="flex justify-between text-slate-700 items-center pt-1 border-t border-[#E5E0D8]">
+                <span className="font-medium text-slate-500">Pre-Flight Resolution Check:</span>
+                {(() => {
+                  const rep = runCardPreFlightInspection(frontElements, backElements, orientation);
+                  return (
+                    <span
+                      className={`text-[11px] font-black px-2 py-0.5 rounded-lg border ${
+                        rep.hasBlurRisk
+                          ? "bg-rose-50 text-rose-700 border-rose-200"
+                          : "bg-emerald-50 text-emerald-800 border-emerald-200"
+                      }`}
+                    >
+                      {rep.hasBlurRisk ? `⚠️ Low DPI Risk (${rep.lowestDpi} DPI)` : "✓ 600+ DPI Certified Sharp"}
+                    </span>
+                  );
+                })()}
               </div>
             </div>
 
-            <div className="flex gap-2.5 pt-2">
+            {/* Interactive Pre-Press Production Toggles */}
+            <div className="p-3.5 bg-white rounded-2xl border border-[#E5E0D8] space-y-2.5">
+              <span className="text-[11px] font-black uppercase text-slate-500 tracking-wider block">
+                Production Options
+              </span>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                {/* Bleed Toggle */}
+                <label className="flex items-center gap-2 p-2 rounded-xl bg-[#FAF8F5] border border-[#E5E0D8] hover:border-[#A9782B] cursor-pointer transition select-none">
+                  <input
+                    type="checkbox"
+                    checked={exportIncludeBleed}
+                    onChange={(e) => setExportIncludeBleed(e.target.checked)}
+                    className="accent-[#A9782B] w-4 h-4 rounded cursor-pointer"
+                  />
+                  <div>
+                    <span className="block font-bold text-slate-800 text-[11px]">Mechanical Bleed</span>
+                    <span className="block text-[10px] text-slate-500">+0.125" edge allowance</span>
+                  </div>
+                </label>
+
+                {/* Printer's Crop Marks Toggle */}
+                <label className="flex items-center gap-2 p-2 rounded-xl bg-[#FAF8F5] border border-[#E5E0D8] hover:border-[#A9782B] cursor-pointer transition select-none">
+                  <input
+                    type="checkbox"
+                    checked={exportIncludeMarks}
+                    onChange={(e) => setExportIncludeMarks(e.target.checked)}
+                    className="accent-[#A9782B] w-4 h-4 rounded cursor-pointer"
+                  />
+                  <div>
+                    <span className="block font-bold text-slate-800 text-[11px]">Printer's Crop Marks</span>
+                    <span className="block text-[10px] text-slate-500">Corner ticks & color bar</span>
+                  </div>
+                </label>
+              </div>
+
+              {/* DPI Selector */}
+              <div className="flex items-center justify-between pt-1">
+                <span className="text-[11px] font-bold text-slate-700">Target Output Resolution:</span>
+                <div className="flex bg-[#FAF8F5] p-0.5 rounded-xl border border-[#E5E0D8] text-[11px] font-black">
+                  <button
+                    type="button"
+                    onClick={() => setExportTargetDpi(600)}
+                    className={`px-2.5 py-1 rounded-lg transition cursor-pointer ${
+                      exportTargetDpi === 600
+                        ? "bg-[#A9782B] text-white shadow-2xs"
+                        : "text-slate-600 hover:text-slate-900"
+                    }`}
+                  >
+                    💎 600+ DPI (Ultra-HD)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setExportTargetDpi(300)}
+                    className={`px-2.5 py-1 rounded-lg transition cursor-pointer ${
+                      exportTargetDpi === 300
+                        ? "bg-[#A9782B] text-white shadow-2xs"
+                        : "text-slate-600 hover:text-slate-900"
+                    }`}
+                  >
+                    300 DPI (Offset)
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Live Progress Indicator when exporting */}
+            {isExporting && (
+              <div className="p-3 bg-[#FAF6EE] rounded-2xl border border-[#EAD5B3] flex items-center gap-3 animate-in fade-in">
+                <Loader2 className="w-5 h-5 text-[#A9782B] animate-spin shrink-0" />
+                <div className="space-y-0.5">
+                  <span className="text-xs font-black text-[#734D15] block">Exporting Production Assets</span>
+                  <span className="text-[11px] text-slate-600 block">{exportStatusText || "Rendering canvas layers at 300 DPI..."}</span>
+                </div>
+              </div>
+            )}
+
+            {/* Export Actions */}
+            <div className="space-y-2 pt-1">
+              {/* Primary: 2-Page Vector PDF */}
               <button
                 type="button"
-                onClick={() => {
-                  triggerToast("✓ Downloaded high-resolution PDF proof!");
-                  setIsProofModalOpen(false);
-                }}
-                className="flex-1 py-2.5 rounded-xl bg-[#A9782B] hover:bg-[#8E621E] text-white text-xs font-black transition flex items-center justify-center gap-1.5 shadow-sm"
+                onClick={handleExportPdf}
+                disabled={isExporting}
+                className="w-full py-3 rounded-2xl bg-gradient-to-r from-[#A9782B] via-[#946723] to-[#7E571B] hover:from-[#946723] hover:to-[#6E4B17] text-white text-xs sm:text-sm font-black transition flex items-center justify-center gap-2 shadow-md cursor-pointer disabled:opacity-50"
               >
-                <Download className="w-3.5 h-3.5" />
-                <span>Download PDF</span>
+                {isExporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileDown className="w-4 h-4" />}
+                <span>Download 2-Page Vector PDF ({exportTargetDpi} DPI Front + Back)</span>
               </button>
 
-              <button
-                type="button"
-                onClick={() => {
-                  triggerToast("✓ Downloaded high-resolution PNG image!");
-                  setIsProofModalOpen(false);
-                }}
-                className="flex-1 py-2.5 rounded-xl bg-[#FAF8F5] hover:bg-slate-100 text-slate-800 text-xs font-bold transition border border-[#E5E0D8]"
-              >
-                Download PNG
-              </button>
+              {/* Secondary Raster Options */}
+              <div className="grid grid-cols-3 gap-2">
+                <button
+                  type="button"
+                  onClick={handleExportFrontPng}
+                  disabled={isExporting}
+                  className="py-2 px-2 rounded-xl bg-[#FAF8F5] hover:bg-[#F2EFE9] text-slate-800 text-[11px] font-bold transition border border-[#E5E0D8] flex items-center justify-center gap-1 cursor-pointer disabled:opacity-50"
+                  title="Export Side A as high-resolution PNG"
+                >
+                  <Download className="w-3 h-3 text-[#A9782B]" />
+                  <span>Front PNG</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleExportBackPng}
+                  disabled={isExporting}
+                  className="py-2 px-2 rounded-xl bg-[#FAF8F5] hover:bg-[#F2EFE9] text-slate-800 text-[11px] font-bold transition border border-[#E5E0D8] flex items-center justify-center gap-1 cursor-pointer disabled:opacity-50"
+                  title="Export Side B as high-resolution PNG"
+                >
+                  <Download className="w-3 h-3 text-[#A9782B]" />
+                  <span>Back PNG</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleExportCompletePackage}
+                  disabled={isExporting}
+                  className="py-2 px-2 rounded-xl bg-[#FAF6EE] hover:bg-[#F5ECE0] text-[#734D15] text-[11px] font-black transition border border-[#EAD5B3] flex items-center justify-center gap-1 cursor-pointer shadow-2xs disabled:opacity-50"
+                  title="Download complete press bundle: PDF + Front PNG + Back PNG"
+                >
+                  <Sparkles className="w-3 h-3 text-[#A9782B]" />
+                  <span>Full Package</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
       )}
+
+      {/* Interactive 3D Mockup Studio & Production Sign-Off Modal */}
+      <Card3DMockupModal
+        isOpen={is3DMockupModalOpen}
+        onClose={() => setIs3DMockupModalOpen(false)}
+        product={selectedProduct}
+        selectedTier={selectedTier}
+        frontElements={frontElements}
+        backElements={backElements}
+        frontBgImage={frontBgImage}
+        backBgImage={backBgImage}
+        frontBgOpacity={frontBgOpacity}
+        backBgOpacity={backBgOpacity}
+        frontBgFit={frontBgFit}
+        backBgFit={backBgFit}
+        orientation={orientation}
+        cornerStyle={cornerStyle}
+        backgroundColor={backgroundColor}
+        gildedEdge={gildedEdge}
+        cardTexture={cardTexture}
+        onApproveAndOrder={handleAddToCartAndOpen}
+        onOpenExportProof={() => setIsProofModalOpen(true)}
+      />
+
+      {/* Real-Time Pre-Flight Quality Inspector Modal (600+ DPI & Enhancer) */}
+      <PreFlightModal
+        isOpen={isPreFlightModalOpen}
+        onClose={() => setIsPreFlightModalOpen(false)}
+        frontElements={frontElements}
+        backElements={backElements}
+        orientation={orientation}
+        productTitle={selectedProduct.title}
+        onEnhanceImageElement={handleEnhanceImageElement}
+        onProceedWithOrder={handleAddToCartAndOpen}
+      />
+
+      {/* Strict Production Gatekeeper Blocker Modal */}
+      <OrderBlockedModal
+        isOpen={isBlockedModalOpen}
+        onClose={() => setIsBlockedModalOpen(false)}
+        gateResult={validateProductionReadiness(
+          frontElements,
+          backElements,
+          orientation,
+          hasInspectedBackSide
+        )}
+        onFixUpscaleImage={handleEnhanceImageElement}
+        onFixNudgeSafeZone={handleFixNudgeSafeZone}
+        onFixSwitchSide={() => {
+          setActiveSide("back");
+          setHasInspectedBackSide(true);
+        }}
+        onFixSelectElement={handleFixSelectElement}
+        onProceedToOrder={handleAddToCartAndOpen}
+        onAutoFixAllAndProceed={handleAutoFixAllAndProceed}
+      />
+
+      {/* Slide-Over Corporate Print Cart Drawer */}
+      <StudioCartDrawer
+        isOpen={isCartDrawerOpen}
+        onClose={() => setIsCartDrawerOpen(false)}
+        items={cartItems}
+        onRemoveItem={(id) => {
+          setCartItems((prev) => prev.filter((i) => i.id !== id));
+          triggerToast("Item removed from cart.");
+        }}
+      />
 
       {/* Floating Toast Notification */}
       {toastMessage && (

@@ -4,6 +4,7 @@ import React, { useRef, useState, useEffect } from "react";
 import { CanvasElement, ProFinish, CardTexture } from "./types";
 import { generateQrSvg } from "../studio/qrUtils";
 import { renderProIcon } from "./proIcons";
+import { calculateImageDpi } from "./dpiUtils";
 import {
   Copy,
   Trash2,
@@ -14,6 +15,7 @@ import {
   Lock,
   Unlock,
   RotateCw,
+  FlipHorizontal,
 } from "lucide-react";
 
 interface Props {
@@ -38,6 +40,7 @@ interface Props {
   backgroundImage?: string;
   backgroundOpacity?: number;
   backgroundFit?: "cover" | "contain" | "repeat";
+  pureCardOnly?: boolean;
 }
 
 export const CanvaCardCanvas: React.FC<Props> = ({
@@ -62,6 +65,7 @@ export const CanvaCardCanvas: React.FC<Props> = ({
   backgroundImage,
   backgroundOpacity = 1,
   backgroundFit = "cover",
+  pureCardOnly = false,
 }) => {
   const cardRef = useRef<HTMLDivElement>(null);
   const deskRef = useRef<HTMLDivElement>(null);
@@ -70,6 +74,14 @@ export const CanvaCardCanvas: React.FC<Props> = ({
   const [snapLineX, setSnapLineX] = useState<boolean>(false);
   const [snapLineY, setSnapLineY] = useState<boolean>(false);
   const [isOutsideSafeZone, setIsOutsideSafeZone] = useState<boolean>(false);
+
+  // Corner Resizing State
+  const [resizingState, setResizingState] = useState<{
+    id: string;
+    corner: "nw" | "ne" | "sw" | "se";
+    startX: number;
+    startWidth: number;
+  } | null>(null);
 
   // 3D Tilt Physics State
   const [tilt, setTilt] = useState<{ x: number; y: number; sheenX: number; sheenY: number }>({
@@ -170,8 +182,43 @@ export const CanvaCardCanvas: React.FC<Props> = ({
     (e.target as HTMLElement).setPointerCapture(e.pointerId);
   };
 
-  // Handle Dragging
+  // Handle Corner Resize Start
+  const handleResizeStart = (
+    e: React.PointerEvent,
+    element: CanvasElement,
+    corner: "nw" | "ne" | "sw" | "se"
+  ) => {
+    e.stopPropagation();
+    e.preventDefault();
+    onSelectElement(element.id);
+    if (element.locked) return;
+    setResizingState({
+      id: element.id,
+      corner,
+      startX: e.clientX,
+      startWidth: element.width || 25,
+    });
+    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+  };
+
+  // Handle Dragging and Resizing
   const handlePointerMove = (e: React.PointerEvent) => {
+    // 1. If actively resizing a corner handle
+    if (resizingState && cardRef.current) {
+      const rect = cardRef.current.getBoundingClientRect();
+      const deltaPercent = ((e.clientX - resizingState.startX) / rect.width) * 100;
+      let widthDelta = deltaPercent;
+      if (resizingState.corner === "nw" || resizingState.corner === "sw") {
+        widthDelta = -deltaPercent;
+      }
+      const newWidth = Math.max(8, Math.min(85, resizingState.startWidth + widthDelta));
+      onUpdateElement(resizingState.id, {
+        width: Math.round(newWidth * 10) / 10,
+      });
+      return;
+    }
+
+    // 2. If dragging an element
     if (!draggingId || !cardRef.current) return;
 
     const rect = cardRef.current.getBoundingClientRect();
@@ -206,8 +253,15 @@ export const CanvaCardCanvas: React.FC<Props> = ({
     });
   };
 
-  // Handle Drag End
+  // Handle Drag or Resize End
   const handlePointerUp = (e: React.PointerEvent) => {
+    if (resizingState) {
+      try {
+        (e.target as HTMLElement).releasePointerCapture(e.pointerId);
+      } catch (_) {}
+      setResizingState(null);
+    }
+
     if (draggingId) {
       try {
         (e.target as HTMLElement).releasePointerCapture(e.pointerId);
@@ -290,72 +344,44 @@ export const CanvaCardCanvas: React.FC<Props> = ({
     };
   };
 
-  return (
+  const cardElement = (
     <div
-      ref={deskRef}
-      onMouseMove={handleDeskMouseMove}
-      onMouseLeave={handleDeskMouseLeave}
-      className="relative flex flex-col items-center justify-center p-4 sm:p-8 select-none w-full"
+      ref={cardRef}
+      onClick={handleCanvasClick}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
       style={{
-        perspective: "1400px",
-        backgroundImage: `
-          radial-gradient(#D3CCC0 1.2px, transparent 1.2px),
-          radial-gradient(#E8E3D8 1.2px, transparent 1.2px)
-        `,
-        backgroundSize: "28px 28px, 14px 14px",
+        backgroundColor,
+        transform: pureCardOnly
+          ? undefined
+          : is3DMode
+          ? `scale(${zoom / 100}) rotateX(${tilt.x}deg) rotateY(${
+              tilt.y + (is3DFlipping ? 180 : 0)
+            }deg)`
+          : `scale(${zoom / 100}) rotateY(${is3DFlipping ? 180 : 0}deg)`,
+        transformOrigin: "center center",
+        transformStyle: "preserve-3d",
+        transition: is3DFlipping
+          ? "transform 0.65s cubic-bezier(0.4, 0.2, 0.2, 1)"
+          : is3DMode && !draggingId
+          ? "transform 0.1s ease-out"
+          : "none",
+        boxShadow: pureCardOnly
+          ? "none"
+          : gildedEdge
+          ? `0 25px 60px -15px rgba(28, 25, 23, 0.25), 0 0 0 2.5px #D4AF37, 0 0 16px rgba(212, 175, 55, 0.5)`
+          : `0 25px 60px -15px rgba(28, 25, 23, 0.22), 0 10px 24px -6px rgba(28, 25, 23, 0.12)`,
       }}
+      className={`relative ${
+        pureCardOnly
+          ? "w-full h-full"
+          : `w-full max-w-[620px] ${
+              orientation === "horizontal" ? "aspect-[1.75/1]" : "aspect-[1/1.75] max-w-[350px]"
+            }`
+      } ${
+        cornerStyle === "rounded" ? "rounded-3xl" : "rounded-sm"
+      } border border-stone-300/80 overflow-hidden cursor-default relative group bg-white`}
     >
-      {/* Safe Zone Alert Banner */}
-      {isOutsideSafeZone && (
-        <div className="mb-3 px-4 py-1.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-800 text-xs font-bold flex items-center gap-2 animate-pulse shadow-sm">
-          <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
-          <span>Careful: Element is near blade cut edge! Keep inside the green Safe Zone.</span>
-        </div>
-      )}
-
-      {/* Blueprint Scale Calibrations (Horizontal & Vertical Rulers) */}
-      <div className="w-full max-w-[620px] mb-1.5 flex items-center justify-between text-[8px] font-mono font-bold text-stone-500 select-none px-2">
-        <span className="flex items-center gap-1">
-          <span className="text-[#A9782B]">0.0"</span> | . . . . |
-        </span>
-        <span>1.0" | . . . . |</span>
-        <span>2.0" | . . . . |</span>
-        <span>3.0" | . . . . |</span>
-        <span className="flex items-center gap-1">
-          | <span className="text-[#A9782B]">3.5" (Standard Cut Trim)</span>
-        </span>
-      </div>
-
-      {/* Main Physical Card Canvas with 3D Flip Wrapper */}
-      <div
-        ref={cardRef}
-        onClick={handleCanvasClick}
-        onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerUp}
-        style={{
-          backgroundColor,
-          transform: is3DMode
-            ? `scale(${zoom / 100}) rotateX(${tilt.x}deg) rotateY(${
-                tilt.y + (is3DFlipping ? 180 : 0)
-              }deg)`
-            : `scale(${zoom / 100}) rotateY(${is3DFlipping ? 180 : 0}deg)`,
-          transformOrigin: "center center",
-          transformStyle: "preserve-3d",
-          transition: is3DFlipping
-            ? "transform 0.65s cubic-bezier(0.4, 0.2, 0.2, 1)"
-            : is3DMode && !draggingId
-            ? "transform 0.1s ease-out"
-            : "none",
-          boxShadow: gildedEdge
-            ? `0 25px 60px -15px rgba(28, 25, 23, 0.25), 0 0 0 2.5px #D4AF37, 0 0 16px rgba(212, 175, 55, 0.5)`
-            : `0 25px 60px -15px rgba(28, 25, 23, 0.22), 0 10px 24px -6px rgba(28, 25, 23, 0.12)`,
-        }}
-        className={`relative w-full max-w-[620px] ${
-          orientation === "horizontal" ? "aspect-[1.75/1]" : "aspect-[1/1.75] max-w-[350px]"
-        } ${
-          cornerStyle === "rounded" ? "rounded-3xl" : "rounded-sm"
-        } border border-stone-300/80 overflow-hidden cursor-default relative group bg-white`}
-      >
         {/* Physical 400-Micron Card Thickness Edge Emulation */}
         <div className="absolute inset-0 pointer-events-none rounded-[inherit] border border-stone-400/30 shadow-[inset_0_1px_2px_rgba(255,255,255,0.8),inset_0_-2px_4px_rgba(0,0,0,0.2)]" />
 
@@ -479,6 +505,20 @@ export const CanvaCardCanvas: React.FC<Props> = ({
                     onPointerDown={(e) => e.stopPropagation()}
                     className="absolute -top-9 left-1/2 -translate-x-1/2 bg-white text-slate-800 border border-[#E5E0D8] rounded-xl px-2 py-1 shadow-xl flex items-center gap-1.5 text-xs z-50 whitespace-nowrap animate-in fade-in"
                   >
+                    {/* Live DPI Badge for Image Elements */}
+                    {el.type === "image" && (() => {
+                      const dpiCalc = calculateImageDpi(el, orientation);
+                      return (
+                        <div
+                          className={`flex items-center gap-1 px-1.5 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-tight border shadow-2xs ${dpiCalc.badgeBg} ${dpiCalc.badgeColor} ${dpiCalc.badgeBorder}`}
+                          title={`${dpiCalc.dpi} DPI (Intrinsic: ${dpiCalc.naturalWidth}×${dpiCalc.naturalHeight}px on 3.5"×2.0" card)`}
+                        >
+                          <span>{dpiCalc.status === "crisp" ? "🟢" : dpiCalc.status === "acceptable" ? "🟡" : "🔴"}</span>
+                          <span>{dpiCalc.dpi} DPI</span>
+                        </div>
+                      );
+                    })()}
+
                     {el.locked ? (
                       <div className="flex items-center gap-1 px-1 text-amber-700 text-[10px] font-bold">
                         <Lock className="w-3 h-3 text-amber-600" />
@@ -486,6 +526,29 @@ export const CanvaCardCanvas: React.FC<Props> = ({
                       </div>
                     ) : (
                       <>
+                        {el.type === "image" && (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => onUpdateElement(el.id, { flipX: !el.flipX })}
+                              className="p-1 hover:bg-slate-100 rounded text-slate-600 hover:text-slate-900 transition cursor-pointer"
+                              title="Flip Horizontally"
+                            >
+                              <FlipHorizontal className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                onUpdateElement(el.id, { rotation: ((el.rotation || 0) + 90) % 360 })
+                              }
+                              className="p-1 hover:bg-slate-100 rounded text-slate-600 hover:text-slate-900 transition cursor-pointer"
+                              title="Rotate 90 Degrees"
+                            >
+                              <RotateCw className="w-3.5 h-3.5" />
+                            </button>
+                            <div className="w-px h-3 bg-slate-200" />
+                          </>
+                        )}
                         <button
                           type="button"
                           onClick={() => onDuplicateElement(el.id)}
@@ -645,20 +708,122 @@ export const CanvaCardCanvas: React.FC<Props> = ({
                   </div>
                 )}
 
-                {/* 5. IMAGE / LOGO ELEMENT */}
-                {el.type === "image" && (
-                  <div className="w-16 h-16 sm:w-20 sm:h-20 p-1 rounded-xl overflow-hidden bg-white/40 border border-slate-200/80 backdrop-blur-xs flex items-center justify-center shadow-xs">
-                    {el.imageSrc ? (
-                      <img src={el.imageSrc} alt="Logo" className="w-full h-full object-contain" />
-                    ) : (
-                      <div className="text-[10px] text-slate-400">Logo</div>
-                    )}
-                  </div>
-                )}
+                {/* 5. IMAGE / LOGO ELEMENT WITH DYNAMIC SCALING, ROTATION, FLIP & SELECTIVE FINISHES */}
+                {el.type === "image" && (() => {
+                  const widthPx = (el.width || 25) * 4.2;
+                  const rot = el.rotation || 0;
+                  const scaleX = el.flipX ? -1 : 1;
+                  const scaleY = el.flipY ? -1 : 1;
+
+                  return (
+                    <div className="relative group/img select-none">
+                      {/* Corner Resize Handles when Selected */}
+                      {isSelected && !el.locked && (
+                        <>
+                          <div
+                            onPointerDown={(e) => handleResizeStart(e, el, "nw")}
+                            className="absolute -top-1.5 -left-1.5 w-3 h-3 rounded-full bg-white border-2 border-[#A9782B] shadow-sm hover:scale-125 transition-transform z-50 cursor-nwse-resize"
+                            title="Drag to resize"
+                          />
+                          <div
+                            onPointerDown={(e) => handleResizeStart(e, el, "ne")}
+                            className="absolute -top-1.5 -right-1.5 w-3 h-3 rounded-full bg-white border-2 border-[#A9782B] shadow-sm hover:scale-125 transition-transform z-50 cursor-nesw-resize"
+                            title="Drag to resize"
+                          />
+                          <div
+                            onPointerDown={(e) => handleResizeStart(e, el, "sw")}
+                            className="absolute -bottom-1.5 -left-1.5 w-3 h-3 rounded-full bg-white border-2 border-[#A9782B] shadow-sm hover:scale-125 transition-transform z-50 cursor-nesw-resize"
+                            title="Drag to resize"
+                          />
+                          <div
+                            onPointerDown={(e) => handleResizeStart(e, el, "se")}
+                            className="absolute -bottom-1.5 -right-1.5 w-3 h-3 rounded-full bg-white border-2 border-[#A9782B] shadow-sm hover:scale-125 transition-transform z-50 cursor-nwse-resize"
+                            title="Drag to resize"
+                          />
+                        </>
+                      )}
+
+                      <div
+                        style={{
+                          width: `${widthPx}px`,
+                          maxWidth: "85vw",
+                          aspectRatio: el.aspectRatio || 1,
+                          opacity: el.opacity ?? 1,
+                          transform: `rotate(${rot}deg) scale(${scaleX}, ${scaleY})`,
+                          transformOrigin: "center center",
+                        }}
+                        className="p-1 rounded-xl overflow-hidden bg-white/10 backdrop-blur-xs flex items-center justify-center transition-all select-none"
+                      >
+                        {el.imageSrc ? (
+                          <img
+                            src={el.imageSrc}
+                            alt={el.imageAlt || "Logo"}
+                            className={`w-full h-full object-contain pointer-events-none select-none ${
+                              el.proFinish === "gold-foil"
+                                ? "drop-shadow-[0_0_10px_rgba(212,175,55,0.85)] filter brightness-110"
+                                : el.proFinish === "silver-foil"
+                                ? "drop-shadow-[0_0_10px_rgba(203,213,225,0.9)] filter brightness-110"
+                                : el.proFinish === "rose-gold-foil"
+                                ? "drop-shadow-[0_0_10px_rgba(253,164,175,0.85)]"
+                                : el.proFinish === "spot-uv"
+                                ? "drop-shadow-[0_4px_8px_rgba(0,0,0,0.4)]"
+                                : ""
+                            }`}
+                          />
+                        ) : (
+                          <div className="text-[10px] text-slate-400">Logo</div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
             );
           })}
       </div>
+  );
+
+  if (pureCardOnly) {
+    return cardElement;
+  }
+
+  return (
+    <div
+      ref={deskRef}
+      onMouseMove={handleDeskMouseMove}
+      onMouseLeave={handleDeskMouseLeave}
+      className="relative flex flex-col items-center justify-center p-4 sm:p-8 select-none w-full"
+      style={{
+        perspective: "1400px",
+        backgroundImage: `
+          radial-gradient(#D3CCC0 1.2px, transparent 1.2px),
+          radial-gradient(#E8E3D8 1.2px, transparent 1.2px)
+        `,
+        backgroundSize: "28px 28px, 14px 14px",
+      }}
+    >
+      {/* Safe Zone Alert Banner */}
+      {isOutsideSafeZone && (
+        <div className="mb-3 px-4 py-1.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-800 text-xs font-bold flex items-center gap-2 animate-pulse shadow-sm">
+          <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+          <span>Careful: Element is near blade cut edge! Keep inside the green Safe Zone.</span>
+        </div>
+      )}
+
+      {/* Blueprint Scale Calibrations (Horizontal & Vertical Rulers) */}
+      <div className="w-full max-w-[620px] mb-1.5 flex items-center justify-between text-[8px] font-mono font-bold text-stone-500 select-none px-2">
+        <span className="flex items-center gap-1">
+          <span className="text-[#A9782B]">0.0"</span> | . . . . |
+        </span>
+        <span>1.0" | . . . . |</span>
+        <span>2.0" | . . . . |</span>
+        <span>3.0" | . . . . |</span>
+        <span className="flex items-center gap-1">
+          | <span className="text-[#A9782B]">3.5" (Standard Cut Trim)</span>
+        </span>
+      </div>
+
+      {cardElement}
     </div>
   );
 };

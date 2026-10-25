@@ -655,17 +655,72 @@ const QrCodePlaceholder = ({ className = "w-8 h-8" }: { className?: string }) =>
   </svg>
 );
 
-// Standardized Luxury Visiting Card Preview Component (Exact Same Size & Same Name: Mahi Kapoor)
-function VisitingCardCatalogPreview({ product, name = "Mahi Kapoor" }: { product: CatalogProduct; name?: string }) {
+// Standardized Luxury Visiting Card Preview Component (Fully Dynamic: Syncs Name, Company, Role, Phone, Fonts & Colors Across All Cards)
+function VisitingCardCatalogPreview({
+  product,
+  name = "Mahi Kapoor",
+  company = "Incredible Treasures",
+  designation = "Managing Director",
+  phone = "+91 99450 39266",
+  email = "contact@incredible-treasures.com",
+  website = "www.incredible-treasures.com",
+  address = "Bengaluru, Karnataka",
+  fonts,
+  colors,
+  fontSizes,
+  italics,
+  bolds,
+  uppers,
+}: {
+  product: CatalogProduct;
+  name?: string;
+  company?: string;
+  designation?: string;
+  phone?: string;
+  email?: string;
+  website?: string;
+  address?: string;
+  fonts?: Record<string, string>;
+  colors?: Record<string, string>;
+  fontSizes?: Record<string, number>;
+  italics?: Record<string, boolean>;
+  bolds?: Record<string, boolean>;
+  uppers?: Record<string, boolean>;
+}) {
   const pid = product.id;
   const displayName = name || "Mahi Kapoor";
+  const displayCompany = company || "Incredible Treasures";
+  const displayDesignation = designation || "Managing Director";
+  const displayPhone = phone || "+91 99450 39266";
+  const displayEmail = email || "contact@incredible-treasures.com";
+  const displayWebsite = website || "www.incredible-treasures.com";
+  const displayAddress = address || "Bengaluru, Karnataka";
+
+  const getStyle = (field: string, defaultColor?: string, defaultWeight?: number): React.CSSProperties => {
+    const fontId = fonts?.[field] || "jakarta";
+    const fontObj = CARD_FONTS.find((f) => f.id === fontId) || CARD_FONTS[0];
+    const color = colors?.[field] || defaultColor;
+    const isItalic = italics?.[field] || false;
+    const isBold = bolds?.[field];
+    const isUpper = uppers?.[field] || false;
+    const userFontSize = fontSizes?.[field];
+
+    return {
+      fontFamily: fontObj.fontFamily,
+      color: color,
+      fontStyle: isItalic ? "italic" : "normal",
+      fontWeight: isBold !== undefined ? (isBold ? 800 : 500) : (defaultWeight ?? 600),
+      textTransform: isUpper ? "uppercase" : "none",
+      ...(userFontSize ? { fontSize: `${Math.max(7, Math.min(16, Math.round(userFontSize * 0.85)))}px` } : {}),
+    };
+  };
 
   return (
     <div className="relative aspect-[4/3] w-full bg-gradient-to-br from-slate-100 via-slate-50 to-slate-200/90 flex items-center justify-center p-3.5 sm:p-4 overflow-hidden select-none">
       {/* Subtle Studio Backdrop Radial Shadow */}
       <div className="absolute inset-0 bg-radial from-transparent via-transparent to-black/5 pointer-events-none" />
 
-      {/* The Standard Visiting Card (Identical Dimensions: Standard 3.5" x 2" Ratio Across All Products) */}
+      {/* The Standard Visiting Card (Identical Dimensions: Standard 3.5\" x 2\" Ratio Across All Products) */}
       <div className="relative w-full max-w-[270px] aspect-[1.75/1] rounded-xl shadow-xl border border-black/15 overflow-hidden transition-all duration-300 group-hover:scale-105 group-hover:shadow-2xl">
         {pid === "pvc-regular-glossy" ? (
           /* 1. PVC Regular Glossy */
@@ -673,30 +728,39 @@ function VisitingCardCatalogPreview({ product, name = "Mahi Kapoor" }: { product
             <div className="w-[60%] p-2.5 sm:p-3 flex flex-col justify-between z-10">
               <div className="flex items-center gap-2">
                 <div className="w-6 h-6 rounded-md bg-emerald-700 text-white font-black text-[10px] flex items-center justify-center shrink-0 shadow-2xs">
-                  IT
+                  {displayCompany ? displayCompany.charAt(0).toUpperCase() : "IT"}
                 </div>
                 <div className="min-w-0">
-                  <div className="text-[11px] sm:text-xs font-black text-slate-900 truncate leading-tight">
+                  <div
+                    className="text-[11px] sm:text-xs font-black truncate leading-tight"
+                    style={getStyle("customerName", "#0F172A", 900)}
+                  >
                     {displayName}
                   </div>
-                  <div className="text-[8px] font-semibold text-slate-500 truncate">
-                    Managing Director
+                  <div
+                    className="text-[8px] font-semibold truncate"
+                    style={getStyle("customerDesignation", "#64748B", 600)}
+                  >
+                    {displayDesignation}
                   </div>
                 </div>
               </div>
               <div className="space-y-0.5 text-[7px] sm:text-[8px] text-slate-600 font-medium">
-                <div className="truncate">+91 99450 39266</div>
-                <div className="truncate">contact@company.com</div>
-                <div className="truncate">Bengaluru, Karnataka</div>
+                <div className="truncate" style={getStyle("phone", "#475569")}>{displayPhone}</div>
+                <div className="truncate" style={getStyle("email", "#475569")}>{displayEmail}</div>
+                <div className="truncate" style={getStyle("address", "#475569")}>{displayAddress}</div>
               </div>
             </div>
             <div className="w-[40%] bg-gradient-to-br from-[#A81D24] via-[#851117] to-[#1E232A] p-2 sm:p-2.5 text-white flex flex-col justify-between relative">
               <div className="text-right">
-                <div className="text-[9px] font-black tracking-tight leading-tight uppercase">
-                  INCREDIBLE
+                <div
+                  className="text-[9px] font-black tracking-tight leading-tight uppercase truncate"
+                  style={getStyle("companyName", "#FFFFFF", 900)}
+                >
+                  {displayCompany}
                 </div>
                 <div className="text-[7px] text-amber-300 font-bold tracking-widest">
-                  TREASURES
+                  PREMIUM SUITE
                 </div>
               </div>
               <div className="text-[7px] text-amber-200/90 font-bold tracking-wider uppercase text-right">
@@ -710,15 +774,30 @@ function VisitingCardCatalogPreview({ product, name = "Mahi Kapoor" }: { product
           <div className="w-full h-full bg-gradient-to-br from-[#1E0B36] via-[#3B1560] to-[#120524] text-white p-3 sm:p-3.5 flex flex-col justify-between relative overflow-hidden">
             <div className="absolute -top-6 -right-6 w-24 h-24 rounded-full bg-fuchsia-600/25 blur-lg pointer-events-none" />
             <div className="flex justify-between items-start relative z-10">
-              <div>
-                <div className="text-[10px] font-serif italic text-white/95">Incredible Treasures</div>
+              <div className="min-w-0 pr-2">
+                <div
+                  className="text-[10px] truncate"
+                  style={getStyle("companyName", "#FFFFFF", 700)}
+                >
+                  {displayCompany}
+                </div>
                 <div className="text-[7px] text-fuchsia-300 font-bold uppercase tracking-wider">Executive Suite</div>
               </div>
-              <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+              <Sparkles className="w-3.5 h-3.5 text-amber-300 shrink-0" />
             </div>
             <div className="relative z-10">
-              <div className="text-[11px] sm:text-xs font-black text-white truncate">{displayName}</div>
-              <div className="text-[8px] text-amber-300 font-semibold">Executive Director • +91 99450 39266</div>
+              <div
+                className="text-[11px] sm:text-xs font-black truncate"
+                style={getStyle("customerName", "#FFFFFF", 900)}
+              >
+                {displayName}
+              </div>
+              <div
+                className="text-[8px] font-semibold truncate"
+                style={getStyle("customerDesignation", "#FDE047")}
+              >
+                {displayDesignation} • {displayPhone}
+              </div>
             </div>
             <div className="flex justify-between text-[7px] text-slate-300 border-t border-white/10 pt-1 relative z-10">
               <span>Silk Matt PVC</span>
@@ -729,13 +808,16 @@ function VisitingCardCatalogPreview({ product, name = "Mahi Kapoor" }: { product
           /* 3. PVC Brushed Silver */
           <div className="w-full h-full bg-gradient-to-r from-slate-300 via-slate-100 to-slate-300 text-slate-900 p-3 sm:p-3.5 flex flex-col justify-between border border-slate-400/60 relative overflow-hidden">
             <div className="flex items-center justify-between border-b border-slate-400/40 pb-1">
-              <div className="flex items-center gap-1.5">
-                <ShieldCheck className="w-3.5 h-3.5 text-slate-700" />
-                <div className="text-[9px] font-black tracking-tight uppercase leading-tight">
-                  METALLIC EXECUTIVE SUITE
+              <div className="flex items-center gap-1.5 min-w-0 pr-2">
+                <ShieldCheck className="w-3.5 h-3.5 text-slate-700 shrink-0" />
+                <div
+                  className="text-[9px] font-black tracking-tight uppercase leading-tight truncate"
+                  style={getStyle("companyName", "#0F172A", 900)}
+                >
+                  {displayCompany}
                 </div>
               </div>
-              <span className="text-[7px] font-black text-slate-700 bg-white/80 px-1 py-0.5 rounded border border-slate-300">
+              <span className="text-[7px] font-black text-slate-700 bg-white/80 px-1 py-0.5 rounded border border-slate-300 shrink-0">
                 RFID
               </span>
             </div>
@@ -744,9 +826,24 @@ function VisitingCardCatalogPreview({ product, name = "Mahi Kapoor" }: { product
                 <User className="w-4 h-4 text-slate-600" />
               </div>
               <div className="space-y-0.5 min-w-0">
-                <div className="text-[10px] sm:text-[11px] font-black text-slate-950 truncate leading-tight">{displayName}</div>
-                <div className="text-[7.5px] text-slate-700 font-bold">Chief Executive Officer</div>
-                <div className="text-[7px] text-slate-500 truncate">+91 99450 39266</div>
+                <div
+                  className="text-[10px] sm:text-[11px] font-black truncate leading-tight"
+                  style={getStyle("customerName", "#0F172A", 900)}
+                >
+                  {displayName}
+                </div>
+                <div
+                  className="text-[7.5px] font-bold truncate"
+                  style={getStyle("customerDesignation", "#334155", 700)}
+                >
+                  {displayDesignation}
+                </div>
+                <div
+                  className="text-[7px] truncate"
+                  style={getStyle("phone", "#64748B")}
+                >
+                  {displayPhone}
+                </div>
               </div>
             </div>
             <div className="text-[7px] text-slate-600 font-mono tracking-widest uppercase">
@@ -757,22 +854,35 @@ function VisitingCardCatalogPreview({ product, name = "Mahi Kapoor" }: { product
           /* 4. PVC Rainbow Holographic */
           <div className="w-full h-full bg-gradient-to-tr from-[#FFD1DC] via-[#FFE4B5] via-[#D1E8E2] to-[#E6E6FA] text-slate-900 p-3 sm:p-3.5 flex flex-col justify-between relative overflow-hidden shadow-inner">
             <div className="flex items-center justify-between">
-              <div>
-                <div className="text-[11px] sm:text-xs font-black text-slate-900 truncate leading-tight">{displayName}</div>
-                <div className="text-[8px] font-bold text-emerald-800">Creative Director</div>
+              <div className="min-w-0 pr-2">
+                <div
+                  className="text-[11px] sm:text-xs font-black truncate leading-tight"
+                  style={getStyle("customerName", "#0F172A", 900)}
+                >
+                  {displayName}
+                </div>
+                <div
+                  className="text-[8px] font-bold truncate"
+                  style={getStyle("customerDesignation", "#065F46", 700)}
+                >
+                  {displayDesignation}
+                </div>
               </div>
-              <Sparkles className="w-3.5 h-3.5 text-amber-700" />
+              <Sparkles className="w-3.5 h-3.5 text-amber-700 shrink-0" />
             </div>
             <div className="text-center py-0.5">
-              <div className="text-xs font-black tracking-wider text-slate-950 uppercase">
-                INCREDIBLE TREASURES
+              <div
+                className="text-xs font-black tracking-wider uppercase truncate"
+                style={getStyle("companyName", "#0F172A", 900)}
+              >
+                {displayCompany}
               </div>
               <div className="text-[7px] font-bold text-amber-900 tracking-wider">
                 Holographic Prismatic Sheen
               </div>
             </div>
             <div className="flex items-center justify-between text-[7px] font-bold text-slate-700 pt-1 border-t border-slate-900/10">
-              <span>+91 99450 39266</span>
+              <span style={getStyle("phone", "#334155")}>{displayPhone}</span>
               <span>Rainbow Iridescent</span>
             </div>
           </div>
@@ -782,19 +892,30 @@ function VisitingCardCatalogPreview({ product, name = "Mahi Kapoor" }: { product
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-red-500 via-amber-400 via-emerald-400 to-indigo-500" />
             <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-500 via-emerald-400 via-amber-400 to-red-500" />
             <div className="pt-0.5">
-              <div className="text-[11px] sm:text-xs font-black tracking-wider text-slate-950 uppercase truncate leading-tight">
-                {displayName.toUpperCase()}
+              <div
+                className="text-[11px] sm:text-xs font-black tracking-wider uppercase truncate leading-tight"
+                style={getStyle("customerName", "#020617", 900)}
+              >
+                {displayName}
               </div>
-              <div className="text-[7.5px] font-extrabold text-slate-700 tracking-wider uppercase">
-                DIRECTOR - OPERATIONS
+              <div
+                className="text-[7.5px] font-extrabold tracking-wider uppercase truncate"
+                style={getStyle("customerDesignation", "#334155", 800)}
+              >
+                {displayDesignation}
               </div>
             </div>
             <div className="py-0.5">
-              <div className="text-[9px] font-black text-slate-900">INCREDIBLE TREASURES</div>
+              <div
+                className="text-[9px] font-black truncate"
+                style={getStyle("companyName", "#0F172A", 900)}
+              >
+                {displayCompany}
+              </div>
               <div className="text-[7px] text-slate-600 font-medium">400 Micron Frosted Crystal</div>
             </div>
             <div className="text-[7px] font-bold text-slate-800 flex justify-between pb-0.5">
-              <span>Cell: +91 99450 39266</span>
+              <span style={getStyle("phone", "#1E293B")}>Cell: {displayPhone}</span>
               <span>Waterproof Clear</span>
             </div>
           </div>
@@ -803,18 +924,31 @@ function VisitingCardCatalogPreview({ product, name = "Mahi Kapoor" }: { product
           <div className="w-full h-full bg-gradient-to-tr from-[#DEBA78] via-[#F4E0A5] to-[#D5A754] text-slate-950 p-3 sm:p-3.5 flex flex-col justify-between relative overflow-hidden">
             <div className="bg-white/95 rounded-lg p-2 shadow-xs border border-amber-300">
               <div className="flex items-center justify-between">
-                <div>
-                  <div className="text-[10px] font-black text-slate-900 leading-tight">CREATIVE MIND</div>
-                  <div className="text-[7px] font-bold text-amber-800">Artist Director Suite</div>
+                <div className="min-w-0 pr-1">
+                  <div
+                    className="text-[10px] font-black leading-tight truncate"
+                    style={getStyle("companyName", "#0F172A", 900)}
+                  >
+                    {displayCompany}
+                  </div>
+                  <div
+                    className="text-[7px] font-bold truncate"
+                    style={getStyle("customerDesignation", "#92400E", 700)}
+                  >
+                    {displayDesignation}
+                  </div>
                 </div>
-                <Sparkles className="w-3 h-3 text-amber-600" />
+                <Sparkles className="w-3 h-3 text-amber-600 shrink-0" />
               </div>
-              <div className="mt-1 text-[11px] font-black text-slate-950 truncate">
+              <div
+                className="mt-1 text-[11px] font-black truncate"
+                style={getStyle("customerName", "#020617", 900)}
+              >
                 {displayName}
               </div>
             </div>
             <div className="text-[7.5px] font-bold text-slate-900 flex justify-between items-center">
-              <span>+91 99450 39266</span>
+              <span style={getStyle("phone", "#020617")}>{displayPhone}</span>
               <span className="font-mono uppercase tracking-wider">GLITTER LUXURY</span>
             </div>
           </div>
@@ -831,15 +965,27 @@ function VisitingCardCatalogPreview({ product, name = "Mahi Kapoor" }: { product
               </span>
             </div>
             <div className="py-0.5">
-              <div className="text-[11px] sm:text-xs font-black tracking-widest uppercase text-slate-800 truncate drop-shadow-[1px_1px_0px_rgba(0,0,0,0.3)]">
-                {displayName.toUpperCase()}
+              <div
+                className="text-[11px] sm:text-xs font-black tracking-widest uppercase truncate drop-shadow-[1px_1px_0px_rgba(0,0,0,0.3)]"
+                style={getStyle("customerName", "#1E293B", 900)}
+              >
+                {displayName}
               </div>
-              <div className="text-[7.5px] font-bold tracking-wider uppercase text-slate-600">
-                MANAGING DIRECTOR
+              <div
+                className="text-[7.5px] font-bold tracking-wider uppercase truncate"
+                style={getStyle("customerDesignation", "#475569", 700)}
+              >
+                {displayDesignation}
+              </div>
+              <div
+                className="text-[7.5px] font-bold tracking-wider uppercase truncate mt-0.5"
+                style={getStyle("companyName", "#334155", 700)}
+              >
+                {displayCompany}
               </div>
             </div>
             <div className="text-[7.5px] font-mono text-slate-700 flex justify-between">
-              <span>+91 99450 39266</span>
+              <span style={getStyle("phone", "#334155")}>{displayPhone}</span>
               <span className="font-bold">3D EMBOSSED</span>
             </div>
           </div>
@@ -855,18 +1001,27 @@ function VisitingCardCatalogPreview({ product, name = "Mahi Kapoor" }: { product
               </span>
             </div>
             <div>
-              <div className="text-[11px] sm:text-xs font-serif font-black tracking-wide bg-gradient-to-r from-amber-200 via-yellow-400 to-amber-200 bg-clip-text text-transparent truncate">
-                {displayName.toUpperCase()}
+              <div
+                className="text-[11px] sm:text-xs font-black tracking-wide bg-gradient-to-r from-amber-200 via-yellow-400 to-amber-200 bg-clip-text text-transparent truncate"
+                style={getStyle("customerName", "#FDE047", 900)}
+              >
+                {displayName}
               </div>
-              <div className="text-[7.5px] font-serif tracking-widest text-amber-200/80 uppercase">
-                EXECUTIVE CHAIRMAN
+              <div
+                className="text-[7.5px] tracking-widest uppercase truncate"
+                style={getStyle("customerDesignation", "#FDE68A", 700)}
+              >
+                {displayDesignation}
               </div>
-              <div className="text-[8px] font-bold text-neutral-300 mt-0.5">
-                INCREDIBLE TREASURES
+              <div
+                className="text-[8px] font-bold mt-0.5 truncate"
+                style={getStyle("companyName", "#E2E8F0", 700)}
+              >
+                {displayCompany}
               </div>
             </div>
             <div className="text-[7px] text-neutral-400 font-mono flex justify-between">
-              <span>+91 99450 39266</span>
+              <span style={getStyle("phone", "#94A3B8")}>{displayPhone}</span>
               <span>400 Micron Matt</span>
             </div>
           </div>
@@ -880,16 +1035,27 @@ function VisitingCardCatalogPreview({ product, name = "Mahi Kapoor" }: { product
               <Trophy className="w-3.5 h-3.5 text-slate-950" />
             </div>
             <div className="text-center py-0.5">
-              <div className="text-xs font-serif font-black tracking-tight text-slate-950">
-                INCREDIBLE TREASURES
+              <div
+                className="text-xs font-black tracking-tight truncate"
+                style={getStyle("companyName", "#020617", 900)}
+              >
+                {displayCompany}
               </div>
-              <div className="text-[10px] font-bold text-slate-950 tracking-wider truncate">
+              <div
+                className="text-[10px] font-bold tracking-wider truncate"
+                style={getStyle("customerName", "#020617", 800)}
+              >
                 {displayName}
               </div>
-              <div className="text-[7px] text-slate-900 font-medium">Founder & Managing Director</div>
+              <div
+                className="text-[7px] font-medium truncate"
+                style={getStyle("customerDesignation", "#0F172A", 600)}
+              >
+                {displayDesignation}
+              </div>
             </div>
             <div className="text-[7px] font-bold text-slate-900 flex justify-between">
-              <span>+91 99450 39266</span>
+              <span style={getStyle("phone", "#0F172A")}>{displayPhone}</span>
               <span>Spot Gloss Varnish</span>
             </div>
           </div>
@@ -898,20 +1064,28 @@ function VisitingCardCatalogPreview({ product, name = "Mahi Kapoor" }: { product
           <div className="w-full h-full bg-[#0F0F12] text-white p-3 sm:p-3.5 flex flex-col justify-between border border-amber-500/30 relative">
             <div className="flex items-center justify-between">
               <div className="w-5 h-5 rounded border border-amber-400 flex items-center justify-center font-serif text-[9px] font-black text-amber-300">
-                IT
+                {displayCompany ? displayCompany.charAt(0).toUpperCase() : "IT"}
               </div>
               <span className="text-[7px] font-bold tracking-widest text-amber-300 uppercase">
                 3D Raised Gold Foil
               </span>
             </div>
             <div>
-              <div className="text-[11px] sm:text-xs font-serif font-bold tracking-wider text-amber-200 truncate">
+              <div
+                className="text-[11px] sm:text-xs font-bold tracking-wider truncate"
+                style={getStyle("customerName", "#FDE68A", 800)}
+              >
                 {displayName}
               </div>
-              <div className="text-[7.5px] text-slate-400 uppercase tracking-wider">Managing Director</div>
+              <div
+                className="text-[7.5px] uppercase tracking-wider truncate"
+                style={getStyle("customerDesignation", "#94A3B8", 600)}
+              >
+                {displayDesignation} • {displayCompany}
+              </div>
             </div>
             <div className="flex justify-between text-[7px] text-amber-300/80 font-mono border-t border-white/10 pt-1">
-              <span>400 GSM Velvet Card</span>
+              <span style={getStyle("phone", "#FDE68A")}>{displayPhone}</span>
               <span>Hot Stamped</span>
             </div>
           </div>
@@ -919,17 +1093,30 @@ function VisitingCardCatalogPreview({ product, name = "Mahi Kapoor" }: { product
           /* 11. Royal Velvet Touch Cards */
           <div className="w-full h-full bg-gradient-to-br from-[#0A192F] to-[#020C1B] text-white p-3 sm:p-3.5 flex flex-col justify-between border border-cyan-900/40 relative">
             <div className="flex items-center justify-between">
-              <div className="text-[8px] font-bold text-cyan-300 uppercase tracking-widest">Royal Velvet</div>
-              <Sparkles className="w-3 h-3 text-cyan-400" />
+              <div
+                className="text-[8px] font-bold uppercase tracking-widest truncate max-w-[170px]"
+                style={getStyle("companyName", "#67E8F9", 700)}
+              >
+                {displayCompany}
+              </div>
+              <Sparkles className="w-3 h-3 text-cyan-400 shrink-0" />
             </div>
             <div>
-              <div className="text-[11px] sm:text-xs font-black tracking-wide text-white truncate">
+              <div
+                className="text-[11px] sm:text-xs font-black tracking-wide truncate"
+                style={getStyle("customerName", "#FFFFFF", 900)}
+              >
                 {displayName}
               </div>
-              <div className="text-[7.5px] text-cyan-200/90 font-medium">Chief Executive Officer</div>
+              <div
+                className="text-[7.5px] font-medium truncate"
+                style={getStyle("customerDesignation", "#A5F3FC", 600)}
+              >
+                {displayDesignation}
+              </div>
             </div>
             <div className="flex justify-between text-[7px] text-slate-400 border-t border-white/10 pt-1">
-              <span>350 GSM European Card</span>
+              <span style={getStyle("phone", "#94A3B8")}>{displayPhone}</span>
               <span>Soft-Touch Feel</span>
             </div>
           </div>
@@ -937,21 +1124,32 @@ function VisitingCardCatalogPreview({ product, name = "Mahi Kapoor" }: { product
           /* 12. Default / Silk Matte Visiting Cards */
           <div className="w-full h-full bg-white text-slate-900 p-3 sm:p-3.5 flex flex-col justify-between border border-slate-200 relative">
             <div className="flex items-center justify-between">
-              <div className="text-[8px] font-black uppercase tracking-wider text-emerald-800">
-                Incredible Treasures
+              <div
+                className="text-[8px] font-black uppercase tracking-wider truncate max-w-[170px]"
+                style={getStyle("companyName", "#065F46", 800)}
+              >
+                {displayCompany}
               </div>
-              <span className="text-[7px] font-bold bg-emerald-50 text-emerald-800 px-1 py-0.5 rounded border border-emerald-200">
+              <span className="text-[7px] font-bold bg-emerald-50 text-emerald-800 px-1 py-0.5 rounded border border-emerald-200 shrink-0">
                 Silk Matte
               </span>
             </div>
             <div>
-              <div className="text-[11px] sm:text-xs font-black text-slate-900 truncate">
+              <div
+                className="text-[11px] sm:text-xs font-black truncate"
+                style={getStyle("customerName", "#0F172A", 900)}
+              >
                 {displayName}
               </div>
-              <div className="text-[7.5px] font-bold text-slate-500">Managing Director</div>
+              <div
+                className="text-[7.5px] font-bold truncate"
+                style={getStyle("customerDesignation", "#475569", 700)}
+              >
+                {displayDesignation}
+              </div>
             </div>
             <div className="flex justify-between text-[7px] text-slate-600 border-t border-slate-100 pt-1">
-              <span>+91 99450 39266</span>
+              <span style={getStyle("phone", "#475569")}>{displayPhone}</span>
               <span>350 GSM Art Card</span>
             </div>
           </div>
@@ -1172,6 +1370,68 @@ export default function VistaprintStorePage() {
     address: false,
   });
 
+  const [detailBolds, setDetailBolds] = useState<{
+    companyName: boolean;
+    customerName: boolean;
+    customerDesignation: boolean;
+    phone: boolean;
+    email: boolean;
+    website: boolean;
+    address: boolean;
+  }>({
+    companyName: true,
+    customerName: true,
+    customerDesignation: true,
+    phone: false,
+    email: false,
+    website: false,
+    address: false,
+  });
+
+  const [detailUppers, setDetailUppers] = useState<{
+    companyName: boolean;
+    customerName: boolean;
+    customerDesignation: boolean;
+    phone: boolean;
+    email: boolean;
+    website: boolean;
+    address: boolean;
+  }>({
+    companyName: false,
+    customerName: false,
+    customerDesignation: false,
+    phone: false,
+    email: false,
+    website: false,
+    address: false,
+  });
+
+  const [detailFontSizes, setDetailFontSizes] = useState<{
+    companyName: number;
+    customerName: number;
+    customerDesignation: number;
+    phone: number;
+    email: number;
+    website: number;
+    address: number;
+  }>({
+    companyName: 13,
+    customerName: 15,
+    customerDesignation: 11,
+    phone: 10,
+    email: 10,
+    website: 10,
+    address: 10,
+  });
+
+  // MS Word Formatting Ribbon Active Focus Target ("all" applies universally, or active field)
+  const [activeStylingTarget, setActiveStylingTarget] = useState<
+    "all" | "companyName" | "customerName" | "customerDesignation" | "phone" | "email" | "website" | "address"
+  >("all");
+
+  // Mega-Dropdown Live Card Preview Hover State (Syncs across dropdown)
+  const [dropdownHoveredCard, setDropdownHoveredCard] = useState<string>("pvc-regular-glossy");
+
   // INDEPENDENT COLOR CONTROLS & INDUSTRY COLOR HARMONY PALETTES
   // Specifically tailored for Businessmen / Corporate, Luxury Gold, Tech Startup, etc.
   const [detailColors, setDetailColors] = useState<{
@@ -1310,11 +1570,18 @@ export default function VistaprintStorePage() {
   const getFieldFontStyle = (field: keyof typeof detailFonts): React.CSSProperties => {
     const fontObj = getFieldFontObj(field);
     const isItalic = detailItalics[field] || false;
+    const isBold = detailBolds[field] ?? false;
+    const isUpper = detailUppers[field] || false;
     const color = detailColors[field] || "#0F172A";
+    const fontSize = detailFontSizes[field] ? `${detailFontSizes[field]}px` : undefined;
+
     return {
       fontFamily: fontObj.fontFamily,
       fontStyle: isItalic ? "italic" : "normal",
+      fontWeight: isBold ? 800 : 500,
       color: color,
+      fontSize: fontSize,
+      textTransform: isUpper ? "uppercase" : "none",
     };
   };
 
@@ -1326,6 +1593,7 @@ export default function VistaprintStorePage() {
   ) => {
     const text = value || fallback || "";
     const color = detailColors[field] || "#0F172A";
+    const forceUpper = isUpper || detailUppers[field];
     return (
       <span
         data-field={field}
@@ -1335,7 +1603,7 @@ export default function VistaprintStorePage() {
           color: color,
         }}
       >
-        {isUpper ? text.toUpperCase() : text}
+        {forceUpper ? text.toUpperCase() : text}
       </span>
     );
   };
@@ -1409,67 +1677,370 @@ export default function VistaprintStorePage() {
     );
   };
 
-  // Reusable Field Styling Sub-Bar (Clean Color Dropdown + Font Dropdown + Italic)
-  const FieldStylingBar = ({ field }: { field: keyof typeof detailPlacements }) => {
-    const currentFontId = detailFonts[field] || "jakarta";
-    const currentFontObj = getFieldFontObj(field);
-    const isItalic = detailItalics[field] || false;
-    const currentColor = detailColors[field] || "#0F172A";
+  // Microsoft Word / Google Docs Style Unified Formatting Ribbon
+  const MSWordFormattingRibbon = () => {
+    const isAll = activeStylingTarget === "all";
+    const currentTargetField: keyof typeof detailPlacements = isAll ? "customerName" : activeStylingTarget;
+    const currentFontId = detailFonts[currentTargetField] || "jakarta";
+    const currentFontObj = getFieldFontObj(currentTargetField);
+    const currentColor = detailColors[currentTargetField] || "#0F172A";
+    const currentFontSize = detailFontSizes[currentTargetField] || 14;
+    const currentIsBold = detailBolds[currentTargetField] ?? false;
+    const currentIsItalic = detailItalics[currentTargetField] ?? false;
+    const currentIsUpper = detailUppers[currentTargetField] ?? false;
+
+    const targetLabels: Record<string, string> = {
+      all: "✨ All Details",
+      companyName: "Company Name",
+      customerName: "Full Name",
+      customerDesignation: "Role / Title",
+      phone: "Phone Number",
+      email: "Email Address",
+      website: "Website URL",
+      address: "Office Address",
+    };
+
+    const handleApplyFont = (fontId: string) => {
+      if (isAll) {
+        setDetailFonts({
+          companyName: fontId,
+          customerName: fontId,
+          customerDesignation: fontId,
+          phone: fontId,
+          email: fontId,
+          website: fontId,
+          address: fontId,
+        });
+        setToastMessage(`Applied ${CARD_FONTS.find((f) => f.id === fontId)?.name.split(" (")[0]} font across all details!`);
+      } else {
+        setDetailFonts((prev) => ({ ...prev, [activeStylingTarget]: fontId }));
+      }
+      setTimeout(() => setToastMessage(null), 2000);
+    };
+
+    const handleApplyColor = (colorHex: string) => {
+      if (isAll) {
+        setDetailColors({
+          companyName: colorHex,
+          customerName: colorHex,
+          customerDesignation: colorHex,
+          phone: colorHex,
+          email: colorHex,
+          website: colorHex,
+          address: colorHex,
+        });
+        setToastMessage(`Applied print color across all details!`);
+      } else {
+        setDetailColors((prev) => ({ ...prev, [activeStylingTarget]: colorHex }));
+      }
+      setTimeout(() => setToastMessage(null), 2000);
+    };
+
+    const handleAdjustFontSize = (delta: number) => {
+      if (isAll) {
+        setDetailFontSizes((prev) => {
+          const next: any = {};
+          Object.keys(prev).forEach((k) => {
+            next[k] = Math.max(8, Math.min(26, (prev as any)[k] + delta));
+          });
+          return next;
+        });
+      } else {
+        setDetailFontSizes((prev) => ({
+          ...prev,
+          [activeStylingTarget]: Math.max(8, Math.min(26, prev[activeStylingTarget] + delta)),
+        }));
+      }
+    };
+
+    const handleToggleBold = () => {
+      if (isAll) {
+        const nextVal = !detailBolds.customerName;
+        setDetailBolds({
+          companyName: nextVal,
+          customerName: nextVal,
+          customerDesignation: nextVal,
+          phone: nextVal,
+          email: nextVal,
+          website: nextVal,
+          address: nextVal,
+        });
+      } else {
+        setDetailBolds((prev) => ({ ...prev, [activeStylingTarget]: !prev[activeStylingTarget] }));
+      }
+    };
+
+    const handleToggleItalic = () => {
+      if (isAll) {
+        const nextVal = !detailItalics.customerName;
+        setDetailItalics({
+          companyName: nextVal,
+          customerName: nextVal,
+          customerDesignation: nextVal,
+          phone: nextVal,
+          email: nextVal,
+          website: nextVal,
+          address: nextVal,
+        });
+      } else {
+        setDetailItalics((prev) => ({ ...prev, [activeStylingTarget]: !prev[activeStylingTarget] }));
+      }
+    };
+
+    const handleToggleUpper = () => {
+      if (isAll) {
+        const nextVal = !detailUppers.customerName;
+        setDetailUppers({
+          companyName: nextVal,
+          customerName: nextVal,
+          customerDesignation: nextVal,
+          phone: nextVal,
+          email: nextVal,
+          website: nextVal,
+          address: nextVal,
+        });
+      } else {
+        setDetailUppers((prev) => ({ ...prev, [activeStylingTarget]: !prev[activeStylingTarget] }));
+      }
+    };
+
+    const handleApplyStyleToAll = () => {
+      const activeFont = detailFonts[currentTargetField];
+      const activeColor = detailColors[currentTargetField];
+      const activeBold = detailBolds[currentTargetField];
+      const activeItalic = detailItalics[currentTargetField];
+      const activeUpper = detailUppers[currentTargetField];
+
+      setDetailFonts({
+        companyName: activeFont,
+        customerName: activeFont,
+        customerDesignation: activeFont,
+        phone: activeFont,
+        email: activeFont,
+        website: activeFont,
+        address: activeFont,
+      });
+      setDetailColors({
+        companyName: activeColor,
+        customerName: activeColor,
+        customerDesignation: activeColor,
+        phone: activeColor,
+        email: activeColor,
+        website: activeColor,
+        address: activeColor,
+      });
+      setDetailBolds({
+        companyName: activeBold,
+        customerName: activeBold,
+        customerDesignation: activeBold,
+        phone: activeBold,
+        email: activeBold,
+        website: activeBold,
+        address: activeBold,
+      });
+      setDetailItalics({
+        companyName: activeItalic,
+        customerName: activeItalic,
+        customerDesignation: activeItalic,
+        phone: activeItalic,
+        email: activeItalic,
+        website: activeItalic,
+        address: activeItalic,
+      });
+      setDetailUppers({
+        companyName: activeUpper,
+        customerName: activeUpper,
+        customerDesignation: activeUpper,
+        phone: activeUpper,
+        email: activeUpper,
+        website: activeUpper,
+        address: activeUpper,
+      });
+      setToastMessage("✨ Applied active typography & color to all card fields!");
+      setTimeout(() => setToastMessage(null), 2500);
+    };
 
     return (
-      <div className="flex items-center justify-between gap-1.5 mt-1.5 px-0.5 text-[10px]">
-        {/* Color Dropdown (Simple, Clean, No Hex, No Dot) */}
-        <div className="inline-flex items-center gap-1.5 bg-slate-50 hover:bg-slate-100 border border-slate-200/90 rounded-md px-1.5 py-0.5 text-[10px] font-semibold text-slate-700 transition">
-          <Palette className="w-2.5 h-2.5 text-slate-500 shrink-0" />
-          <span className="text-[10px] font-bold text-slate-500">Color:</span>
-          <select
-            value={currentColor}
-            onChange={(e) => setDetailColors((prev) => ({ ...prev, [field]: e.target.value }))}
-            className="bg-transparent text-slate-900 font-bold cursor-pointer focus:outline-none text-[10px] max-w-[110px] truncate"
-            title="Select Print Color"
-          >
-            {CARD_PRINT_COLORS.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
-            {!CARD_PRINT_COLORS.some((c) => c.id.toLowerCase() === currentColor.toLowerCase()) && (
-              <option value={currentColor}>Current Color</option>
-            )}
-          </select>
+      <div className="bg-gradient-to-r from-slate-50 via-amber-50/25 to-slate-50 border border-amber-300/60 rounded-2xl p-3 sm:p-3.5 mb-4 shadow-xs">
+        {/* Row 1: Target Selector Pills & Active Indicator */}
+        <div className="flex flex-wrap items-center justify-between gap-2 pb-2.5 border-b border-slate-200/80 mb-2.5">
+          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
+            <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 mr-1 shrink-0 flex items-center gap-1">
+              <Sliders className="w-3 h-3 text-amber-600" />
+              <span>Format:</span>
+            </span>
+            {(["all", "companyName", "customerName", "customerDesignation", "phone", "email", "website", "address"] as const).map((tgt) => {
+              const isSelected = activeStylingTarget === tgt;
+              return (
+                <button
+                  key={tgt}
+                  type="button"
+                  onClick={() => setActiveStylingTarget(tgt)}
+                  className={`text-[10px] font-bold px-2 py-0.5 rounded-lg transition-all shrink-0 cursor-pointer ${
+                    isSelected
+                      ? "bg-slate-900 text-amber-300 shadow-2xs font-black ring-1 ring-amber-400/40"
+                      : "bg-white/80 text-slate-600 hover:text-slate-900 hover:bg-white border border-slate-200/70"
+                  }`}
+                >
+                  {targetLabels[tgt]}
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0">
+            <span className="text-[10px] font-bold text-amber-900 bg-amber-100/80 px-2 py-0.5 rounded-full border border-amber-300/80">
+              {isAll ? "⚡ Master Mode (All Details Sync)" : `Editing: ${targetLabels[activeStylingTarget]}`}
+            </span>
+          </div>
         </div>
 
-        {/* Font Selector & Italic */}
-        <div className="inline-flex items-center gap-1 shrink-0">
-          <div className="inline-flex items-center gap-1 bg-slate-50 hover:bg-slate-100 border border-slate-200/90 rounded-md px-1.5 py-0.5 text-[10px] font-semibold text-slate-700 transition">
-            <Type className="w-2.5 h-2.5 text-amber-700 shrink-0" />
-            <span className="text-[10px] font-bold text-slate-500">Font:</span>
-            <select
-              value={currentFontId}
-              onChange={(e) => setDetailFonts((prev) => ({ ...prev, [field]: e.target.value }))}
-              className="bg-transparent text-slate-900 font-bold cursor-pointer focus:outline-none text-[10px] max-w-[85px] truncate"
-              style={{ fontFamily: currentFontObj.fontFamily }}
-              title="Change Font"
-            >
-              {CARD_FONTS.map((font) => (
-                <option key={font.id} value={font.id} style={{ fontFamily: font.fontFamily }}>
-                  {font.name.split(" (")[0]}
-                </option>
-              ))}
-            </select>
+        {/* Row 2: Microsoft Word Unified Toolbar Ribbon */}
+        <div className="flex flex-wrap items-center justify-between gap-2.5">
+          {/* Left Ribbon: Font + Size + B/I/TT */}
+          <div className="flex flex-wrap items-center gap-2">
+            {/* Font Selector */}
+            <div className="inline-flex items-center gap-1.5 bg-white border border-slate-300 rounded-xl px-2.5 py-1 text-xs font-semibold shadow-2xs">
+              <Type className="w-3.5 h-3.5 text-amber-700 shrink-0" />
+              <select
+                value={currentFontId}
+                onChange={(e) => handleApplyFont(e.target.value)}
+                className="bg-transparent text-slate-900 font-bold cursor-pointer focus:outline-none text-xs max-w-[130px] sm:max-w-[155px] truncate"
+                style={{ fontFamily: currentFontObj.fontFamily }}
+                title="Change Typography Font"
+              >
+                {CARD_FONTS.map((font) => (
+                  <option key={font.id} value={font.id} style={{ fontFamily: font.fontFamily }}>
+                    {font.name.split(" (")[0]}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Font Size Stepper (MS Word A- / A+) */}
+            <div className="inline-flex items-center bg-white border border-slate-300 rounded-xl p-0.5 text-xs font-bold shadow-2xs">
+              <button
+                type="button"
+                onClick={() => handleAdjustFontSize(-1)}
+                className="w-6 h-6 flex items-center justify-center rounded-lg text-slate-600 hover:text-slate-950 hover:bg-slate-100 transition cursor-pointer"
+                title="Decrease Font Size"
+              >
+                <Minus className="w-3 h-3" />
+              </button>
+              <span className="px-2 text-[11px] font-black text-slate-900 select-none min-w-[34px] text-center">
+                {currentFontSize}px
+              </span>
+              <button
+                type="button"
+                onClick={() => handleAdjustFontSize(1)}
+                className="w-6 h-6 flex items-center justify-center rounded-lg text-slate-600 hover:text-slate-950 hover:bg-slate-100 transition cursor-pointer"
+                title="Increase Font Size"
+              >
+                <Plus className="w-3 h-3" />
+              </button>
+            </div>
+
+            {/* B / I / TT Style Toggles */}
+            <div className="inline-flex items-center bg-white border border-slate-300 rounded-xl p-0.5 text-xs font-bold shadow-2xs">
+              <button
+                type="button"
+                onClick={handleToggleBold}
+                className={`w-6 h-6 flex items-center justify-center rounded-lg transition cursor-pointer ${
+                  currentIsBold
+                    ? "bg-slate-900 text-white font-black shadow-2xs"
+                    : "text-slate-600 hover:text-slate-950 hover:bg-slate-100 font-extrabold"
+                }`}
+                title="Bold"
+              >
+                B
+              </button>
+              <button
+                type="button"
+                onClick={handleToggleItalic}
+                className={`w-6 h-6 flex items-center justify-center rounded-lg transition cursor-pointer ${
+                  currentIsItalic
+                    ? "bg-amber-500 text-white font-black shadow-2xs italic"
+                    : "text-slate-600 hover:text-slate-950 hover:bg-slate-100 italic"
+                }`}
+                title="Italic"
+              >
+                I
+              </button>
+              <button
+                type="button"
+                onClick={handleToggleUpper}
+                className={`px-1.5 h-6 flex items-center justify-center rounded-lg transition text-[10px] cursor-pointer ${
+                  currentIsUpper
+                    ? "bg-indigo-600 text-white font-black shadow-2xs"
+                    : "text-slate-600 hover:text-slate-950 hover:bg-slate-100 font-extrabold"
+                }`}
+                title="Uppercase / All Caps"
+              >
+                TT
+              </button>
+            </div>
           </div>
-          <button
-            type="button"
-            onClick={() => setDetailItalics((prev) => ({ ...prev, [field]: !prev[field] }))}
-            className={`p-1 rounded-md border text-[10px] transition cursor-pointer ${
-              isItalic
-                ? "bg-amber-100 border-amber-300 text-amber-950 font-black shadow-2xs"
-                : "border-slate-200/90 bg-slate-50 text-slate-400 hover:text-slate-700"
-            }`}
-            title={isItalic ? "Italic Active (Click to disable)" : "Make Text Italic"}
-          >
-            <Italic className="w-2.5 h-2.5" />
-          </button>
+
+          {/* Right Ribbon: Fast Color Swatches + 1-Click Apply to All */}
+          <div className="flex flex-wrap items-center gap-2">
+            {/* Color Swatches */}
+            <div className="inline-flex items-center gap-1.5 bg-white border border-slate-300 rounded-xl px-2 py-1 shadow-2xs">
+              <Palette className="w-3.5 h-3.5 text-slate-600 shrink-0" />
+              <div className="flex items-center gap-1">
+                {[
+                  { id: "#0F172A", name: "Black", bg: "bg-slate-950" },
+                  { id: "#A9782B", name: "Brand Gold", bg: "bg-[#A9782B]" },
+                  { id: "#2563EB", name: "Royal Blue", bg: "bg-blue-600" },
+                  { id: "#1E3A8A", name: "Deep Navy", bg: "bg-blue-900" },
+                  { id: "#475569", name: "Slate Grey", bg: "bg-slate-600" },
+                  { id: "#059669", name: "Emerald", bg: "bg-emerald-600" },
+                  { id: "#DC2626", name: "Crimson", bg: "bg-red-600" },
+                ].map((swatch) => (
+                  <button
+                    key={swatch.id}
+                    type="button"
+                    onClick={() => handleApplyColor(swatch.id)}
+                    className={`w-4 h-4 rounded-full ${swatch.bg} border transition-all cursor-pointer ${
+                      currentColor.toLowerCase() === swatch.id.toLowerCase()
+                        ? "ring-2 ring-amber-500 scale-125 border-white shadow-xs"
+                        : "border-slate-300 hover:scale-115 opacity-80 hover:opacity-100"
+                    }`}
+                    title={swatch.name}
+                  />
+                ))}
+
+                {/* Native Color Picker */}
+                <label
+                  className="w-4 h-4 rounded-full border border-slate-300 overflow-hidden relative cursor-pointer ml-0.5 hover:scale-115 transition"
+                  title="Custom Color Picker"
+                >
+                  <input
+                    type="color"
+                    value={currentColor.startsWith("#") ? currentColor : "#0F172A"}
+                    onChange={(e) => handleApplyColor(e.target.value)}
+                    className="absolute -top-2 -left-2 w-8 h-8 opacity-0 cursor-pointer"
+                  />
+                  <div
+                    className="w-full h-full"
+                    style={{ backgroundColor: currentColor }}
+                  />
+                </label>
+              </div>
+            </div>
+
+            {/* 1-Click Apply to All Details Button */}
+            {!isAll && (
+              <button
+                type="button"
+                onClick={handleApplyStyleToAll}
+                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-slate-900 hover:bg-slate-800 text-amber-300 text-xs font-black shadow-2xs hover:shadow-xs transition cursor-pointer"
+                title="Apply current font, size & color to all fields"
+              >
+                <Sparkles className="w-3 h-3 text-amber-400" />
+                <span>Apply to All Details</span>
+              </button>
+            )}
+          </div>
         </div>
       </div>
     );
@@ -2817,6 +3388,7 @@ export default function VistaprintStorePage() {
                     <ul className="space-y-2.5 text-slate-600">
                       <li>
                         <button
+                          onMouseEnter={() => setDropdownHoveredCard("pvc-regular-glossy")}
                           onClick={() => {
                             selectProductById("pvc-regular-glossy", false);
                             setActiveDropdown(null);
@@ -2828,6 +3400,7 @@ export default function VistaprintStorePage() {
                       </li>
                       <li>
                         <button
+                          onMouseEnter={() => setDropdownHoveredCard("pvc-regular-matt")}
                           onClick={() => {
                             selectProductById("pvc-regular-matt", false);
                             setActiveDropdown(null);
@@ -2839,6 +3412,7 @@ export default function VistaprintStorePage() {
                       </li>
                       <li>
                         <button
+                          onMouseEnter={() => setDropdownHoveredCard("pvc-brushed-silver")}
                           onClick={() => {
                             selectProductById("pvc-brushed-silver", false);
                             setActiveDropdown(null);
@@ -2850,6 +3424,7 @@ export default function VistaprintStorePage() {
                       </li>
                       <li>
                         <button
+                          onMouseEnter={() => setDropdownHoveredCard("pvc-rainbow")}
                           onClick={() => {
                             selectProductById("pvc-rainbow", false);
                             setActiveDropdown(null);
@@ -2861,6 +3436,7 @@ export default function VistaprintStorePage() {
                       </li>
                       <li>
                         <button
+                          onMouseEnter={() => setDropdownHoveredCard("pvc-transparent")}
                           onClick={() => {
                             selectProductById("pvc-transparent", false);
                             setActiveDropdown(null);
@@ -2881,6 +3457,7 @@ export default function VistaprintStorePage() {
                     <ul className="space-y-2.5 text-slate-600">
                       <li>
                         <button
+                          onMouseEnter={() => setDropdownHoveredCard("pvc-glitter")}
                           onClick={() => {
                             selectProductById("pvc-glitter", false);
                             setActiveDropdown(null);
@@ -2892,6 +3469,7 @@ export default function VistaprintStorePage() {
                       </li>
                       <li>
                         <button
+                          onMouseEnter={() => setDropdownHoveredCard("pvc-embossed")}
                           onClick={() => {
                             selectProductById("pvc-embossed", false);
                             setActiveDropdown(null);
@@ -2903,6 +3481,7 @@ export default function VistaprintStorePage() {
                       </li>
                       <li>
                         <button
+                          onMouseEnter={() => setDropdownHoveredCard("pvc-matt-foiling")}
                           onClick={() => {
                             selectProductById("pvc-matt-foiling", false);
                             setActiveDropdown(null);
@@ -2914,6 +3493,7 @@ export default function VistaprintStorePage() {
                       </li>
                       <li>
                         <button
+                          onMouseEnter={() => setDropdownHoveredCard("pvc-matt-spot-uv")}
                           onClick={() => {
                             selectProductById("pvc-matt-spot-uv", false);
                             setActiveDropdown(null);
@@ -2963,6 +3543,7 @@ export default function VistaprintStorePage() {
                     <ul className="space-y-2.5 text-slate-600">
                       <li>
                         <button
+                          onMouseEnter={() => setDropdownHoveredCard("gold-foil-cards")}
                           onClick={() => selectProductById("gold-foil-cards", true)}
                           className="hover:text-emerald-700 text-left font-bold text-slate-900 flex items-center gap-1.5"
                         >
@@ -2972,6 +3553,7 @@ export default function VistaprintStorePage() {
                       </li>
                       <li>
                         <button
+                          onMouseEnter={() => setDropdownHoveredCard("visiting-cards")}
                           onClick={() => selectProductById("visiting-cards", true)}
                           className="hover:text-emerald-700 text-left font-medium"
                         >
@@ -2980,6 +3562,7 @@ export default function VistaprintStorePage() {
                       </li>
                       <li>
                         <button
+                          onMouseEnter={() => setDropdownHoveredCard("royal-matte-cards")}
                           onClick={() => selectProductById("royal-matte-cards", true)}
                           className="hover:text-emerald-700 text-left"
                         >
@@ -3047,28 +3630,52 @@ export default function VistaprintStorePage() {
                   </div>
                 </div>
 
-                {/* Bottom Featured Banner */}
-                <div className="mt-8 pt-4 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4">
-                  <div className="flex items-center gap-4 bg-emerald-50/80 p-3 rounded-2xl border border-emerald-100 w-full sm:w-auto">
-                    <div className="w-14 h-14 relative rounded-xl overflow-hidden bg-white border border-slate-200 shrink-0">
-                      <Image src="/images/pvc/card_pvc-regular-glossy.png" alt="PVC Visiting Card" fill sizes="56px" className="object-cover" />
+                {/* Bottom Featured Banner with LIVE PERSONALIZED CARD SYNC */}
+                <div className="mt-8 pt-4 border-t border-slate-100 flex flex-col lg:flex-row items-center justify-between gap-4">
+                  <div className="flex flex-col sm:flex-row items-center gap-4 bg-gradient-to-r from-slate-900 via-[#1e150a] to-slate-950 p-3.5 sm:p-4 rounded-2xl border border-amber-500/30 text-white w-full lg:w-auto shadow-md">
+                    {/* Live Miniature Card Preview */}
+                    <div className="w-[180px] h-[105px] shrink-0 rounded-xl overflow-hidden shadow-2xl border border-white/20 relative">
+                      <VisitingCardCatalogPreview
+                        product={ALL_PRODUCTS.find((p) => p.id === dropdownHoveredCard) || ALL_PRODUCTS[0]}
+                        name={customerName}
+                        company={companyName}
+                        designation={customerDesignation}
+                        phone={phone}
+                        email={email}
+                        website={website}
+                        address={address}
+                        fonts={detailFonts}
+                        colors={detailColors}
+                        fontSizes={detailFontSizes}
+                        italics={detailItalics}
+                        bolds={detailBolds}
+                        uppers={detailUppers}
+                      />
                     </div>
-                    <div>
+                    <div className="space-y-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <span className="text-xs font-bold text-slate-900">Featured: 400 Micron PVC Visiting Card Suite</span>
+                        <span className="text-[10px] font-black uppercase tracking-wider text-amber-300 bg-amber-400/20 px-2 py-0.5 rounded-full border border-amber-400/30">
+                          ⚡ Live Proof In Dropdown
+                        </span>
+                        <span className="text-xs font-bold text-white truncate">
+                          {ALL_PRODUCTS.find((p) => p.id === dropdownHoveredCard)?.title || "Regular Glossy PVC"}
+                        </span>
                       </div>
-                      <p className="text-[11px] text-slate-500">
-                        Heavy 400 Micron tearproof polymer • 2-sided print • 2 days dispatch • Premium waterproof finish.
+                      <p className="text-[11px] text-slate-300">
+                        Live synced with your name: <strong>{customerName}</strong> ({companyName})
+                      </p>
+                      <p className="text-[10px] text-slate-400">
+                        Hover any card option above to preview that substrate instantly!
                       </p>
                     </div>
                     <button
                       onClick={() => {
-                        selectProductById("pvc-regular-glossy", false);
+                        selectProductById(dropdownHoveredCard, false);
                         setActiveDropdown(null);
                       }}
-                      className="ml-auto px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shrink-0 transition"
+                      className="ml-auto px-4 py-2 bg-gradient-to-r from-[#A9782B] to-[#8E621E] hover:from-[#8E621E] hover:to-[#734D15] text-white rounded-xl text-xs font-black shrink-0 transition shadow-md cursor-pointer"
                     >
-                      View PVC Cards →
+                      Customize Substrate →
                     </button>
                   </div>
 
@@ -3922,7 +4529,22 @@ export default function VistaprintStorePage() {
                       <div>
                         <div className="relative aspect-[4/3] w-full bg-slate-100 overflow-hidden">
                           {prod.category === "visiting-cards" ? (
-                            <VisitingCardCatalogPreview product={prod} name={customerName || "Mahi Kapoor"} />
+                            <VisitingCardCatalogPreview
+                              product={prod}
+                              name={customerName}
+                              company={companyName}
+                              designation={customerDesignation}
+                              phone={phone}
+                              email={email}
+                              website={website}
+                              address={address}
+                              fonts={detailFonts}
+                              colors={detailColors}
+                              fontSizes={detailFontSizes}
+                              italics={detailItalics}
+                              bolds={detailBolds}
+                              uppers={detailUppers}
+                            />
                           ) : (
                             <Image
                               src={prod.image}
@@ -6104,18 +6726,21 @@ export default function VistaprintStorePage() {
                       </div>
                     </div>
 
+                    {/* UNIFIED MS WORD / GOOGLE DOCS STYLE TYPOGRAPHY & COLOR FORMATTING RIBBON */}
+                    <MSWordFormattingRibbon />
+
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 text-xs">
                       <div>
                         <PlacementSelector field="companyName" label="Company / Brand Name" icon={Briefcase} />
                         <input
                           type="text"
                           value={companyName}
+                          onFocus={() => setActiveStylingTarget("companyName")}
                           onChange={(e) => setCompanyName(e.target.value)}
                           placeholder="e.g. Incredible Treasures"
                           style={getFieldFontStyle("companyName")}
                           className="font-companyName w-full px-3.5 py-2 text-sm bg-white border border-slate-200 rounded-xl focus:border-amber-500 focus:ring-2 focus:ring-amber-500/15 focus:outline-none transition-all shadow-2xs font-semibold"
                         />
-                        <FieldStylingBar field="companyName" />
                       </div>
 
                       <div>
@@ -6123,12 +6748,12 @@ export default function VistaprintStorePage() {
                         <input
                           type="text"
                           value={customerName}
+                          onFocus={() => setActiveStylingTarget("customerName")}
                           onChange={(e) => setCustomerName(e.target.value)}
                           placeholder="e.g. Vikram Singhania"
                           style={getFieldFontStyle("customerName")}
                           className="font-customerName w-full px-3.5 py-2 text-sm bg-white border border-slate-200 rounded-xl focus:border-amber-500 focus:ring-2 focus:ring-amber-500/15 focus:outline-none transition-all shadow-2xs font-bold"
                         />
-                        <FieldStylingBar field="customerName" />
                       </div>
 
                       <div>
@@ -6136,12 +6761,12 @@ export default function VistaprintStorePage() {
                         <input
                           type="text"
                           value={customerDesignation}
+                          onFocus={() => setActiveStylingTarget("customerDesignation")}
                           onChange={(e) => setCustomerDesignation(e.target.value)}
                           placeholder="e.g. Managing Director & CEO"
                           style={getFieldFontStyle("customerDesignation")}
                           className="font-customerDesignation w-full px-3.5 py-2 text-sm bg-white border border-slate-200 rounded-xl focus:border-amber-500 focus:ring-2 focus:ring-amber-500/15 focus:outline-none transition-all shadow-2xs font-bold"
                         />
-                        <FieldStylingBar field="customerDesignation" />
                       </div>
 
                       <div>
@@ -6149,12 +6774,12 @@ export default function VistaprintStorePage() {
                         <input
                           type="text"
                           value={phone}
+                          onFocus={() => setActiveStylingTarget("phone")}
                           onChange={(e) => setPhone(e.target.value)}
                           placeholder="+91 99450 39266"
                           style={getFieldFontStyle("phone")}
                           className="font-phone w-full px-3.5 py-2 text-sm bg-white border border-slate-200 rounded-xl focus:border-amber-500 focus:ring-2 focus:ring-amber-500/15 focus:outline-none transition-all shadow-2xs font-medium"
                         />
-                        <FieldStylingBar field="phone" />
                       </div>
 
                       <div>
@@ -6162,12 +6787,12 @@ export default function VistaprintStorePage() {
                         <input
                           type="email"
                           value={email}
+                          onFocus={() => setActiveStylingTarget("email")}
                           onChange={(e) => setEmail(e.target.value)}
                           placeholder="contact@company.com"
                           style={getFieldFontStyle("email")}
                           className="font-email w-full px-3.5 py-2 text-sm bg-white border border-slate-200 rounded-xl focus:border-amber-500 focus:ring-2 focus:ring-amber-500/15 focus:outline-none transition-all shadow-2xs font-medium"
                         />
-                        <FieldStylingBar field="email" />
                       </div>
 
                       <div>
@@ -6175,12 +6800,12 @@ export default function VistaprintStorePage() {
                         <input
                           type="text"
                           value={website}
+                          onFocus={() => setActiveStylingTarget("website")}
                           onChange={(e) => setWebsite(e.target.value)}
                           placeholder="www.company.com"
                           style={getFieldFontStyle("website")}
                           className="font-website w-full px-3.5 py-2 text-sm bg-white border border-slate-200 rounded-xl focus:border-amber-500 focus:ring-2 focus:ring-amber-500/15 focus:outline-none transition-all shadow-2xs font-medium"
                         />
-                        <FieldStylingBar field="website" />
                       </div>
 
                       <div className="sm:col-span-2">
@@ -6188,12 +6813,12 @@ export default function VistaprintStorePage() {
                         <input
                           type="text"
                           value={address}
+                          onFocus={() => setActiveStylingTarget("address")}
                           onChange={(e) => setAddress(e.target.value)}
                           placeholder="Yelahanka, Bengaluru – 560064"
                           style={getFieldFontStyle("address")}
                           className="font-address w-full px-3.5 py-2 text-sm bg-white border border-slate-200 rounded-xl focus:border-amber-500 focus:ring-2 focus:ring-amber-500/15 focus:outline-none transition-all shadow-2xs font-medium"
                         />
-                        <FieldStylingBar field="address" />
                       </div>
                     </div>
                   </div>
@@ -9378,6 +10003,7 @@ Please confirm order timeline.`
           <span className="w-2.5 h-2.5 rounded-full bg-emerald-300 animate-ping absolute -top-1 -right-1" />
         </button>
       </div>
+
     </div>
   );
 }

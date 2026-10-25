@@ -5,6 +5,7 @@ import { CanvasElement } from "./types";
 import { STARTER_TEMPLATES, StudioTemplate } from "./templates";
 import { ALL_PRODUCTS, CatalogProduct } from "@/data/products";
 import { PRO_ICONS, renderProIcon } from "./proIcons";
+import { SAMPLE_TEST_LOGOS } from "./sampleLogos";
 import {
   LayoutTemplate,
   Type,
@@ -24,6 +25,8 @@ import {
   EyeOff,
   ArrowUp,
   ArrowDown,
+  ChevronsUp,
+  ChevronsDown,
   Trash2,
   Copy,
   Smile,
@@ -48,7 +51,16 @@ interface Props {
   onAddShape: (kind: "divider-h" | "divider-v" | "badge" | "frame") => void;
   onAddIcon: (iconName: string) => void;
   onAddQr: (kind: "upi" | "whatsapp" | "vcard" | "url") => void;
-  onUploadImage: (src: string) => void;
+  onUploadImage: (
+    src: string,
+    meta?: {
+      naturalWidth: number;
+      naturalHeight: number;
+      fileName: string;
+      fileSizeBytes?: number;
+      aspectRatio?: number;
+    }
+  ) => void;
   selectedSubstrateId: string;
   onSelectSubstrate: (id: string) => void;
 
@@ -59,7 +71,7 @@ interface Props {
   onUpdateElement: (id: string, updates: Partial<CanvasElement>) => void;
   onDeleteElement: (id: string) => void;
   onDuplicateElement: (id: string) => void;
-  onReorderElement: (id: string, direction: "up" | "down") => void;
+  onReorderElement: (id: string, direction: "up" | "down" | "front" | "back") => void;
 
   // Custom Full Card Background support
   activeSide: "front" | "back";
@@ -148,7 +160,23 @@ export const CanvaSidebar: React.FC<Props> = ({
     const reader = new FileReader();
     reader.onload = (event) => {
       const result = event.target?.result as string;
-      if (result) onUploadImage(result);
+      if (result) {
+        if (typeof window !== "undefined") {
+          const img = new window.Image();
+          img.onload = () => {
+            onUploadImage(result, {
+              naturalWidth: img.naturalWidth || 800,
+              naturalHeight: img.naturalHeight || 600,
+              fileName: file.name,
+              fileSizeBytes: file.size,
+              aspectRatio: (img.naturalWidth || 800) / (img.naturalHeight || 600),
+            });
+          };
+          img.src = result;
+        } else {
+          onUploadImage(result);
+        }
+      }
     };
     reader.readAsDataURL(file);
   };
@@ -674,9 +702,63 @@ export const CanvaSidebar: React.FC<Props> = ({
               <label className="p-3 border-2 border-dashed border-[#E5E0D8] hover:border-[#A9782B] rounded-xl bg-white hover:bg-[#FAF6EE] transition flex flex-col items-center justify-center text-center gap-1 cursor-pointer">
                 <UploadCloud className="w-5 h-5 text-slate-500" />
                 <span className="text-xs font-bold text-slate-800">Choose Logo File</span>
-                <span className="text-[9px] text-slate-500">Transparent PNG recommended</span>
+                <span className="text-[9px] text-slate-500">Transparent PNG, JPG, or SVG</span>
                 <input type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
               </label>
+
+              {/* Instant Pre-Calibrated Test Logos for DPI Verification */}
+              <div className="space-y-1.5 pt-2 border-t border-[#E5E0D8]">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-black uppercase tracking-wider text-slate-500">
+                    Test DPI Meters (1-Click):
+                  </span>
+                  <span className="text-[8px] bg-[#FAF6EE] text-[#A9782B] px-1.5 py-0.2 rounded font-bold border border-[#EAD5B3]">
+                    Pre-calibrated
+                  </span>
+                </div>
+
+                <div className="space-y-1.5">
+                  {SAMPLE_TEST_LOGOS.map((sample) => (
+                    <button
+                      key={sample.id}
+                      type="button"
+                      onClick={() =>
+                        onUploadImage(sample.dataUrl, {
+                          naturalWidth: sample.naturalWidth,
+                          naturalHeight: sample.naturalHeight,
+                          fileName: sample.name,
+                          fileSizeBytes: sample.naturalWidth * 200,
+                          aspectRatio: 1,
+                        })
+                      }
+                      className="w-full p-2 rounded-xl bg-white hover:bg-[#FAF6EE] border border-[#E5E0D8] hover:border-[#A9782B] transition flex items-center justify-between gap-2 text-left cursor-pointer group shadow-2xs"
+                    >
+                      <div className="flex items-center gap-2">
+                        <div className="w-6 h-6 rounded-lg bg-slate-100 border border-slate-200 overflow-hidden p-0.5 shrink-0">
+                          <img
+                            src={sample.dataUrl}
+                            alt={sample.name}
+                            className="w-full h-full object-contain"
+                          />
+                        </div>
+                        <div>
+                          <span className="text-[11px] font-bold text-slate-800 block leading-tight group-hover:text-[#A9782B]">
+                            {sample.name}
+                          </span>
+                          <span className="text-[9px] text-slate-500">
+                            {sample.naturalWidth}×{sample.naturalHeight}px
+                          </span>
+                        </div>
+                      </div>
+                      <span
+                        className={`text-[9px] font-black px-1.5 py-0.5 rounded-full border ${sample.badgeClass}`}
+                      >
+                        {sample.badgeLabel}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         )}
@@ -758,12 +840,20 @@ export const CanvaSidebar: React.FC<Props> = ({
                           {el.hidden ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
                         </button>
 
-                        {/* Layer Reorder */}
+                        {/* Layer Reorder: Bring to Front, Step Up, Step Down, Send to Back */}
+                        <button
+                          type="button"
+                          onClick={() => onReorderElement(el.id, "front")}
+                          className="p-1 rounded-lg text-slate-400 hover:text-slate-900 hover:bg-slate-200"
+                          title="Bring to Very Front (Top)"
+                        >
+                          <ChevronsUp className="w-3 h-3" />
+                        </button>
                         <button
                           type="button"
                           onClick={() => onReorderElement(el.id, "up")}
                           className="p-1 rounded-lg text-slate-400 hover:text-slate-800 hover:bg-slate-200"
-                          title="Bring Forward"
+                          title="Bring Forward (1 step)"
                         >
                           <ArrowUp className="w-3 h-3" />
                         </button>
@@ -771,9 +861,17 @@ export const CanvaSidebar: React.FC<Props> = ({
                           type="button"
                           onClick={() => onReorderElement(el.id, "down")}
                           className="p-1 rounded-lg text-slate-400 hover:text-slate-800 hover:bg-slate-200"
-                          title="Send Backward"
+                          title="Send Backward (1 step)"
                         >
                           <ArrowDown className="w-3 h-3" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => onReorderElement(el.id, "back")}
+                          className="p-1 rounded-lg text-slate-400 hover:text-slate-900 hover:bg-slate-200"
+                          title="Send to Very Back (Bottom)"
+                        >
+                          <ChevronsDown className="w-3 h-3" />
                         </button>
 
                         {/* Delete */}
