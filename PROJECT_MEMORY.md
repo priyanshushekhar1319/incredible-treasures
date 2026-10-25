@@ -468,11 +468,44 @@
 
 ---
 
-## 🚀 21. ROADMAP FOR UPCOMING WEEK 3 MILESTONES
-1. **Day 17:** Slide-over Cart Drawer & Upsells (Stainless steel card holders, luxury envelopes, coupon engine).
-2. **Day 18:** Indian Checkout & Pincode Auto-Detection (City/State auto-lookup).
-3. **Day 19:** B2B GST Calculation & Invoicing Module (Karnataka CGST/SGST vs Inter-state IGST).
-4. **Day 20:** Razorpay Payment Gateway Integration (UPI, Cards, NetBanking).
+## 🛍️ 21. DAY 17: SLIDE-OVER CART DRAWER, LUXURY UPSELLS & COUPON ENGINE (COMPLETED)
+- **High-Converting Slide-Over Cart Drawer (`StudioCartDrawer.tsx`):**
+  - Smooth backdrop-blurred drawer panel sliding in from the right.
+  - Cart card items feature Side A (Front) visual thumbnails, substrate finish pills, dimensions, corner style, and 24K gilded edge badges.
+  - Certified **💎 600+ DPI Pre-Flight Approved** quality certification tag on every line item.
+  - Synchronized cart storage architecture in `src/lib/cartStore.ts` with local storage persistence and custom window events (`it_cart_updated`).
+- **Free Express Shipping Progress Bar:**
+  - Dynamic progress indicator calibrated to **₹3,000 threshold** for free insured BlueDart air dispatch.
+  - Real-time remaining balance calculation (e.g. *"Add ₹500 more for Free Insured Air Dispatch"*) with animated metallic gold progress meter.
+  - Unlocks glowing celebration tag *"✨ FREE Insured Air Dispatch Unlocked!"* once the threshold is reached or with `FREESHIP` coupon.
+- **High-Converting Luxury Cross-Sell / Upsell Accessories:**
+  - 3 Curated luxury accessories with 1-click `[ + Add ]` / `[ Added ✓ ]` toggle:
+    1. *Laser-Engraved Stainless Steel Card Case* (+₹399, holds 25 cards with velvet lining).
+    2. *Handcrafted Luxury Cotton Envelopes (Pack of 50)* (+₹449, 120 GSM deckle-edge paper with gold foil emblem).
+    3. *Physical 12-Substrate Sample Swatch Kit* (+₹299, 12 tactile material samples).
+  - Dynamically recalculates subtotal, taxes, and grand total in real-time.
+- **Dynamic Corporate Promo & Coupon Engine:**
+  - Real-time coupon validator with instant savings calculation:
+    - `FIRST500`: ₹500 flat discount on corporate orders.
+    - `MAHI20`: 20% exclusive executive privilege discount.
+    - `CORPORATE10`: 10% instant bulk corporate savings on orders above ₹3,000.
+    - `FREESHIP`: 100% free insured express air shipping.
+  - 1-Click test chips for rapid testing, friendly error handling, and 1-click remove badge.
+- **Indian Checkout & B2B GST Compliance:**
+  - Seamless handoff to Corporate Delivery & Invoicing form.
+  - Pre-filled credentials for *"Mahi Kapoor, Incredible Treasures Luxury Studio"*.
+  - 6-digit Indian Pincode auto-lookup for Bengaluru, Mumbai, Delhi, Hyderabad, Chennai, Kolkata, Pune, and Ahmedabad.
+  - Official 15-digit GSTIN input with 18% Input Tax Credit (ITC) tax invoice auto-generation.
+  - Payment method options: Instant UPI, Corporate Card, and B2B PO Invoice.
+  - Order confirmed ticket with order reference (`#IT-PRINT-XXXXXX`) and 1-tap WhatsApp dispatch tracker.
+
+---
+
+## 🚀 22. ROADMAP FOR UPCOMING WEEK 3 MILESTONES
+1. **Day 18:** Advanced Indian Checkout & Pincode Auto-Detection (City/State auto-lookup expansion & delivery SLAs).
+2. **Day 19:** B2B GST Calculation & Invoicing Module (Karnataka CGST/SGST vs Inter-state IGST with PDF Tax Invoice Generator).
+3. **Day 20:** Razorpay Payment Gateway Integration (UPI QR, Credit/Debit Cards, NetBanking, Webhooks).
+
 
 
 
