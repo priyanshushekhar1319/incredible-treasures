@@ -48,6 +48,7 @@ import { StudioCartDrawer, StudioCartItem } from "@/components/canva-studio/Stud
 import {
   generate300DpiPdf,
   downloadCardFacePng,
+  generateThumbnailDataUrl,
   RenderFaceParams,
   ExportOptions,
 } from "@/components/canva-studio/printExportEngine";
@@ -55,6 +56,7 @@ import { SaveDesignModal } from "@/components/canva-studio/SaveDesignModal";
 import { SavedDesignsModal } from "@/components/canva-studio/SavedDesignsModal";
 import { CustomerAuthModal } from "@/components/CustomerAuthModal";
 import { SavedDesignItem, CustomerUser, getCustomerSession } from "@/lib/customerSession";
+import { getStoredCart, saveStoredCart } from "@/lib/cartStore";
 import { FolderHeart, Save, User as UserIcon } from "lucide-react";
 
 const VISITING_CARDS = ALL_PRODUCTS.filter((p) => p.category === "visiting-cards");
@@ -104,6 +106,10 @@ export default function VisitingCardStudioCanvaPage() {
 
   useEffect(() => {
     setCustomerUser(getCustomerSession());
+    const stored = getStoredCart();
+    if (stored && stored.length > 0) {
+      setCartItems(stored);
+    }
   }, []);
 
   // Active Side (Front or Back)
@@ -412,7 +418,7 @@ export default function VisitingCardStudioCanvaPage() {
     triggerToast(`✓ Loaded "${design.name}" into studio canvas!`);
   };
 
-  // Day 16: 1-Click Re-Order Saved Design Directly from Cloud Library
+  // 1-Click Re-Order Saved Design Directly from Cloud Library
   const handleAddToCartFromSaved = (design: SavedDesignItem) => {
     const prod = ALL_PRODUCTS.find((p) => p.id === design.substrateId) || selectedProduct;
     const tier = prod.pricingTiers?.[0] || selectedTier;
@@ -420,15 +426,24 @@ export default function VisitingCardStudioCanvaPage() {
       id: `saved-print-${design.id}-${Date.now()}`,
       title: design.name || prod.title,
       substrateId: design.substrateId,
+      substrateTitle: prod.title,
       quantity: tier.qty,
       pricePerUnit: tier.pricePerUnit,
       totalPrice: tier.total,
       orientation: design.orientation,
+      cornerStyle: design.cornerStyle,
+      gildedEdge: design.gildedEdge,
       specs: `${design.orientation === "horizontal" ? "Landscape 3.5\"×2.0\"" : "Portrait 2.0\"×3.5\""} • ${
         design.cornerStyle === "rounded" ? "3mm Round Corners" : "Square Cut"
-      } • Cloud Library Order`,
+      }${design.gildedEdge ? " • 24K Gilded" : ""} • 600+ DPI Approved`,
+      frontPreviewBg: design.previewFront || undefined,
+      backPreviewBg: design.previewBack || undefined,
     };
-    setCartItems((prev) => [newItem, ...prev]);
+    setCartItems((prev) => {
+      const next = [newItem, ...prev];
+      saveStoredCart(next);
+      return next;
+    });
     setIsCartDrawerOpen(true);
     triggerToast(`✓ Added ${tier.qty} cards of "${design.name}" to cart!`);
   };
@@ -775,18 +790,35 @@ export default function VisitingCardStudioCanvaPage() {
   };
 
   // Add customized card to Cart and open Slide-Over Drawer
-  const handleAddToCartAndOpen = () => {
+  const handleAddToCartAndOpen = async () => {
+    let frontThumb: string | undefined = undefined;
+    try {
+      frontThumb = await generateThumbnailDataUrl(getRenderParams("front"));
+    } catch {}
+
     const newItem: StudioCartItem = {
       id: `print-card-${Date.now()}`,
       title: selectedProduct.title,
       substrateId: selectedSubstrateId,
+      substrateTitle: selectedProduct.title,
       quantity: selectedTier.qty,
       pricePerUnit: selectedTier.pricePerUnit,
       totalPrice: selectedTier.total,
       orientation: orientation,
-      specs: `${orientation === "horizontal" ? "Landscape 3.5\"×2.0\"" : "Portrait 2.0\"×3.5\""} • ${cornerStyle === "rounded" ? "3mm Round Corners" : "Square Cut"} • 600+ DPI Pre-Flight Approved`,
+      cornerStyle: cornerStyle,
+      gildedEdge: gildedEdge,
+      specs: `${orientation === "horizontal" ? "Landscape 3.5\"×2.0\"" : "Portrait 2.0\"×3.5\""} • ${
+        cornerStyle === "rounded" ? "3mm Round Corners" : "Square Cut"
+      }${gildedEdge ? " • 24K Gilded" : ""} • 600+ DPI Pre-Flight Approved`,
+      frontPreviewBg: frontThumb,
+      frontElementsCount: frontElements.length,
+      backElementsCount: backElements.length,
     };
-    setCartItems((prev) => [newItem, ...prev]);
+    setCartItems((prev) => {
+      const next = [newItem, ...prev];
+      saveStoredCart(next);
+      return next;
+    });
     setIsCartDrawerOpen(true);
     triggerToast(`✓ Added ${selectedTier.qty} cards to cart! Opening checkout.`);
   };
@@ -1994,8 +2026,16 @@ export default function VisitingCardStudioCanvaPage() {
         onClose={() => setIsCartDrawerOpen(false)}
         items={cartItems}
         onRemoveItem={(id) => {
-          setCartItems((prev) => prev.filter((i) => i.id !== id));
+          setCartItems((prev) => {
+            const next = prev.filter((i) => i.id !== id);
+            saveStoredCart(next);
+            return next;
+          });
           triggerToast("Item removed from cart.");
+        }}
+        onClearCart={() => {
+          setCartItems([]);
+          saveStoredCart([]);
         }}
       />
 
