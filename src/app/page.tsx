@@ -81,8 +81,12 @@ import {
   Mic,
   MicOff,
   Volume2,
+  FolderHeart,
 } from "lucide-react";
 import { ALL_PRODUCTS, CatalogProduct, PricingTier } from "@/data/products";
+import { CustomerAuthModal } from "@/components/CustomerAuthModal";
+import { SavedDesignsModal } from "@/components/canva-studio/SavedDesignsModal";
+import { CustomerUser, getCustomerSession } from "@/lib/customerSession";
 
 // ==========================================
 // HIGH-AESTHETIC BOTANICAL & ORNATE SVG ICONS
@@ -1206,6 +1210,15 @@ const VISUAL_SEARCH_SAMPLES = [
 export default function VistaprintStorePage() {
   // Navigation & Product Selection state
   const [selectedProduct, setSelectedProduct] = useState<CatalogProduct | null>(null);
+
+  // Day 16: Customer Portal & Saved Designs State
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
+  const [isSavedDesignsModalOpen, setIsSavedDesignsModalOpen] = useState<boolean>(false);
+  const [customerUser, setCustomerUser] = useState<CustomerUser | null>(null);
+
+  useEffect(() => {
+    setCustomerUser(getCustomerSession());
+  }, []);
 
   // Global Omnibar Search & Quick View state
   const [searchQuery, setSearchQuery] = useState("");
@@ -3312,13 +3325,26 @@ export default function VistaprintStorePage() {
               <Search className="w-5 h-5" />
             </button>
 
+            {/* Day 16: Saved Designs Quick Link */}
+            <button
+              type="button"
+              onClick={() => setIsSavedDesignsModalOpen(true)}
+              className="hidden lg:flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-slate-700 hover:text-[#734D15] hover:bg-[#FAF6EE] px-3.5 py-2 sm:py-2.5 rounded-full border border-slate-200 hover:border-[#EAD5B3] transition cursor-pointer"
+              title="View My Saved Designs"
+            >
+              <FolderHeart className="w-4 h-4 text-[#A9782B]" />
+              <span>My Designs</span>
+            </button>
+
             {/* Sign In Button beside Cart */}
             <button
               type="button"
+              onClick={() => setIsAuthModalOpen(true)}
               className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm font-semibold text-slate-700 hover:text-emerald-700 hover:bg-slate-50 px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-full border border-slate-200 hover:border-slate-300 transition cursor-pointer"
+              title="Customer Account & GSTIN Invoicing"
             >
-              <User className="w-4 h-4 text-slate-500" />
-              <span>Sign In</span>
+              <User className="w-4 h-4 text-[#A9782B]" />
+              <span>{customerUser?.name?.split(" ")[0] || "Sign In"}</span>
             </button>
 
             <button
@@ -10004,6 +10030,24 @@ Please confirm order timeline.`
         </button>
       </div>
 
+      {/* Day 16: Customer Authentication & Corporate Account Portal */}
+      <CustomerAuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        onOpenSavedDesigns={() => setIsSavedDesignsModalOpen(true)}
+        onUserChange={(u) => setCustomerUser(u)}
+      />
+
+      {/* Day 16: Saved Designs Cloud Library Modal */}
+      <SavedDesignsModal
+        isOpen={isSavedDesignsModalOpen}
+        onClose={() => setIsSavedDesignsModalOpen(false)}
+        onLoadDesign={(d) => {
+          if (typeof window !== "undefined") {
+            window.location.href = `/studio`;
+          }
+        }}
+      />
     </div>
   );
 }

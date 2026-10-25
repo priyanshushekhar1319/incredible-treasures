@@ -40,6 +40,8 @@ import {
   ShieldCheck,
   Printer,
   Rotate3d,
+  Save,
+  FolderHeart,
 } from "lucide-react";
 import { calculateImageDpi } from "./dpiUtils";
 
@@ -91,6 +93,10 @@ interface Props {
   isCmykSoftProof?: boolean;
   onToggleCmykSoftProof?: () => void;
   onOpen3DMockup?: () => void;
+
+  // Day 16 Design State Persistence
+  onOpenSaveModal?: () => void;
+  onOpenSavedDesignsModal?: () => void;
 }
 
 const FONTS = [
@@ -149,6 +155,8 @@ export const CanvaToolbar: React.FC<Props> = ({
   isCmykSoftProof = false,
   onToggleCmykSoftProof,
   onOpen3DMockup,
+  onOpenSaveModal,
+  onOpenSavedDesignsModal,
 }) => {
   const [isHarmoniesOpen, setIsHarmoniesOpen] = useState<boolean>(false);
   const [isEnhancingImage, setIsEnhancingImage] = useState<boolean>(false);
@@ -1123,6 +1131,31 @@ export const CanvaToolbar: React.FC<Props> = ({
               <Ruler className="w-3.5 h-3.5 text-[#A9782B]" />
               <span>{showGuides ? "Hide Guides" : "Show Guides"}</span>
             </button>
+
+            {/* Day 16: Cloud State Persistence Actions */}
+            {onOpenSavedDesignsModal && (
+              <button
+                type="button"
+                onClick={onOpenSavedDesignsModal}
+                className="px-2.5 py-1 rounded-xl font-bold bg-[#FAF8F5] hover:bg-[#FAF6EE] text-slate-700 hover:text-[#734D15] border border-[#E5E0D8] hover:border-[#EAD5B3] transition flex items-center gap-1.5 shadow-2xs cursor-pointer text-xs"
+                title="Browse My Saved Designs Library"
+              >
+                <FolderHeart className="w-3.5 h-3.5 text-[#A9782B]" />
+                <span className="hidden sm:inline">Saved Designs</span>
+              </button>
+            )}
+
+            {onOpenSaveModal && (
+              <button
+                type="button"
+                onClick={onOpenSaveModal}
+                className="px-3 py-1 rounded-xl font-black bg-gradient-to-r from-[#A9782B] to-[#8E621E] hover:from-[#8E621E] hover:to-[#734D15] text-white shadow-xs transition flex items-center gap-1.5 cursor-pointer text-xs"
+                title="Save Design to Cloud (Database & Local Backup)"
+              >
+                <Save className="w-3.5 h-3.5 text-white" />
+                <span>Save Design</span>
+              </button>
+            )}
 
             {/* Interactive 3D Mockup Studio Modal Trigger */}
             {onOpen3DMockup && (

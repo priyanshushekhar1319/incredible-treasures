@@ -98,8 +98,46 @@ model User {
   gstin        String?
   role         String    @default("CUSTOMER") // "CUSTOMER", "STAFF", "SUPER_ADMIN"
   orders       Order[]
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  savedDesigns SavedDesign[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+}
+
+model SavedDesign {
+  id              String   @id @default(cuid())
+  userId          String?
+  user            User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sessionId       String?  // Guest or anonymous session token
+  name            String   @default("Untitled Luxury Design")
+  productSlug     String   @default("visiting-cards")
+  substrateId     String   @default("pvc-regular-glossy")
+  orientation     String   @default("horizontal") // "horizontal" | "vertical"
+  cornerStyle     String   @default("square")     // "square" | "rounded"
+  backgroundColor String   @default("#FFFFFF")
+  gildedEdge      Boolean  @default(false)
+  cardTexture     String   @default("smooth")
+  
+  // Serialized Canvas Elements (JSON string of CanvasElement[])
+  frontElements   String   // JSON string
+  backElements    String   // JSON string
+
+  // Background Artwork & Settings
+  frontBgImage    String?
+  backBgImage     String?
+  frontBgOpacity  Float    @default(1.0)
+  backBgOpacity   Float    @default(1.0)
+  frontBgFit      String   @default("cover")
+  backBgFit       String   @default("cover")
+
+  // High-fidelity compact preview thumbnails (DataURL or image path)
+  previewFront    String?
+  previewBack     String?
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([userId])
+  @@index([sessionId])
 }
 
 model Order {
