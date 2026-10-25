@@ -174,7 +174,7 @@ export const Day10StudioControls: React.FC<Props> = ({
           </div>
         </div>
         <span className="text-xs font-bold text-[#734D15] bg-[#FAF6EE] px-2.5 py-0.5 rounded-full border border-[#EAD5B3] shrink-0 self-start sm:self-auto">
-          Day 10 Studio Engine
+          VECTOR & QR ENGINE
         </span>
       </div>
 

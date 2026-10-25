@@ -248,7 +248,7 @@ export const CardQrAndShapesOverlay: React.FC<Props> = ({
           className={`absolute ${getPositionClass(
             qrConfig.position
           )} z-20 pointer-events-auto flex flex-col items-center group cursor-pointer transition-all hover:scale-105`}
-          title={`Day 10 Live ${qrConfig.type.toUpperCase()} QR Code • Scannable via real smartphone camera`}
+          title={`Live ${qrConfig.type.toUpperCase()} QR Code • Scannable via real smartphone camera`}
         >
           <div
             className="p-1 rounded-xl shadow-md border transition-all"
