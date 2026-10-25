@@ -430,13 +430,49 @@
 
 ---
 
-## 🚀 20. ROADMAP FOR UPCOMING WEEK 3 MILESTONES
-1. **Day 16:** Design State Persistence & Customer Account Portal (PostgreSQL/SQLite canvas state serialization & "My Saved Designs").
-2. **Day 17:** Slide-over Cart Drawer & Upsells (Stainless steel card holders, luxury envelopes, coupon engine).
-3. **Day 18:** Indian Checkout & Pincode Auto-Detection (City/State auto-lookup).
-4. **Day 19:** B2B GST Calculation & Invoicing Module (Karnataka CGST/SGST vs Inter-state IGST).
-5. **Day 20:** Razorpay Payment Gateway Integration (UPI, Cards, NetBanking).
+## 💾 20. DAY 16: DESIGN STATE PERSISTENCE & CUSTOMER ACCOUNT PORTAL (COMPLETED)
+- **Prisma Cloud Storage Model (`SavedDesign`):**
+  - Integrated `SavedDesign` entity linked to `User` via cascade relation with guest `sessionId` fallback.
+  - Complete canvas state serialization:
+    - `frontElements` & `backElements`: Full JSON string containing all typography, font weights, colors, finishes, and vector coordinates.
+    - Substrate ID (`pvc-regular-glossy`, `pvc-matt-foiling`, etc.), Orientation (`horizontal` / `vertical`), and Corner style (`square` / `rounded`).
+    - Base background color, gilded edge status, and tactile paper texture.
+    - Custom background artwork URLs, opacities (10%-100%), and sizing fit modes (`cover`, `contain`, `repeat`).
+    - Compact preview thumbnail Data URLs (`previewFront`, `previewBack`) generated on the fly.
+  - Successfully synced database schema with `npx prisma db push` and regenerated `@prisma/client`.
+- **Backend API Endpoints:**
+  - `GET /api/designs`: Retrieves saved projects filtered by `userId` or `sessionId` with parsed element trees.
+  - `POST /api/designs`: Atomic creation or update of saved card drafts with cloud persistence.
+  - `DELETE /api/designs`: Deletes draft with instant state cleanup.
+  - `GET / POST /api/auth/customer`: Profile authentication, corporate GSTIN management, and session linkage.
+- **Interactive Save Design Modal (`SaveDesignModal.tsx`):**
+  - Accessible via gold `[ 💾 Save Design ]` button in Canva toolbar and header.
+  - Dual-face real-time thumbnail preview cards (Side A Front / Side B Back).
+  - Custom project naming with pre-filled intelligent defaults.
+  - "Save as New Copy" vs "Update Existing Draft" toggle for multi-version management.
+  - Animated cloud synchronization indicators.
+- **"My Saved Designs" Cloud Library Gallery (`SavedDesignsModal.tsx`):**
+  - Accessible from Studio header, toolbar, and main Storefront navigation.
+  - Visual card showcase with 1-tap `[ Front / Back ]` face toggle.
+  - Substrate badge, orientation tags, and last-saved timestamp.
+  - **1-Click Studio Restore:** Instantly restores all elements, backgrounds, textures, substrates, and orientation into the active editor.
+  - **1-Click Direct Re-Order:** Adds saved project directly to print cart with volume discount tiers.
+  - **600+ DPI PDF Download:** Exports press-ready vector PDF directly from the saved card card preview.
+- **Customer Account & Corporate GSTIN Portal (`CustomerAuthModal.tsx`):**
+  - Instant authentication with business email & phone.
+  - 1-Click Executive Preset for *"Mahi Kapoor, Managing Director"*.
+  - Official 15-digit GSTIN profile storage for automated MCA/GST tax-compliant invoices.
+  - Seamless header avatar badge in both Storefront and Studio.
+- **Build & Quality Verification:**
+  - Full production build (`npm run build`) passed with exit code 0 across all static and dynamic endpoints.
 
+---
+
+## 🚀 21. ROADMAP FOR UPCOMING WEEK 3 MILESTONES
+1. **Day 17:** Slide-over Cart Drawer & Upsells (Stainless steel card holders, luxury envelopes, coupon engine).
+2. **Day 18:** Indian Checkout & Pincode Auto-Detection (City/State auto-lookup).
+3. **Day 19:** B2B GST Calculation & Invoicing Module (Karnataka CGST/SGST vs Inter-state IGST).
+4. **Day 20:** Razorpay Payment Gateway Integration (UPI, Cards, NetBanking).
 
 
 

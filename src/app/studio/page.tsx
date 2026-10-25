@@ -51,6 +51,11 @@ import {
   RenderFaceParams,
   ExportOptions,
 } from "@/components/canva-studio/printExportEngine";
+import { SaveDesignModal } from "@/components/canva-studio/SaveDesignModal";
+import { SavedDesignsModal } from "@/components/canva-studio/SavedDesignsModal";
+import { CustomerAuthModal } from "@/components/CustomerAuthModal";
+import { SavedDesignItem, CustomerUser, getCustomerSession } from "@/lib/customerSession";
+import { FolderHeart, Save, User as UserIcon } from "lucide-react";
 
 const VISITING_CARDS = ALL_PRODUCTS.filter((p) => p.category === "visiting-cards");
 
@@ -88,6 +93,18 @@ export default function VisitingCardStudioCanvaPage() {
   const [hasInspectedBackSide, setHasInspectedBackSide] = useState<boolean>(true);
   const [isCartDrawerOpen, setIsCartDrawerOpen] = useState<boolean>(false);
   const [cartItems, setCartItems] = useState<StudioCartItem[]>([]);
+
+  // Day 16: Design State Persistence & Customer Account Portal
+  const [isSaveModalOpen, setIsSaveModalOpen] = useState<boolean>(false);
+  const [isSavedDesignsModalOpen, setIsSavedDesignsModalOpen] = useState<boolean>(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
+  const [currentSavedDesignId, setCurrentSavedDesignId] = useState<string | null>(null);
+  const [designTitle, setDesignTitle] = useState<string>("Mahi Kapoor • 24K Gold Stamped Executive Card");
+  const [customerUser, setCustomerUser] = useState<CustomerUser | null>(null);
+
+  useEffect(() => {
+    setCustomerUser(getCustomerSession());
+  }, []);
 
   // Active Side (Front or Back)
   const [activeSide, setActiveSide] = useState<"front" | "back">("front");
@@ -370,6 +387,57 @@ export default function VisitingCardStudioCanvaPage() {
     setSelectedId(null);
     recordHistory(tpl.frontElements, tpl.backElements, tpl.backgroundColor);
     triggerToast(`Loaded "${tpl.name}" starter layout!`);
+  };
+
+  // Day 16: Restore Full Saved Design State from Cloud Library
+  const handleLoadDesign = (design: SavedDesignItem) => {
+    setFrontElements(design.frontElements || []);
+    setBackElements(design.backElements || []);
+    setSelectedSubstrateId(design.substrateId || "pvc-regular-glossy");
+    setOrientation(design.orientation || "horizontal");
+    setCornerStyle(design.cornerStyle || "square");
+    setBackgroundColor(design.backgroundColor || "#FFFFFF");
+    setGildedEdge(Boolean(design.gildedEdge));
+    setCardTexture((design.cardTexture as CardTexture) || "smooth");
+    setFrontBgImage(design.frontBgImage || undefined);
+    setBackBgImage(design.backBgImage || undefined);
+    setFrontBgOpacity(design.frontBgOpacity ?? 1);
+    setBackBgOpacity(design.backBgOpacity ?? 1);
+    setFrontBgFit(design.frontBgFit || "cover");
+    setBackBgFit(design.backBgFit || "cover");
+    setCurrentSavedDesignId(design.id);
+    setDesignTitle(design.name);
+    setSelectedId(null);
+    recordHistory(design.frontElements || [], design.backElements || [], design.backgroundColor || "#FFFFFF");
+    triggerToast(`✓ Loaded "${design.name}" into studio canvas!`);
+  };
+
+  // Day 16: 1-Click Re-Order Saved Design Directly from Cloud Library
+  const handleAddToCartFromSaved = (design: SavedDesignItem) => {
+    const prod = ALL_PRODUCTS.find((p) => p.id === design.substrateId) || selectedProduct;
+    const tier = prod.pricingTiers?.[0] || selectedTier;
+    const newItem: StudioCartItem = {
+      id: `saved-print-${design.id}-${Date.now()}`,
+      title: design.name || prod.title,
+      substrateId: design.substrateId,
+      quantity: tier.qty,
+      pricePerUnit: tier.pricePerUnit,
+      totalPrice: tier.total,
+      orientation: design.orientation,
+      specs: `${design.orientation === "horizontal" ? "Landscape 3.5\"×2.0\"" : "Portrait 2.0\"×3.5\""} • ${
+        design.cornerStyle === "rounded" ? "3mm Round Corners" : "Square Cut"
+      } • Cloud Library Order`,
+    };
+    setCartItems((prev) => [newItem, ...prev]);
+    setIsCartDrawerOpen(true);
+    triggerToast(`✓ Added ${tier.qty} cards of "${design.name}" to cart!`);
+  };
+
+  // Day 16: Save Design Callback
+  const handleSaveSuccess = (saved: any) => {
+    setCurrentSavedDesignId(saved.id);
+    setDesignTitle(saved.name);
+    triggerToast(`✓ Design "${saved.name}" saved to your cloud library!`);
   };
 
   // Add Freeform Text
@@ -1115,6 +1183,38 @@ export default function VisitingCardStudioCanvaPage() {
             </select>
           )}
 
+          {/* Day 16: Saved Designs & Save Buttons */}
+          <button
+            type="button"
+            onClick={() => setIsSavedDesignsModalOpen(true)}
+            className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#FAF8F5] hover:bg-[#FAF6EE] text-slate-700 hover:text-[#734D15] border border-[#E5E0D8] hover:border-[#EAD5B3] text-xs font-bold transition shadow-2xs cursor-pointer"
+            title="Browse My Saved Designs Cloud Library"
+          >
+            <FolderHeart className="w-3.5 h-3.5 text-[#A9782B]" />
+            <span>My Designs</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setIsSaveModalOpen(true)}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#FAF6EE] hover:bg-[#EAD5B3]/40 text-[#734D15] border border-[#EAD5B3] text-xs font-black transition shadow-2xs cursor-pointer"
+            title="Save Design to Cloud (Database & Local Backup)"
+          >
+            <Save className="w-3.5 h-3.5 text-[#A9782B]" />
+            <span>Save</span>
+          </button>
+
+          {/* Customer Account Avatar Pill */}
+          <button
+            type="button"
+            onClick={() => setIsAuthModalOpen(true)}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-[#FAF8F5] hover:bg-slate-100 text-slate-800 border border-[#E5E0D8] text-xs font-bold transition shadow-2xs cursor-pointer"
+            title="Customer Account & GSTIN Invoicing"
+          >
+            <UserIcon className="w-3.5 h-3.5 text-[#A9782B]" />
+            <span className="hidden md:inline font-semibold">{customerUser?.name?.split(" ")[0] || "Account"}</span>
+          </button>
+
           {/* WhatsApp Quotation CTA */}
           <a
             href={getWhatsAppQuoteUrl()}
@@ -1226,6 +1326,8 @@ export default function VisitingCardStudioCanvaPage() {
         isCmykSoftProof={isCmykSoftProof}
         onToggleCmykSoftProof={() => setIsCmykSoftProof(!isCmykSoftProof)}
         onOpen3DMockup={() => setIs3DMockupModalOpen(true)}
+        onOpenSaveModal={() => setIsSaveModalOpen(true)}
+        onOpenSavedDesignsModal={() => setIsSavedDesignsModalOpen(true)}
       />
 
       {/* ========================================================= */}
@@ -1852,6 +1954,40 @@ export default function VisitingCardStudioCanvaPage() {
         onFixSelectElement={handleFixSelectElement}
         onProceedToOrder={handleAddToCartAndOpen}
         onAutoFixAllAndProceed={handleAutoFixAllAndProceed}
+      />
+
+      {/* Day 16: Save Design to Cloud Modal */}
+      <SaveDesignModal
+        isOpen={isSaveModalOpen}
+        onClose={() => setIsSaveModalOpen(false)}
+        onSaveSuccess={handleSaveSuccess}
+        currentDesignName={designTitle}
+        substrateId={selectedSubstrateId}
+        substrateTitle={selectedProduct.title}
+        orientation={orientation}
+        cornerStyle={cornerStyle}
+        backgroundColor={backgroundColor}
+        gildedEdge={gildedEdge}
+        cardTexture={cardTexture}
+        frontParams={getRenderParams("front")}
+        backParams={getRenderParams("back")}
+        existingDesignId={currentSavedDesignId}
+      />
+
+      {/* Day 16: Saved Designs Cloud Library Modal */}
+      <SavedDesignsModal
+        isOpen={isSavedDesignsModalOpen}
+        onClose={() => setIsSavedDesignsModalOpen(false)}
+        onLoadDesign={handleLoadDesign}
+        onAddToCartFromSaved={handleAddToCartFromSaved}
+      />
+
+      {/* Day 16: Customer Authentication & Corporate Portal Modal */}
+      <CustomerAuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        onOpenSavedDesigns={() => setIsSavedDesignsModalOpen(true)}
+        onUserChange={(u) => setCustomerUser(u)}
       />
 
       {/* Slide-Over Corporate Print Cart Drawer */}
