@@ -160,9 +160,9 @@ export const SaveDesignModal: React.FC<Props> = ({
             </div>
             <div>
               <h3 className="text-base font-black text-slate-900 tracking-tight flex items-center gap-2">
-                Save Design to Cloud
+                Save Design
                 <span className="text-[10px] font-bold text-[#734D15] bg-[#FAF6EE] px-2 py-0.5 rounded-full border border-[#EAD5B3]">
-                  DAY 16 READY
+                  CLOUD BACKUP
                 </span>
               </h3>
               <p className="text-xs text-slate-500 font-medium">

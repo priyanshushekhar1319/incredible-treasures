@@ -1201,7 +1201,7 @@ export default function VisitingCardStudioCanvaPage() {
             title="Save Design to Cloud (Database & Local Backup)"
           >
             <Save className="w-3.5 h-3.5 text-[#A9782B]" />
-            <span>Save</span>
+            <span>Save Design</span>
           </button>
 
           {/* Customer Account Avatar Pill */}
@@ -1326,8 +1326,6 @@ export default function VisitingCardStudioCanvaPage() {
         isCmykSoftProof={isCmykSoftProof}
         onToggleCmykSoftProof={() => setIsCmykSoftProof(!isCmykSoftProof)}
         onOpen3DMockup={() => setIs3DMockupModalOpen(true)}
-        onOpenSaveModal={() => setIsSaveModalOpen(true)}
-        onOpenSavedDesignsModal={() => setIsSavedDesignsModalOpen(true)}
       />
 
       {/* ========================================================= */}
