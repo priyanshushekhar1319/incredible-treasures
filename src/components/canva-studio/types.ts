@@ -67,6 +67,15 @@ export interface CanvasElement {
   // Image attributes:
   imageSrc?: string;
   imageAlt?: string;
+  naturalWidth?: number;
+  naturalHeight?: number;
+  fileSizeBytes?: number;
+  fileName?: string;
+  flipX?: boolean;
+  flipY?: boolean;
+  aspectRatio?: number;
+  calculatedDpi?: number;
+  dpiStatus?: "crisp" | "acceptable" | "warning";
 }
 
 export type CardTexture = "smooth" | "linen" | "cotton" | "brushed" | "frosted";

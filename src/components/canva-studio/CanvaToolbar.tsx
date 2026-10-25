@@ -29,10 +29,19 @@ import {
   Unlock,
   ArrowUp,
   ArrowDown,
+  ChevronsUp,
+  ChevronsDown,
   Wand2,
   Crown,
   Layers,
+  FlipHorizontal,
+  FlipVertical,
+  Image as ImageIcon,
+  ShieldCheck,
+  Printer,
+  Rotate3d,
 } from "lucide-react";
+import { calculateImageDpi } from "./dpiUtils";
 
 interface Props {
   selectedElement: CanvasElement | null;
@@ -41,6 +50,11 @@ interface Props {
   onDeleteSelected: () => void;
   onBringForward?: () => void;
   onSendBackward?: () => void;
+  onBringToFront?: () => void;
+  onSendToBack?: () => void;
+
+  // Day 12 & Client Enhancer
+  onEnhanceImage?: (elementId: string) => Promise<void>;
 
   orientation: "horizontal" | "vertical";
   onChangeOrientation: (o: "horizontal" | "vertical") => void;
@@ -63,12 +77,20 @@ interface Props {
   // AI Assistant Modal trigger
   onOpenAiModal?: () => void;
 
+  // Day 12 Pre-Flight Inspector Modal Trigger
+  onOpenPreFlightModal?: () => void;
+
   // Aesthetic Upgrades
   gildedEdge?: boolean;
   onToggleGildedEdge?: () => void;
   cardTexture?: CardTexture;
   onChangeTexture?: (texture: CardTexture) => void;
   onApplyHarmony?: (harmony: ColorHarmony) => void;
+
+  // Interactive 3D Mockup Modal & CMYK Pre-Press Proof
+  isCmykSoftProof?: boolean;
+  onToggleCmykSoftProof?: () => void;
+  onOpen3DMockup?: () => void;
 }
 
 const FONTS = [
@@ -99,6 +121,9 @@ export const CanvaToolbar: React.FC<Props> = ({
   onDeleteSelected,
   onBringForward,
   onSendBackward,
+  onBringToFront,
+  onSendToBack,
+  onEnhanceImage,
   orientation,
   onChangeOrientation,
   cornerStyle,
@@ -115,13 +140,18 @@ export const CanvaToolbar: React.FC<Props> = ({
   onUndo,
   onRedo,
   onOpenAiModal,
+  onOpenPreFlightModal,
   gildedEdge = false,
   onToggleGildedEdge,
   cardTexture = "smooth",
   onChangeTexture,
   onApplyHarmony,
+  isCmykSoftProof = false,
+  onToggleCmykSoftProof,
+  onOpen3DMockup,
 }) => {
   const [isHarmoniesOpen, setIsHarmoniesOpen] = useState<boolean>(false);
+  const [isEnhancingImage, setIsEnhancingImage] = useState<boolean>(false);
 
   return (
     <div className="bg-white/95 backdrop-blur-md border-b border-[#E5E0D8] px-4 py-2 flex flex-wrap items-center justify-between gap-2.5 min-h-[52px] text-xs shadow-2xs relative">
@@ -606,7 +636,272 @@ export const CanvaToolbar: React.FC<Props> = ({
       )}
 
       {/* ----------------------------------------------------- */}
-      {/* CASE 5: NOTHING SELECTED (GLOBAL CANVAS & PRO AESTHETICS) */}
+      {/* CASE 5: IMAGE / LOGO ELEMENT SELECTED (DAY 11 & DAY 12) */}
+      {/* ----------------------------------------------------- */}
+      {selectedElement && selectedElement.type === "image" && (
+        <div className="flex flex-wrap items-center gap-2.5 flex-1">
+          {/* Logo Thumbnail & Name */}
+          <div className="flex items-center gap-2 pr-2 border-r border-[#E5E0D8]">
+            <div className="w-7 h-7 rounded-lg overflow-hidden bg-white border border-slate-200 shadow-2xs flex items-center justify-center p-0.5">
+              {selectedElement.imageSrc ? (
+                <img
+                  src={selectedElement.imageSrc}
+                  alt="Logo"
+                  className="w-full h-full object-contain"
+                />
+              ) : (
+                <ImageIcon className="w-3.5 h-3.5 text-[#A9782B]" />
+              )}
+            </div>
+            <span className="text-slate-900 font-extrabold text-xs max-w-[110px] truncate">
+              {selectedElement.fileName || "Brand Logo"}
+            </span>
+          </div>
+
+          {/* DAY 12: Real-Time DPI Quality Meter Badge (Clickable to open Pre-Flight Modal) */}
+          {(() => {
+            const dpiCalc = calculateImageDpi(selectedElement, orientation);
+            return (
+              <button
+                type="button"
+                onClick={onOpenPreFlightModal}
+                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-black border transition cursor-pointer shadow-2xs ${dpiCalc.badgeBg} ${dpiCalc.badgeColor} ${dpiCalc.badgeBorder} hover:scale-102`}
+                title="Click to view full Pre-Flight Print Quality Inspector"
+              >
+                <ShieldCheck className="w-3.5 h-3.5" />
+                <span>{dpiCalc.label}</span>
+                <span className="text-[9px] bg-white/90 px-1 py-0.2 rounded font-mono font-bold border border-slate-200/60">
+                  {dpiCalc.physicalWidthInches}" wide
+                </span>
+              </button>
+            );
+          })()}
+
+          {/* 1-Click Smart Image Enhancer / 600+ DPI Upscaler */}
+          {onEnhanceImage && (
+            <button
+              type="button"
+              disabled={isEnhancingImage}
+              onClick={async () => {
+                try {
+                  setIsEnhancingImage(true);
+                  await onEnhanceImage(selectedElement.id);
+                } finally {
+                  setIsEnhancingImage(false);
+                }
+              }}
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-black bg-gradient-to-r from-amber-500/15 via-[#A9782B]/20 to-amber-600/15 hover:from-amber-500/25 hover:to-amber-600/25 text-[#734D15] border border-[#EAD5B3] transition cursor-pointer shadow-2xs hover:scale-102 disabled:opacity-50"
+              title="Enhance contrast, unsharp mask clarity, and upscale image to 600+ DPI"
+            >
+              <Wand2 className={`w-3.5 h-3.5 text-[#A9782B] ${isEnhancingImage ? "animate-spin" : ""}`} />
+              <span>{isEnhancingImage ? "Upscaling..." : "✨ Upscale to 600+ DPI"}</span>
+            </button>
+          )}
+
+          {/* DAY 11: Size Stepper */}
+          <div className="flex items-center gap-1 bg-[#FAF8F5] border border-[#E5E0D8] rounded-xl px-2 py-0.5 shadow-2xs">
+            <span className="text-[10px] font-bold text-slate-500">Size:</span>
+            <button
+              type="button"
+              onClick={() =>
+                onUpdateSelected({ width: Math.max(8, (selectedElement.width || 25) - 3) })
+              }
+              className="w-5 h-5 flex items-center justify-center text-slate-600 hover:text-slate-900 rounded font-bold cursor-pointer"
+              title="Decrease Size"
+            >
+              -
+            </button>
+            <span className="w-7 text-center font-mono font-bold text-slate-900 text-[11px]">
+              {Math.round(selectedElement.width || 25)}%
+            </span>
+            <button
+              type="button"
+              onClick={() =>
+                onUpdateSelected({ width: Math.min(80, (selectedElement.width || 25) + 3) })
+              }
+              className="w-5 h-5 flex items-center justify-center text-slate-600 hover:text-slate-900 rounded font-bold cursor-pointer"
+              title="Increase Size"
+            >
+              +
+            </button>
+          </div>
+
+          {/* DAY 11: Flip & Rotation Controls */}
+          <div className="flex items-center gap-0.5 bg-[#FAF8F5] border border-[#E5E0D8] rounded-xl p-0.5 shadow-2xs">
+            <button
+              type="button"
+              onClick={() => onUpdateSelected({ flipX: !selectedElement.flipX })}
+              className={`px-2 py-1 rounded-lg text-[10px] font-bold flex items-center gap-1 transition cursor-pointer ${
+                selectedElement.flipX
+                  ? "bg-[#A9782B] text-white shadow-2xs"
+                  : "text-slate-600 hover:text-slate-900 hover:bg-white"
+              }`}
+              title="Flip Horizontally (Mirror)"
+            >
+              <FlipHorizontal className="w-3 h-3" />
+              <span>Flip H</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => onUpdateSelected({ flipY: !selectedElement.flipY })}
+              className={`px-2 py-1 rounded-lg text-[10px] font-bold flex items-center gap-1 transition cursor-pointer ${
+                selectedElement.flipY
+                  ? "bg-[#A9782B] text-white shadow-2xs"
+                  : "text-slate-600 hover:text-slate-900 hover:bg-white"
+              }`}
+              title="Flip Vertically"
+            >
+              <FlipVertical className="w-3 h-3" />
+              <span>Flip V</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() =>
+                onUpdateSelected({ rotation: ((selectedElement.rotation || 0) + 90) % 360 })
+              }
+              className="px-2 py-1 rounded-lg text-[10px] font-bold text-slate-600 hover:text-slate-900 hover:bg-white flex items-center gap-1 transition cursor-pointer"
+              title="Rotate 90 Degrees"
+            >
+              <RotateCw className="w-3 h-3" />
+              <span>{selectedElement.rotation || 0}°</span>
+            </button>
+          </div>
+
+          {/* DAY 11: Center Alignment Helpers */}
+          <div className="flex items-center gap-0.5 bg-[#FAF8F5] border border-[#E5E0D8] rounded-xl p-0.5 shadow-2xs">
+            <button
+              type="button"
+              onClick={() => onUpdateSelected({ x: 50 })}
+              className="px-2 py-1 rounded-lg text-[10px] font-bold text-slate-600 hover:text-slate-900 hover:bg-white cursor-pointer"
+              title="Snap to Horizontal Center"
+            >
+              Center X
+            </button>
+            <button
+              type="button"
+              onClick={() => onUpdateSelected({ y: 50 })}
+              className="px-2 py-1 rounded-lg text-[10px] font-bold text-slate-600 hover:text-slate-900 hover:bg-white cursor-pointer"
+              title="Snap to Vertical Center"
+            >
+              Center Y
+            </button>
+          </div>
+
+          {/* Selective Foil & Spot UV Finishes for Logo (Pro Luxury Feature) */}
+          <div className="flex items-center gap-1 bg-[#FAF6EE] border border-[#EAD5B3] rounded-xl px-2 py-1 shadow-2xs">
+            <Sparkles className="w-3.5 h-3.5 text-[#A9782B]" />
+            <select
+              value={selectedElement.proFinish || "standard"}
+              onChange={(e) => onUpdateSelected({ proFinish: e.target.value as ProFinish })}
+              className="bg-transparent text-[#734D15] text-[11px] font-black cursor-pointer focus:outline-none"
+              title="Select Logo Special Foil / Spot UV Effect"
+            >
+              <option value="standard">Standard Logo Print</option>
+              <option value="gold-foil">🟡 24K Gold Foil Logo</option>
+              <option value="silver-foil">⚪ Silver Chrome Foil Logo</option>
+              <option value="rose-gold-foil">🌸 Rose Gold Foil Logo</option>
+              <option value="spot-uv">💎 Raised Spot UV 3D Lacquer</option>
+            </select>
+          </div>
+
+          {/* Opacity Slider */}
+          <div className="flex items-center gap-1.5 text-slate-500 bg-[#FAF8F5] border border-[#E5E0D8] rounded-xl px-2 py-1">
+            <span className="text-[10px] font-bold">Opacity:</span>
+            <input
+              type="range"
+              min="0.1"
+              max="1"
+              step="0.05"
+              value={selectedElement.opacity ?? 1}
+              onChange={(e) => onUpdateSelected({ opacity: parseFloat(e.target.value) })}
+              className="w-12 accent-[#A9782B] cursor-pointer"
+            />
+          </div>
+
+          {/* Action Buttons: Lock, Layer Order, Duplicate, Delete */}
+          <div className="ml-auto flex items-center gap-1">
+            <button
+              type="button"
+              onClick={() => onUpdateSelected({ locked: !selectedElement.locked })}
+              className={`p-1.5 rounded-xl border transition cursor-pointer ${
+                selectedElement.locked
+                  ? "bg-amber-100 text-amber-800 border-amber-300"
+                  : "bg-[#FAF8F5] hover:bg-slate-100 text-slate-600 border-[#E5E0D8]"
+              }`}
+              title={selectedElement.locked ? "Unlock element" : "Lock element in place"}
+            >
+              {selectedElement.locked ? (
+                <Lock className="w-3.5 h-3.5" />
+              ) : (
+                <Unlock className="w-3.5 h-3.5" />
+              )}
+            </button>
+
+            {onBringToFront && (
+              <button
+                type="button"
+                onClick={onBringToFront}
+                className="p-1.5 rounded-xl bg-[#FAF8F5] hover:bg-slate-100 text-slate-700 border border-[#E5E0D8] transition"
+                title="Bring to Very Front"
+              >
+                <ChevronsUp className="w-3.5 h-3.5" />
+              </button>
+            )}
+            {onBringForward && (
+              <button
+                type="button"
+                onClick={onBringForward}
+                className="p-1.5 rounded-xl bg-[#FAF8F5] hover:bg-slate-100 text-slate-600 border border-[#E5E0D8] transition"
+                title="Bring Forward (1 step)"
+              >
+                <ArrowUp className="w-3.5 h-3.5" />
+              </button>
+            )}
+            {onSendBackward && (
+              <button
+                type="button"
+                onClick={onSendBackward}
+                className="p-1.5 rounded-xl bg-[#FAF8F5] hover:bg-slate-100 text-slate-600 border border-[#E5E0D8] transition"
+                title="Send Backward (1 step)"
+              >
+                <ArrowDown className="w-3.5 h-3.5" />
+              </button>
+            )}
+            {onSendToBack && (
+              <button
+                type="button"
+                onClick={onSendToBack}
+                className="p-1.5 rounded-xl bg-[#FAF8F5] hover:bg-slate-100 text-slate-700 border border-[#E5E0D8] transition"
+                title="Send to Very Back"
+              >
+                <ChevronsDown className="w-3.5 h-3.5" />
+              </button>
+            )}
+
+            <button
+              type="button"
+              onClick={onDuplicateSelected}
+              className="p-1.5 rounded-xl bg-[#FAF8F5] hover:bg-slate-100 text-slate-700 hover:text-slate-900 border border-[#E5E0D8] transition"
+              title="Duplicate"
+            >
+              <Copy className="w-3.5 h-3.5" />
+            </button>
+            <button
+              type="button"
+              onClick={onDeleteSelected}
+              className="p-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 hover:text-rose-700 border border-rose-200 transition"
+              title="Delete"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ----------------------------------------------------- */}
+      {/* CASE 6: NOTHING SELECTED (GLOBAL CANVAS & PRO AESTHETICS) */}
       {/* ----------------------------------------------------- */}
       {!selectedElement && (
         <div className="flex flex-wrap items-center justify-between gap-2 w-full text-slate-700">
@@ -798,6 +1093,23 @@ export const CanvaToolbar: React.FC<Props> = ({
               </button>
             )}
 
+            {/* CMYK Commercial Pre-Press Soft-Proofing Toggle */}
+            {onToggleCmykSoftProof && (
+              <button
+                type="button"
+                onClick={onToggleCmykSoftProof}
+                className={`px-2.5 py-1 rounded-xl font-bold border transition flex items-center gap-1.5 cursor-pointer shadow-2xs text-xs ${
+                  isCmykSoftProof
+                    ? "bg-[#A9782B] text-white border-amber-600 shadow-xs font-black"
+                    : "bg-[#FAF8F5] text-slate-700 border-[#E5E0D8] hover:bg-slate-100"
+                }`}
+                title="Soft-proof with CMYK offset press ink gamut absorption"
+              >
+                <Printer className="w-3.5 h-3.5" />
+                <span>{isCmykSoftProof ? "CMYK Proof ON" : "CMYK Proof"}</span>
+              </button>
+            )}
+
             {/* Print Guidelines Toggle Button */}
             <button
               type="button"
@@ -812,16 +1124,29 @@ export const CanvaToolbar: React.FC<Props> = ({
               <span>{showGuides ? "Hide Guides" : "Show Guides"}</span>
             </button>
 
-            {/* Instant Export Proof Button */}
+            {/* Interactive 3D Mockup Studio Modal Trigger */}
+            {onOpen3DMockup && (
+              <button
+                type="button"
+                onClick={onOpen3DMockup}
+                className="px-3 py-1 rounded-xl font-black bg-gradient-to-r from-amber-500/20 via-[#A9782B]/25 to-amber-600/20 hover:from-amber-500/30 hover:to-amber-600/30 text-[#734D15] border border-[#EAD5B3] hover:border-[#A9782B] transition flex items-center gap-1.5 shadow-2xs cursor-pointer text-xs group"
+                title="Open Interactive 3D Mockup Studio with Mouse Tilt & Production Sign-Off"
+              >
+                <Rotate3d className="w-3.5 h-3.5 text-[#A9782B] group-hover:rotate-45 transition-transform" />
+                <span>3D Mockup</span>
+              </button>
+            )}
+
+            {/* Instant 600+ DPI Ultra-HD Export Button */}
             {onExportProof && (
               <button
                 type="button"
                 onClick={onExportProof}
-                className="px-2.5 py-1 rounded-xl font-bold border border-[#E5E0D8] bg-[#FAF8F5] hover:bg-slate-100 text-slate-700 transition flex items-center gap-1.5 cursor-pointer shadow-2xs text-xs"
-                title="Download 300 DPI Proof File"
+                className="px-3 py-1 rounded-xl font-black border border-[#EAD5B3] bg-gradient-to-r from-[#FAF6EE] to-[#F5ECE0] hover:from-[#F5ECE0] hover:to-[#EAD5B3] text-[#734D15] transition flex items-center gap-1.5 cursor-pointer shadow-2xs text-xs"
+                title="Download 600+ DPI Ultra-HD Press-Ready Vector PDF with Bleed & PNGs"
               >
-                <Download className="w-3.5 h-3.5 text-slate-600" />
-                <span>Proof</span>
+                <Sparkles className="w-3.5 h-3.5 text-[#A9782B]" />
+                <span>600+ DPI Export</span>
               </button>
             )}
           </div>
