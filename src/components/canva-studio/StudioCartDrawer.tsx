@@ -28,6 +28,7 @@ import {
   Navigation,
   Compass,
   Radio,
+  FileCheck2,
 } from "lucide-react";
 import {
   CartCardItem,
@@ -43,6 +44,7 @@ import { calculateDeliverySla, DeliverySlaResult } from "@/lib/deliverySla";
 import { lookupIndianPincode } from "@/lib/pincodeEngine";
 import { createRealOrder, OrderItem } from "@/lib/orderStore";
 import { OrderLiveTrackingModal } from "@/components/OrderLiveTrackingModal";
+import { OfficialTaxInvoiceModal } from "@/components/OfficialTaxInvoiceModal";
 
 export type StudioCartItem = CartCardItem;
 
@@ -105,6 +107,7 @@ export const StudioCartDrawer: React.FC<Props> = ({
   const [isCheckoutOpen, setIsCheckoutOpen] = useState<boolean>(false);
   const [orderSuccessId, setOrderSuccessId] = useState<string | null>(null);
   const [isTrackingModalOpen, setIsTrackingModalOpen] = useState<boolean>(false);
+  const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState<boolean>(false);
 
   // Luxury Upsells Selected
   const [selectedUpsellIds, setSelectedUpsellIds] = useState<string[]>([]);
@@ -444,7 +447,7 @@ export const StudioCartDrawer: React.FC<Props> = ({
                 </div>
               </div>
 
-              {/* ACTION 1: LIVE PRODUCT LOCATION TRACKER (User Requested Add-on) */}
+              {/* ACTION 1: LIVE PRODUCT LOCATION TRACKER */}
               <button
                 type="button"
                 onClick={() => setIsTrackingModalOpen(true)}
@@ -454,7 +457,17 @@ export const StudioCartDrawer: React.FC<Props> = ({
                 <span>Track Live Product Location & Air Dispatch</span>
               </button>
 
-              {/* ACTION 2: WhatsApp Dispatch Ticket */}
+              {/* ACTION 2: OFFICIAL MCA & GST TAX INVOICE */}
+              <button
+                type="button"
+                onClick={() => setIsInvoiceModalOpen(true)}
+                className="w-full py-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs transition flex items-center justify-center gap-2 shadow-md cursor-pointer"
+              >
+                <FileCheck2 className="w-4 h-4 text-amber-300" />
+                <span>View & Print Official GST Tax Invoice (PDF)</span>
+              </button>
+
+              {/* ACTION 3: WhatsApp Dispatch Ticket */}
               <a
                 href={`https://wa.me/919945039266?text=${encodeURIComponent(
                   `Hi Incredible Treasures, I placed corporate order #${orderSuccessId} for ${items.length} print item(s) totalling ₹${grandTotal.toLocaleString("en-IN")}. Please confirm BlueDart Air dispatch status.`
@@ -1099,6 +1112,15 @@ export const StudioCartDrawer: React.FC<Props> = ({
         customerName={fullName}
         companyName={companyName}
       />
+
+      {/* Embedded Official Tax Invoice Modal */}
+      {orderSuccessId && (
+        <OfficialTaxInvoiceModal
+          isOpen={isInvoiceModalOpen}
+          onClose={() => setIsInvoiceModalOpen(false)}
+          orderId={orderSuccessId}
+        />
+      )}
     </>
   );
 };
