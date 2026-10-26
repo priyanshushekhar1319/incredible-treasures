@@ -113,12 +113,12 @@ const DEFAULT_DEMO_ORDERS: PlacedOrder[] = [
       gstin: "29AAKFI2392F1Z5",
     },
     pricing: {
-      subtotal: 2500,
-      gstAmount: 450,
+      subtotal: 2118.64,
+      gstAmount: 381.36,
       shippingFee: 0,
       shippingTier: "standard",
       couponDiscount: 0,
-      grandTotal: 2950,
+      grandTotal: 2500,
     },
     payment: {
       method: "upi",
