@@ -119,7 +119,7 @@ export const OfficialTaxInvoiceModal: React.FC<Props> = ({
                   Official GST Tax Invoice
                 </h3>
                 <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-black uppercase border border-emerald-300">
-                  ITC ELIGIBLE • 18% GST
+                  ITC ELIGIBLE • CGST 9% + SGST 9%
                 </span>
               </div>
               <span className="text-[11px] text-slate-500 font-medium">

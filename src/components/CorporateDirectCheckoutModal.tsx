@@ -562,7 +562,7 @@ export const CorporateDirectCheckoutModal: React.FC<Props> = ({
                 {/* Corporate GSTIN */}
                 <div>
                   <label className="font-bold text-slate-700 block mb-1">
-                    Corporate GSTIN (For 18% Input Tax Credit):
+                    Corporate GSTIN (For CGST 9% + SGST 9% Input Tax Credit):
                   </label>
                   <input
                     type="text"
@@ -628,10 +628,16 @@ export const CorporateDirectCheckoutModal: React.FC<Props> = ({
                     <strong className="text-slate-900">₹{baseSubtotal.toLocaleString("en-IN")}</strong>
                   </div>
                   {gstAmount > 0 && (
-                    <div className="flex justify-between text-slate-600">
-                      <span>18% GST (Input Tax Credit):</span>
-                      <strong className="text-slate-900">₹{gstAmount.toLocaleString("en-IN")}</strong>
-                    </div>
+                    <>
+                      <div className="flex justify-between text-slate-600">
+                        <span>Central GST (CGST 9%):</span>
+                        <strong className="text-slate-900 font-mono">₹{Math.round(gstAmount / 2).toLocaleString("en-IN")}</strong>
+                      </div>
+                      <div className="flex justify-between text-slate-600">
+                        <span>State GST (SGST 9%):</span>
+                        <strong className="text-slate-900 font-mono">₹{Math.round(gstAmount / 2).toLocaleString("en-IN")}</strong>
+                      </div>
+                    </>
                   )}
                   <div className="flex justify-between text-slate-600">
                     <span>
