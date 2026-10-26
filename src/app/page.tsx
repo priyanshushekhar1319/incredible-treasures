@@ -2286,7 +2286,7 @@ export default function VistaprintStorePage() {
       quantity: 50,
       unitPrice: 165,
       branding: "Full Color Sublimation",
-      specs: "Grade-A Ceramic • Gloss Enamel • Standard Rate (+18% GST Extra)",
+      specs: "Grade-A Ceramic • Gloss Enamel • Standard Rate (+ CGST 9% & SGST 9%)",
       isGstIncluded: false,
     },
     {
@@ -2298,7 +2298,7 @@ export default function VistaprintStorePage() {
       quantity: 200,
       unitPrice: 12.50,
       branding: "400 Micron Glossy",
-      specs: "400 Micron White PVC • 2-Sided • Price Includes 18% GST",
+      specs: "400 Micron White PVC • 2-Sided • Price Includes CGST 9% & SGST 9%",
       isGstIncluded: true,
     },
   ]);
@@ -2790,7 +2790,7 @@ export default function VistaprintStorePage() {
         quantity: totalOrderQty,
         unitPrice: effectiveUnitPrice,
         branding: `Front & Back Dual Proof • Co: ${companyName}`,
-        specs: `${product.specs} • Logo Synced • (+18% GST Extra)`,
+        specs: `${product.specs} • Logo Synced • (+ CGST 9% & SGST 9%)`,
         isGstIncluded: false,
       };
     }
@@ -4695,11 +4695,11 @@ export default function VistaprintStorePage() {
                             </div>
                             {prod.isGstIncluded ? (
                               <span className="text-[10px] font-bold text-emerald-800 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200/80 inline-flex items-center gap-0.5 mt-0.5">
-                                ✓ Rate Incl. 18% GST
+                                ✓ Rate Incl. CGST 9% + SGST 9%
                               </span>
                             ) : (
                               <span className="text-[10px] font-bold text-amber-800 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200/80 inline-flex items-center gap-0.5 mt-0.5">
-                                + 18% GST Extra
+                                + CGST 9% & SGST 9% Extra
                               </span>
                             )}
                           </div>
@@ -6955,11 +6955,11 @@ export default function VistaprintStorePage() {
                         </span>
                         {selectedProduct.isGstIncluded ? (
                           <span className="bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 text-[10px] font-black px-2 py-0.5 rounded-full ml-1">
-                            ✓ INCL. 18% GST
+                            ✓ INCL. CGST 9% + SGST 9%
                           </span>
                         ) : (
                           <span className="bg-amber-400/20 text-amber-300 border border-amber-400/40 text-[10px] font-extrabold px-2 py-0.5 rounded-full ml-1">
-                            + 18% GST EXTRA
+                            + CGST 9% & SGST 9% EXTRA
                           </span>
                         )}
                       </div>
@@ -6978,7 +6978,7 @@ export default function VistaprintStorePage() {
                             Select Quantity Tier:
                           </label>
                           <span className="text-[11px] font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-                            ✓ Rates include 18% GST
+                            ✓ Rates include CGST 9% + SGST 9%
                           </span>
                         </div>
                         <div className="grid grid-cols-3 gap-2.5">
@@ -7017,7 +7017,7 @@ export default function VistaprintStorePage() {
                             Select Quantity Tier:
                           </label>
                           <span className="text-[11px] font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
-                            + 18% GST Extra Added at Checkout
+                            + CGST 9% & SGST 9% Extra at Checkout
                           </span>
                         </div>
                         <div className="grid grid-cols-3 gap-2.5">
@@ -7110,7 +7110,7 @@ export default function VistaprintStorePage() {
                                 quantity: selectedPvcTier.qty,
                                 unitPrice: selectedPvcTier.pricePerUnit,
                                 branding: `${selectedProduct.finishType || '400 Micron'} • ${cornerStyle} Corners`,
-                                specs: `Front & Back Proof Ready • Co: ${companyName} • ${selectedProduct.specs} • Rate Includes 18% GST`,
+                                specs: `Front & Back Proof Ready • Co: ${companyName} • ${selectedProduct.specs} • Rate Includes CGST 9% + SGST 9%`,
                                 isGstIncluded: true,
                               });
                             } else {
@@ -7127,7 +7127,7 @@ export default function VistaprintStorePage() {
                                 quantity: totalOrderQty,
                                 unitPrice: effectiveUnitPrice,
                                 branding: `Front & Back Dual Proof • Co: ${companyName}`,
-                                specs: `${selectedProduct.specs} • Logo Synced • (+18% GST Extra)`,
+                                specs: `${selectedProduct.specs} • Logo Synced • (+ CGST 9% & SGST 9%)`,
                                 isGstIncluded: false,
                               });
                             }
@@ -7199,7 +7199,7 @@ Please confirm order timeline.`
                       <div className="flex justify-between py-1">
                         <span className="text-slate-400">GST Invoice:</span>
                         <span className={`font-bold ${selectedProduct.isGstIncluded ? "text-emerald-700" : "text-amber-800"}`}>
-                          {selectedProduct.isGstIncluded ? "Included (18% GST)" : "+18% GST Added at Checkout"}
+                          {selectedProduct.isGstIncluded ? "Included (CGST 9% + SGST 9%)" : "+ CGST 9% & SGST 9% at Checkout"}
                         </span>
                       </div>
                     </div>
@@ -7660,7 +7660,7 @@ Please confirm order timeline.`
                               ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40"
                               : "bg-amber-500/20 text-amber-300 border border-amber-500/40"
                           }`}>
-                            {selectedProduct.isGstIncluded ? "✓ Rate Includes 18% GST" : "+18% GST Extra At Checkout"}
+                            {selectedProduct.isGstIncluded ? "✓ Rate Includes CGST 9% + SGST 9%" : "+ CGST 9% & SGST 9% Extra At Checkout"}
                           </span>
                           <span className="text-[10px] text-slate-400 block mt-1">Min Order: {selectedProduct.minQty}</span>
                         </div>
@@ -8024,7 +8024,7 @@ Please confirm order timeline.`
                         Classified under HSN 4911 (Commercial Printed Trade Stationery). Official B2B GST tax invoice generated automatically upon order fulfillment.
                       </p>
                       <div className="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-md inline-block">
-                        Standard 18% GST Bracket
+                        Standard CGST 9% + SGST 9% Bracket
                       </div>
                     </div>
 
@@ -8034,7 +8034,7 @@ Please confirm order timeline.`
                       </div>
                       <h4 className="text-sm font-extrabold text-slate-900">100% Input Tax Credit (ITC)</h4>
                       <p className="text-xs text-slate-600 leading-relaxed">
-                        Enter your company GSTIN during checkout to claim the full 18% Input Tax Credit on your GSTR-2B. Invoices include complete tax breakdown and HSN codes.
+                        Enter your company GSTIN during checkout to claim the full CGST 9% + SGST 9% Input Tax Credit on your GSTR-2B. Invoices include complete tax breakdown and HSN codes.
                       </p>
                       <div className="text-[11px] font-bold text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded-md inline-block">
                         Instant GST Invoicing with GSTIN
@@ -8048,13 +8048,13 @@ Please confirm order timeline.`
                       <h4 className="text-sm font-extrabold text-slate-900">Transparent Pricing Rule</h4>
                       <p className="text-xs text-slate-600 leading-relaxed">
                         {selectedProduct.isGstIncluded
-                          ? "This PVC product rate is strictly inclusive of 18% GST. No unexpected tax will be added to this item during checkout."
-                          : "Standard corporate stationery rates have +18% GST calculated transparently at checkout with an itemized tax breakdown."}
+                          ? "This PVC product rate is strictly inclusive of CGST 9% + SGST 9%. No unexpected tax will be added to this item during checkout."
+                          : "Standard corporate stationery rates have +CGST 9% & SGST 9% calculated transparently at checkout with an itemized tax breakdown."}
                       </p>
                       <div className={`text-[11px] font-bold px-2.5 py-1 rounded-md inline-block ${
                         selectedProduct.isGstIncluded ? "text-emerald-700 bg-emerald-50" : "text-amber-800 bg-amber-50"
                       }`}>
-                        {selectedProduct.isGstIncluded ? "Rate Includes 18% GST" : "+18% GST Added at Checkout"}
+                        {selectedProduct.isGstIncluded ? "Rate Includes CGST 9% + SGST 9%" : "+ CGST 9% & SGST 9% Added at Checkout"}
                       </div>
                     </div>
                   </div>
@@ -8510,11 +8510,11 @@ Please confirm order timeline.`
                       <span className="text-xl font-black text-slate-900">{quickViewProduct.startingPrice}</span>
                       {quickViewProduct.isGstIncluded ? (
                         <span className="text-[10px] font-bold text-emerald-800 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200/80 block mt-0.5">
-                          ✓ Price Incl. 18% GST
+                          ✓ Price Incl. CGST 9% + SGST 9%
                         </span>
                       ) : (
                         <span className="text-[10px] font-bold text-amber-800 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200/80 block mt-0.5">
-                          + 18% GST Extra at Checkout
+                          + CGST 9% & SGST 9% Extra at Checkout
                         </span>
                       )}
                     </div>
@@ -8528,7 +8528,7 @@ Please confirm order timeline.`
                 {quickViewProduct.pricingTiers && quickViewProduct.pricingTiers.length > 0 && (
                   <div className="bg-emerald-50/70 p-3 rounded-xl border border-emerald-200/70 space-y-1 text-xs">
                     <span className="font-bold text-emerald-900 block text-[11px] uppercase tracking-wider">
-                      Official Tier Rates (Incl. 18% GST):
+                      Official Tier Rates (Incl. CGST 9% + SGST 9%):
                     </span>
                     <div className="grid grid-cols-3 gap-1.5 text-center pt-1">
                       {quickViewProduct.pricingTiers.map((t) => (
@@ -8589,7 +8589,7 @@ Please confirm order timeline.`
                             quantity: baseTier.qty,
                             unitPrice: baseTier.pricePerUnit,
                             branding: prod.finishType || "400 Micron Polymer",
-                            specs: `400 Micron • ${prod.sides}-Sided • Price Includes 18% GST`,
+                            specs: `400 Micron • ${prod.sides}-Sided • Price Includes CGST 9% + SGST 9%`,
                             isGstIncluded: true,
                           });
                         } else {
@@ -8602,7 +8602,7 @@ Please confirm order timeline.`
                             quantity: 1,
                             unitPrice: priceNum,
                             branding: "Standard Evaluation",
-                            specs: `${prod.specs} • (+18% GST Extra)`,
+                            specs: `${prod.specs} • (+ CGST 9% & SGST 9%)`,
                             isGstIncluded: false,
                           });
                         }
@@ -8694,7 +8694,7 @@ Please confirm order timeline.`
                   </select>
                 </div>
                 <span className="text-xs font-bold text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
-                  {uploadTargetProduct.isGstIncluded ? "✓ Incl. 18% GST" : "+18% GST Extra"}
+                  {uploadTargetProduct.isGstIncluded ? "✓ Incl. CGST 9% + SGST 9%" : "+ CGST 9% & SGST 9% Extra"}
                 </span>
               </div>
 
@@ -9287,11 +9287,11 @@ Please confirm order timeline.`
                             </h4>
                             {item.isGstIncluded ? (
                               <span className="inline-flex items-center gap-1 bg-emerald-100 text-emerald-800 text-[9px] font-black px-1.5 py-0.5 rounded mt-0.5">
-                                ✓ Rate Includes 18% GST (Zero Extra Tax)
+                                ✓ Price Includes CGST 9% & SGST 9%
                               </span>
                             ) : (
                               <span className="inline-flex items-center gap-1 bg-amber-100 text-amber-900 text-[9px] font-extrabold px-1.5 py-0.5 rounded mt-0.5 border border-amber-300/60">
-                                + 18% GST Extra Added at Checkout
+                                + CGST 9% & SGST 9% at Checkout
                               </span>
                             )}
                           </div>
@@ -9338,7 +9338,7 @@ Please confirm order timeline.`
                       {/* Line Item Total */}
                       <div className="text-right">
                         <span className="text-[10px] text-slate-500 block">
-                          @ ₹{item.unitPrice.toFixed(2)}/pc {item.isGstIncluded ? "(Incl. 18% GST)" : "(+ 18% GST)"}
+                          @ ₹{item.unitPrice.toFixed(2)}/pc {item.isGstIncluded ? "(Incl. CGST 9% + SGST 9%)" : "(+ CGST 9% + SGST 9%)"}
                         </span>
                         <span className="text-sm font-extrabold text-slate-900">
                           ₹{(item.unitPrice * item.quantity).toFixed(2)}
@@ -9360,20 +9360,20 @@ Please confirm order timeline.`
                   </div>
                   {cartGst > 0 && (
                     <>
-                      <div className="flex justify-between text-amber-900 bg-amber-50/80 px-2.5 py-1 rounded-lg text-[11px] font-semibold border border-amber-200">
-                        <span>GST (18%) on Regular Products:</span>
-                        <span className="font-bold">₹{cartGst.toFixed(2)}</span>
+                      <div className="flex justify-between text-slate-700">
+                        <span>Central GST (CGST 9%):</span>
+                        <span className="font-bold text-slate-900">₹{(cartGst / 2).toFixed(2)}</span>
                       </div>
-                      <div className="flex justify-between text-[10px] text-slate-500 pl-2">
-                        <span>• CGST (9%): ₹{(cartGst / 2).toFixed(2)}</span>
-                        <span>• SGST (9%): ₹{(cartGst / 2).toFixed(2)}</span>
+                      <div className="flex justify-between text-slate-700">
+                        <span>State GST (SGST 9%):</span>
+                        <span className="font-bold text-slate-900">₹{(cartGst / 2).toFixed(2)}</span>
                       </div>
                     </>
                   )}
                   {cartIncludedGst > 0 && (
-                    <div className="flex justify-between text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-lg text-[11px] font-medium border border-emerald-200/80">
-                      <span>PVC Cards 18% GST:</span>
-                      <span className="font-bold">₹{cartIncludedGst.toFixed(2)} (Already in Price)</span>
+                    <div className="flex justify-between text-[11px] text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-lg font-medium border border-emerald-200/80">
+                      <span>PVC Cards (CGST 9% + SGST 9%):</span>
+                      <span className="font-bold">Included in Price</span>
                     </div>
                   )}
                   <div className="flex justify-between text-sm font-black text-slate-900 pt-2 border-t border-slate-200">
@@ -9398,10 +9398,10 @@ Please confirm order timeline.`
                         cartItems
                           .map(
                             (it, i) =>
-                              `${i + 1}. ${it.title}\n   • Qty: ${it.quantity} units\n   • Rate: ₹${it.unitPrice}${it.isGstIncluded ? ' (Incl. 18% GST)' : ''}\n   • Customization: ${it.branding || 'Standard'}\n   • Total: ₹${(it.unitPrice * it.quantity).toFixed(2)}`
+                              `${i + 1}. ${it.title}\n   • Qty: ${it.quantity} units\n   • Rate: ₹${it.unitPrice}${it.isGstIncluded ? ' (Incl. CGST 9% + SGST 9%)' : ' (+ CGST 9% + SGST 9%)'}\n   • Customization: ${it.branding || 'Standard'}\n   • Total: ₹${(it.unitPrice * it.quantity).toFixed(2)}`
                           )
                           .join("\n\n") +
-                        `\n\n--------------------------\n• Subtotal: ₹${cartSubtotal.toFixed(2)}${cartIncludedGst > 0 ? `\n• Embedded GST (Already Included): ₹${cartIncludedGst.toFixed(2)}` : ''}\n• Additional GST (18%): ₹${cartGst.toFixed(2)}\n• Grand Total: ₹${cartGrandTotal.toFixed(2)}\n\nPlease send bank proforma invoice & delivery timeline.`
+                        `\n\n--------------------------\n• Subtotal: ₹${cartSubtotal.toFixed(2)}${cartIncludedGst > 0 ? `\n• PVC Cards: CGST 9% + SGST 9% Included` : ''}\n• Central GST (CGST 9%): ₹${(cartGst / 2).toFixed(2)}\n• State GST (SGST 9%): ₹${(cartGst / 2).toFixed(2)}\n• Grand Total: ₹${cartGrandTotal.toFixed(2)}\n\nPlease send bank proforma invoice & delivery timeline.`
                     )}`}
                     target="_blank"
                     rel="noopener noreferrer"
@@ -9534,11 +9534,11 @@ Please confirm order timeline.`
                           {item.title}
                           {item.isGstIncluded ? (
                             <span className="text-[9px] bg-emerald-100 text-emerald-800 font-bold px-1.5 py-0.5 rounded ml-1.5">
-                              Rate Incl. 18% GST
+                              Incl. CGST 9% + SGST 9%
                             </span>
                           ) : (
                             <span className="text-[9px] bg-amber-100 text-amber-900 font-bold px-1.5 py-0.5 rounded ml-1.5">
-                              + 18% GST Extra
+                              + CGST 9% & SGST 9% Extra
                             </span>
                           )}
                         </td>
@@ -9559,7 +9559,7 @@ Please confirm order timeline.`
                 <div className="text-[11px] text-slate-500 max-w-sm space-y-1">
                   <p className="font-bold text-slate-800">Terms & Conditions:</p>
                   <p>1. Proof approval required before mass fabrication.</p>
-                  <p>2. PVC Visiting Cards rates are inclusive of 18% GST. All other products are subject to 18% GST (+9% CGST, +9% SGST).</p>
+                  <p>2. PVC Visiting Cards rates are inclusive of CGST 9% + SGST 9%. All other products are subject to CGST 9% and SGST 9%.</p>
                   <p>3. Subject to Bengaluru Jurisdiction.</p>
                 </div>
 
@@ -9568,23 +9568,23 @@ Please confirm order timeline.`
                     <span>Base Amount:</span>
                     <span className="font-bold text-slate-900">₹{cartSubtotal.toFixed(2)}</span>
                   </div>
-                  {cartIncludedGst > 0 && (
-                    <div className="flex justify-between text-[11px] text-emerald-800">
-                      <span>Included GST (18%):</span>
-                      <span className="font-semibold">₹{cartIncludedGst.toFixed(2)}</span>
-                    </div>
-                  )}
                   {cartGst > 0 && (
                     <>
                       <div className="flex justify-between text-xs">
-                        <span>Additional CGST (9%):</span>
+                        <span>Central GST (CGST 9%):</span>
                         <span className="font-semibold text-slate-900">₹{(cartGst / 2).toFixed(2)}</span>
                       </div>
                       <div className="flex justify-between text-xs">
-                        <span>Additional SGST (9%):</span>
+                        <span>State GST (SGST 9%):</span>
                         <span className="font-semibold text-slate-900">₹{(cartGst / 2).toFixed(2)}</span>
                       </div>
                     </>
+                  )}
+                  {cartIncludedGst > 0 && (
+                    <div className="flex justify-between text-[11px] text-emerald-800">
+                      <span>PVC Cards:</span>
+                      <span className="font-semibold">CGST 9% + SGST 9% Included</span>
+                    </div>
                   )}
                   <div className="flex justify-between text-sm font-black text-slate-900 pt-2 border-t border-slate-300">
                     <span>Grand Total:</span>

@@ -330,7 +330,7 @@ export const CustomerAuthModal: React.FC<Props> = ({
                   />
                 </div>
                 <p className="text-[11px] text-slate-500 mt-1">
-                  Karnataka state code 29. Auto-applies 18% GST (CGST 9% + SGST 9%) or inter-state IGST.
+                  Karnataka state code 29. Auto-applies CGST 9% + SGST 9% for full Input Tax Credit.
                 </p>
               </div>
 
@@ -396,7 +396,7 @@ export const CustomerAuthModal: React.FC<Props> = ({
                             ₹{ord.pricing.grandTotal.toLocaleString("en-IN")}
                           </strong>
                           <span className="text-[9px] font-black uppercase text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
-                            18% GST INCL.
+                            CGST 9% + SGST 9% INCL.
                           </span>
                         </div>
                       </div>
@@ -504,7 +504,7 @@ export const CustomerAuthModal: React.FC<Props> = ({
           ) : (
             <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
               <span className="text-[11px] text-slate-500 font-medium">
-                Official MCA Invoices with 18% ITC credit.
+                Official MCA Invoices with CGST 9% + SGST 9% ITC credit.
               </span>
               <button
                 type="button"

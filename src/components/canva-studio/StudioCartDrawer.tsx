@@ -703,7 +703,7 @@ export const StudioCartDrawer: React.FC<Props> = ({
                 {/* GSTIN Input */}
                 <div>
                   <label className="font-bold text-slate-700 block mb-1">
-                    Corporate GSTIN (For 18% Input Tax Credit):
+                    Corporate GSTIN (For CGST 9% + SGST 9% Input Tax Credit):
                   </label>
                   <input
                     type="text"
@@ -759,8 +759,12 @@ export const StudioCartDrawer: React.FC<Props> = ({
                   </div>
                 )}
                 <div className="flex justify-between text-slate-600">
-                  <span>18% GST (Tax Invoice & ITC):</span>
-                  <span>₹{gstAmount.toLocaleString("en-IN")}</span>
+                  <span>Central GST (CGST 9%):</span>
+                  <span className="font-mono text-slate-900 font-bold">₹{Math.round(gstAmount / 2).toLocaleString("en-IN")}</span>
+                </div>
+                <div className="flex justify-between text-slate-600">
+                  <span>State GST (SGST 9%):</span>
+                  <span className="font-mono text-slate-900 font-bold">₹{Math.round(gstAmount / 2).toLocaleString("en-IN")}</span>
                 </div>
                 <div className="flex justify-between text-slate-600">
                   <span>
@@ -1067,8 +1071,12 @@ export const StudioCartDrawer: React.FC<Props> = ({
                     )}
 
                     <div className="flex justify-between text-slate-600">
-                      <span>18% GST (Input Tax Credit Eligible):</span>
-                      <strong className="text-slate-900">₹{gstAmount.toLocaleString("en-IN")}</strong>
+                      <span>Central GST (CGST 9%):</span>
+                      <strong className="text-slate-900 font-mono">₹{Math.round(gstAmount / 2).toLocaleString("en-IN")}</strong>
+                    </div>
+                    <div className="flex justify-between text-slate-600">
+                      <span>State GST (SGST 9%):</span>
+                      <strong className="text-slate-900 font-mono">₹{Math.round(gstAmount / 2).toLocaleString("en-IN")}</strong>
                     </div>
 
                     <div className="flex justify-between text-slate-600">
