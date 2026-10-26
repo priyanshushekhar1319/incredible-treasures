@@ -55,6 +55,7 @@ import {
 import { SaveDesignModal } from "@/components/canva-studio/SaveDesignModal";
 import { SavedDesignsModal } from "@/components/canva-studio/SavedDesignsModal";
 import { CustomerAuthModal } from "@/components/CustomerAuthModal";
+import { OrderLiveTrackingModal } from "@/components/OrderLiveTrackingModal";
 import { SavedDesignItem, CustomerUser, getCustomerSession } from "@/lib/customerSession";
 import { getStoredCart, saveStoredCart } from "@/lib/cartStore";
 import { FolderHeart, Save, User as UserIcon } from "lucide-react";
@@ -100,6 +101,7 @@ export default function VisitingCardStudioCanvaPage() {
   const [isSaveModalOpen, setIsSaveModalOpen] = useState<boolean>(false);
   const [isSavedDesignsModalOpen, setIsSavedDesignsModalOpen] = useState<boolean>(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
+  const [isLiveTrackingModalOpen, setIsLiveTrackingModalOpen] = useState<boolean>(false);
   const [currentSavedDesignId, setCurrentSavedDesignId] = useState<string | null>(null);
   const [designTitle, setDesignTitle] = useState<string>("Mahi Kapoor • 24K Gold Stamped Executive Card");
   const [customerUser, setCustomerUser] = useState<CustomerUser | null>(null);
@@ -2017,7 +2019,18 @@ export default function VisitingCardStudioCanvaPage() {
         isOpen={isAuthModalOpen}
         onClose={() => setIsAuthModalOpen(false)}
         onOpenSavedDesigns={() => setIsSavedDesignsModalOpen(true)}
+        onOpenLiveTracking={() => setIsLiveTrackingModalOpen(true)}
         onUserChange={(u) => setCustomerUser(u)}
+      />
+
+      {/* Day 18: Live Product Location & Air Dispatch Tracking Modal */}
+      <OrderLiveTrackingModal
+        isOpen={isLiveTrackingModalOpen}
+        onClose={() => setIsLiveTrackingModalOpen(false)}
+        initialOrderId="IT-PRINT-017378"
+        initialPincode="560001"
+        customerName={customerUser?.name || "Mahi Kapoor"}
+        companyName={customerUser?.companyName || "Incredible Treasures Luxury Studio"}
       />
 
       {/* Slide-Over Corporate Print Cart Drawer */}

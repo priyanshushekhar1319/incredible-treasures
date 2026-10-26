@@ -15,6 +15,7 @@ import {
   ArrowRight,
   LogOut,
   Loader2,
+  Navigation,
 } from "lucide-react";
 import {
   CustomerUser,
@@ -27,6 +28,7 @@ interface Props {
   isOpen: boolean;
   onClose: () => void;
   onOpenSavedDesigns?: () => void;
+  onOpenLiveTracking?: () => void;
   onUserChange?: (user: CustomerUser | null) => void;
 }
 
@@ -34,6 +36,7 @@ export const CustomerAuthModal: React.FC<Props> = ({
   isOpen,
   onClose,
   onOpenSavedDesigns,
+  onOpenLiveTracking,
   onUserChange,
 }) => {
   const [activeTab, setActiveTab] = useState<"profile" | "gstin">("profile");
@@ -330,6 +333,26 @@ export const CustomerAuthModal: React.FC<Props> = ({
                   <span>Browse My Saved Designs Cloud Library</span>
                 </div>
                 <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-[#A9782B] group-hover:translate-x-1 transition-all" />
+              </button>
+            </div>
+          )}
+
+          {/* Day 18: Live Location & Air Transit Tracker */}
+          {onOpenLiveTracking && (
+            <div className="pt-1.5">
+              <button
+                type="button"
+                onClick={() => {
+                  onClose();
+                  onOpenLiveTracking();
+                }}
+                className="w-full p-3 rounded-2xl bg-gradient-to-r from-[#FAF6EE] to-[#FAF8F5] hover:from-[#FAF8F5] hover:to-[#FAF6EE] border border-[#EAD5B3] hover:border-[#A9782B] transition flex items-center justify-between text-xs font-bold text-[#734D15] cursor-pointer shadow-2xs group"
+              >
+                <div className="flex items-center gap-2.5">
+                  <Navigation className="w-4 h-4 text-[#A9782B] animate-pulse" />
+                  <span>Track Live Product Location & Air Dispatch</span>
+                </div>
+                <ArrowRight className="w-4 h-4 text-[#A9782B] group-hover:translate-x-1 transition-all" />
               </button>
             </div>
           )}
