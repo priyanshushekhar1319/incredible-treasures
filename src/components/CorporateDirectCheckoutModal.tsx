@@ -27,6 +27,7 @@ import { calculateDeliverySla, DeliverySlaResult } from "@/lib/deliverySla";
 import { createRealOrder, OrderItem, PlacedOrder } from "@/lib/orderStore";
 import { getCustomerSession } from "@/lib/customerSession";
 import { OrderLiveTrackingModal } from "@/components/OrderLiveTrackingModal";
+import { OfficialTaxInvoiceModal } from "@/components/OfficialTaxInvoiceModal";
 
 export interface CheckoutCartItem {
   id: string;
@@ -102,6 +103,7 @@ export const CorporateDirectCheckoutModal: React.FC<Props> = ({
   // Order Placement Result
   const [confirmedOrder, setConfirmedOrder] = useState<PlacedOrder | null>(null);
   const [isTrackingModalOpen, setIsTrackingModalOpen] = useState<boolean>(false);
+  const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState<boolean>(false);
 
   // Sync profile from customer session on open
   useEffect(() => {
@@ -315,6 +317,16 @@ export const CorporateDirectCheckoutModal: React.FC<Props> = ({
                 >
                   <PackageCheck className="w-4 h-4 text-amber-300" />
                   <span>Track Order & Live Production Lifecycle</span>
+                </button>
+
+                {/* Action 2: OFFICIAL MCA & GST TAX INVOICE */}
+                <button
+                  type="button"
+                  onClick={() => setIsInvoiceModalOpen(true)}
+                  className="w-full py-3 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs transition flex items-center justify-center gap-2 shadow-md cursor-pointer"
+                >
+                  <FileText className="w-4 h-4 text-amber-300" />
+                  <span>View & Print Official GST Tax Invoice (PDF)</span>
                 </button>
 
                 {/* Action 2: WhatsApp Desk */}
@@ -661,6 +673,16 @@ export const CorporateDirectCheckoutModal: React.FC<Props> = ({
           initialPincode={confirmedOrder.customer.pincode}
           customerName={confirmedOrder.customer.fullName}
           companyName={confirmedOrder.customer.companyName}
+        />
+      )}
+
+      {/* Embedded Official Tax Invoice Modal */}
+      {confirmedOrder && (
+        <OfficialTaxInvoiceModal
+          isOpen={isInvoiceModalOpen}
+          onClose={() => setIsInvoiceModalOpen(false)}
+          orderData={confirmedOrder}
+          orderId={confirmedOrder.id}
         />
       )}
     </>

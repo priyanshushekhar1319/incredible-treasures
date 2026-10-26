@@ -10135,7 +10135,7 @@ Please confirm order timeline.`
         }}
       />
 
-      {/* Day 18: Corporate Direct Online Checkout Modal (Real Orders for Ready-Made & Catalog Products) */}
+      {/* Corporate Direct Online Checkout Modal (Real Orders for Ready-Made & Catalog Products) */}
       <CorporateDirectCheckoutModal
         isOpen={isDirectCheckoutOpen}
         onClose={() => setIsDirectCheckoutOpen(false)}
@@ -10148,7 +10148,7 @@ Please confirm order timeline.`
         onClearCart={() => setCartItems([])}
       />
 
-      {/* Day 18: Real Order & Production Lifecycle Tracker Modal */}
+      {/* Real Order & Production Lifecycle Tracker Modal */}
       <OrderLiveTrackingModal
         isOpen={isLiveTrackingOpen}
         onClose={() => setIsLiveTrackingOpen(false)}

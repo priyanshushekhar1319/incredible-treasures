@@ -533,9 +533,45 @@
 
 ---
 
-## 🚀 23. ROADMAP FOR UPCOMING WEEK 3 MILESTONES
-1. **Day 19:** B2B GST Invoicing & PDF Generation Module (Karnataka CGST/SGST vs Inter-state IGST with official MCA/GST Tax Invoice PDF Generator).
-2. **Day 20:** Razorpay Payment Gateway Integration (Instant UPI QR, Corporate Credit/Debit Cards, NetBanking, and Webhook fulfillment).
+## 🧾 23. DAY 19: B2B GST CALCULATION ENGINE & OFFICIAL MCA TAX INVOICE PDF GENERATOR (COMPLETED)
+- **Legal Compliance & Supplier Profile (`src/lib/gstEngine.ts`):**
+  - **Supplier Tax Identity:** Registered under *Incredible Treasures Private Limited* (CIN: `U22219KA2024PTC189201`, PAN: `AAKFI2392F`, GSTIN: `29AAKFI2392F1Z5`), registered address in Tasker Town, Bengaluru, and offset manufacturing press facility in Peenya 2nd Stage.
+  - **Corporate Bank Details:** Complete NEFT/RTGS payment details for HDFC Bank Limited (MG Road Corporate Branch, Bengaluru, Current Account `50200084920145`, IFSC: `HDFC0000140`, UPI: `incredibletreasures@hdfcbank`).
+  - **Statutory Compliance:** Formatted in strict accordance with Section 31 of the Central Goods and Services Tax (CGST) Act, 2017 and Section 16 Input Tax Credit (ITC) eligibility.
+- **Genuine Tax Split & HSN Directory (`gstEngine.ts`):**
+  - **Intra-State vs Inter-State GST Logic:**
+    - If Buyer is located in Karnataka (State Code `29`), GST is split 50/50: **CGST (9%) + SGST (9%)**.
+    - If Buyer is located outside Karnataka (e.g., Maharashtra `27`, Delhi `07`, Tamil Nadu `33`), **IGST (18%)** is applied.
+  - **Harmonized System of Nomenclature (HSN) Directory:**
+    - `4911`: Other Printed Matter - Luxury Polymer & PVC Visiting Cards.
+    - `4909`: Printed or Illustrated Cards - Soft Touch & Raised Spot UV.
+    - `6912`: Ceramic Tableware & Corporate Mugs - 350ml Grade-A.
+    - `6105`: Men's Knitted Corporate Polos & Executive T-Shirts.
+    - `4819`: Cartons, Boxes & Cases of Corrugated Paper or Board.
+    - `4817`: Envelopes & Letter Cards of Paper - 120 GSM Cotton Deckle.
+    - `7326`: Articles of Stainless Steel - Laser-Engraved Executive Cases.
+  - **Automatic Indian Number to Words Converter:** Converts total payable into legal words (e.g. *"INR Two Thousand Nine Hundred and Fifty Only"*).
+- **Official MCA & GST Tax Invoice Viewer & PDF Generator (`OfficialTaxInvoiceModal.tsx`):**
+  - **A4 Vector Printable Layout:** Uses `@media print` CSS rules for perfect 1-page A4 printing or saving to PDF via the browser's native print engine.
+  - **Original for Recipient:** Includes Invoice Number (`INV-IT-YYYY-XXXXXX`), Date of Invoice, Place of Supply, Reverse Charge (RCM: NO), and Air Cargo Docket number.
+  - **Billed To & Shipped To Details:** Displays buyer legal entity name, corporate address, contact details, buyer GSTIN, and state code.
+  - **Itemized Financial Table:** Line number, Product description, HSN code, Quantity, Unit Rate, Taxable Value, CGST/SGST/IGST breakdown, and Total Line Price.
+  - **Bank RTGS Box & Legal Declarations:** HDFC Bank details for corporate electronic transfer, standard legal jurisdiction (Bengaluru), and ITC claim statement.
+  - **Digital Seal & Verification Stamp:** MCA & GST verified QR badge with official *"DIGITALLY SIGNED & VERIFIED"* seal from Peenya Offset Press Works.
+  - **Direct Actions:** Single-click `[ Print / Save PDF ]` and instant `[ WhatsApp ]` billing desk sharing.
+- **System-Wide Integrations:**
+  - **Customer Account Portal (`CustomerAuthModal.tsx`):** Added 3rd tab: **"Tax Invoices & Receipts"** displaying all stored past orders with invoice references, timestamps, company names, amounts, and `[ View & Print PDF ]` action buttons.
+  - **Storefront Direct Checkout (`CorporateDirectCheckoutModal.tsx`):** Added direct `[ View & Print Official GST Tax Invoice (PDF) ]` on order completion.
+  - **Canva Studio Drawer (`StudioCartDrawer.tsx`):** Added direct `[ View & Print Official GST Tax Invoice (PDF) ]` on order completion.
+- **Quality & Verification:**
+  - Full Next.js 16 build (`npm run build`) succeeded with exit code 0.
+  - End-to-end browser subagent verification verified opening, rendering, and inspecting the invoice modal.
+
+---
+
+## 🚀 24. ROADMAP FOR UPCOMING WEEK 3 MILESTONES
+1. **Day 20:** Razorpay Payment Gateway Integration (Instant UPI QR, Corporate Credit/Debit Cards, NetBanking, and Webhook fulfillment).
+
 
 
 
