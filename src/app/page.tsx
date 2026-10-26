@@ -2734,16 +2734,22 @@ export default function VistaprintStorePage() {
   const cartCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
   const cartSubtotal = cartItems.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0);
 
-  // Additional GST: only applies to products where GST is NOT included in the base rate
-  const additionalGst = cartItems
+  // Exclusive Products Subtotal (where 18% GST is added extra)
+  const cartExclusiveSubtotal = cartItems
     .filter((item) => !item.isGstIncluded)
-    .reduce((sum, item) => sum + item.unitPrice * item.quantity * 0.18, 0);
+    .reduce((sum, item) => sum + item.unitPrice * item.quantity, 0);
+
+  // Inclusive Products Subtotal (where CGST 9% + SGST 9% is already included in price)
+  const cartInclusiveSubtotal = cartItems
+    .filter((item) => item.isGstIncluded)
+    .reduce((sum, item) => sum + item.unitPrice * item.quantity, 0);
+
+  // Additional GST: only applies to products where GST is NOT included in the base rate
+  const additionalGst = cartExclusiveSubtotal * 0.18;
   const cartGst = Math.round(additionalGst * 100) / 100;
 
   // Embedded GST component in PVC visiting cards (18/118):
-  const includedGst = cartItems
-    .filter((item) => item.isGstIncluded)
-    .reduce((sum, item) => sum + (item.unitPrice * item.quantity * 18) / 118, 0);
+  const includedGst = (cartInclusiveSubtotal * 18) / 118;
   const cartIncludedGst = Math.round(includedGst * 100) / 100;
 
   // Grand Total never adds extra tax on GST-included PVC cards
@@ -9355,27 +9361,36 @@ Please confirm order timeline.`
               <div className="p-5 border-t border-slate-200 bg-slate-50 space-y-4">
                 <div className="space-y-1.5 text-xs text-slate-600">
                   <div className="flex justify-between">
-                    <span>Base Subtotal:</span>
+                    <span>Products Subtotal:</span>
                     <span className="font-semibold text-slate-900">₹{cartSubtotal.toFixed(2)}</span>
                   </div>
+
+                  {cartExclusiveSubtotal > 0 && cartInclusiveSubtotal > 0 && (
+                    <div className="p-2.5 rounded-xl bg-slate-100/80 border border-slate-200/90 space-y-1 text-[11px]">
+                      <div className="flex justify-between text-slate-700">
+                        <span>• Exclusive Items (Tax Extra):</span>
+                        <strong className="text-slate-900 font-mono">₹{cartExclusiveSubtotal.toFixed(2)}</strong>
+                      </div>
+                      <div className="flex justify-between text-emerald-800">
+                        <span>• Inclusive Items (CGST 9% + SGST 9% in Price):</span>
+                        <strong className="text-emerald-700 font-mono">₹{cartInclusiveSubtotal.toFixed(2)}</strong>
+                      </div>
+                    </div>
+                  )}
+
                   {cartGst > 0 && (
                     <>
                       <div className="flex justify-between text-slate-700">
-                        <span>Central GST (CGST 9%):</span>
-                        <span className="font-bold text-slate-900">₹{(cartGst / 2).toFixed(2)}</span>
+                        <span>Central GST (CGST 9%{cartInclusiveSubtotal > 0 ? ` on ₹${cartExclusiveSubtotal.toFixed(2)}` : ""}):</span>
+                        <span className="font-bold text-slate-900 font-mono">₹{(cartGst / 2).toFixed(2)}</span>
                       </div>
                       <div className="flex justify-between text-slate-700">
-                        <span>State GST (SGST 9%):</span>
-                        <span className="font-bold text-slate-900">₹{(cartGst / 2).toFixed(2)}</span>
+                        <span>State GST (SGST 9%{cartInclusiveSubtotal > 0 ? ` on ₹${cartExclusiveSubtotal.toFixed(2)}` : ""}):</span>
+                        <span className="font-bold text-slate-900 font-mono">₹{(cartGst / 2).toFixed(2)}</span>
                       </div>
                     </>
                   )}
-                  {cartIncludedGst > 0 && (
-                    <div className="flex justify-between text-[11px] text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-lg font-medium border border-emerald-200/80">
-                      <span>PVC Cards (CGST 9% + SGST 9%):</span>
-                      <span className="font-bold">Included in Price</span>
-                    </div>
-                  )}
+
                   <div className="flex justify-between text-sm font-black text-slate-900 pt-2 border-t border-slate-200">
                     <span>Grand Total:</span>
                     <span className="text-emerald-700 text-base font-black">₹{cartGrandTotal.toFixed(2)}</span>
@@ -9563,32 +9578,41 @@ Please confirm order timeline.`
                   <p>3. Subject to Bengaluru Jurisdiction.</p>
                 </div>
 
-                <div className="w-full sm:w-64 space-y-1.5 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                <div className="w-full sm:w-72 space-y-1.5 bg-slate-50 p-4 rounded-xl border border-slate-200">
                   <div className="flex justify-between text-xs">
-                    <span>Base Amount:</span>
+                    <span>Base Subtotal:</span>
                     <span className="font-bold text-slate-900">₹{cartSubtotal.toFixed(2)}</span>
                   </div>
+
+                  {cartExclusiveSubtotal > 0 && cartInclusiveSubtotal > 0 && (
+                    <div className="p-2 rounded-lg bg-white border border-slate-200 space-y-1 text-[10px]">
+                      <div className="flex justify-between text-slate-700">
+                        <span>• Exclusive Items (Tax Extra):</span>
+                        <strong className="text-slate-900 font-mono">₹{cartExclusiveSubtotal.toFixed(2)}</strong>
+                      </div>
+                      <div className="flex justify-between text-emerald-800">
+                        <span>• Inclusive Items (Tax in Price):</span>
+                        <strong className="text-emerald-700 font-mono">₹{cartInclusiveSubtotal.toFixed(2)}</strong>
+                      </div>
+                    </div>
+                  )}
+
                   {cartGst > 0 && (
                     <>
                       <div className="flex justify-between text-xs">
-                        <span>Central GST (CGST 9%):</span>
-                        <span className="font-semibold text-slate-900">₹{(cartGst / 2).toFixed(2)}</span>
+                        <span>Central GST (CGST 9%{cartInclusiveSubtotal > 0 ? ` on ₹${cartExclusiveSubtotal.toFixed(2)}` : ""}):</span>
+                        <span className="font-semibold text-slate-900 font-mono">₹{(cartGst / 2).toFixed(2)}</span>
                       </div>
                       <div className="flex justify-between text-xs">
-                        <span>State GST (SGST 9%):</span>
-                        <span className="font-semibold text-slate-900">₹{(cartGst / 2).toFixed(2)}</span>
+                        <span>State GST (SGST 9%{cartInclusiveSubtotal > 0 ? ` on ₹${cartExclusiveSubtotal.toFixed(2)}` : ""}):</span>
+                        <span className="font-semibold text-slate-900 font-mono">₹{(cartGst / 2).toFixed(2)}</span>
                       </div>
                     </>
                   )}
-                  {cartIncludedGst > 0 && (
-                    <div className="flex justify-between text-[11px] text-emerald-800">
-                      <span>PVC Cards:</span>
-                      <span className="font-semibold">CGST 9% + SGST 9% Included</span>
-                    </div>
-                  )}
+
                   <div className="flex justify-between text-sm font-black text-slate-900 pt-2 border-t border-slate-300">
                     <span>Grand Total:</span>
-                    <span className="text-emerald-700 text-base">₹{cartGrandTotal.toFixed(2)}</span>
+                    <span className="text-emerald-700 text-base font-black">₹{cartGrandTotal.toFixed(2)}</span>
                   </div>
                 </div>
               </div>

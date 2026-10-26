@@ -144,9 +144,12 @@ export const CorporateDirectCheckoutModal: React.FC<Props> = ({
   // Calculate Real Financial Totals
   const baseSubtotal = items.reduce((acc, it) => acc + it.unitPrice * it.quantity, 0);
 
-  // Calculate GST: For items where GST is already included vs items where GST is extra
   const extraGstSubtotal = items
     .filter((it) => !it.isGstIncluded)
+    .reduce((acc, it) => acc + it.unitPrice * it.quantity, 0);
+
+  const includedGstSubtotal = items
+    .filter((it) => it.isGstIncluded)
     .reduce((acc, it) => acc + it.unitPrice * it.quantity, 0);
 
   const gstAmount = Math.round(extraGstSubtotal * 0.18);
@@ -627,14 +630,28 @@ export const CorporateDirectCheckoutModal: React.FC<Props> = ({
                     <span>Products Subtotal:</span>
                     <strong className="text-slate-900">₹{baseSubtotal.toLocaleString("en-IN")}</strong>
                   </div>
+
+                  {extraGstSubtotal > 0 && includedGstSubtotal > 0 && (
+                    <div className="p-2.5 rounded-xl bg-white border border-[#E5E0D8] space-y-1 text-[11px]">
+                      <div className="flex justify-between text-slate-700">
+                        <span>• Exclusive Items (Tax Extra):</span>
+                        <strong className="text-slate-900 font-mono">₹{extraGstSubtotal.toLocaleString("en-IN")}</strong>
+                      </div>
+                      <div className="flex justify-between text-emerald-800">
+                        <span>• Inclusive Items (CGST 9% + SGST 9% in Rate):</span>
+                        <strong className="text-emerald-700 font-mono">₹{includedGstSubtotal.toLocaleString("en-IN")}</strong>
+                      </div>
+                    </div>
+                  )}
+
                   {gstAmount > 0 && (
                     <>
                       <div className="flex justify-between text-slate-600">
-                        <span>Central GST (CGST 9%):</span>
+                        <span>Central GST (CGST 9%{includedGstSubtotal > 0 ? ` on ₹${extraGstSubtotal.toLocaleString("en-IN")}` : ""}):</span>
                         <strong className="text-slate-900 font-mono">₹{Math.round(gstAmount / 2).toLocaleString("en-IN")}</strong>
                       </div>
                       <div className="flex justify-between text-slate-600">
-                        <span>State GST (SGST 9%):</span>
+                        <span>State GST (SGST 9%{includedGstSubtotal > 0 ? ` on ₹${extraGstSubtotal.toLocaleString("en-IN")}` : ""}):</span>
                         <strong className="text-slate-900 font-mono">₹{Math.round(gstAmount / 2).toLocaleString("en-IN")}</strong>
                       </div>
                     </>

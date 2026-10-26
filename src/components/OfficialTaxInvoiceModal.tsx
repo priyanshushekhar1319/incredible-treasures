@@ -90,9 +90,16 @@ export const OfficialTaxInvoiceModal: React.FC<Props> = ({
     buyerStateCode = "36";
   }
 
-  // Tax calculations based on genuine state split
+  // Derive statutory taxable subtotal by segregating inclusive vs exclusive lines
+  const computedTaxableSubtotal = order.items.reduce((sum, it) => {
+    const isIncl = Boolean(it.isGstIncluded);
+    const lineTaxable = isIncl ? Math.round((it.totalPrice / 1.18) * 100) / 100 : it.totalPrice;
+    return sum + lineTaxable;
+  }, 0);
+
+  // Tax calculations based on genuine state split on the true taxable value
   const taxSplit = calculateGstTaxSplit(
-    order.pricing.subtotal,
+    computedTaxableSubtotal,
     buyerStateCode,
     order.customer.state || "Karnataka"
   );
@@ -321,14 +328,18 @@ export const OfficialTaxInvoiceModal: React.FC<Props> = ({
               <tbody className="divide-y divide-slate-100 text-[11px]">
                 {order.items.map((it, idx) => {
                   const hsn = resolveHsnCode(it.title, it.categoryName);
-                  const lineTaxable = it.totalPrice;
-                  const lineCgst = Math.round(lineTaxable * 0.09);
-                  const lineSgst = Math.round(lineTaxable * 0.09);
-                  const lineIgst = Math.round(lineTaxable * 0.18);
-                  const lineTotal =
-                    taxSplit.taxType === "INTRA_STATE"
-                      ? lineTaxable + lineCgst + lineSgst
-                      : lineTaxable + lineIgst;
+                  const isIncl = Boolean(it.isGstIncluded);
+                  const lineTaxable = isIncl
+                    ? Math.round((it.totalPrice / 1.18) * 100) / 100
+                    : it.totalPrice;
+                  const lineCgst = Math.round(lineTaxable * 0.09 * 100) / 100;
+                  const lineSgst = Math.round(lineTaxable * 0.09 * 100) / 100;
+                  const lineIgst = Math.round(lineTaxable * 0.18 * 100) / 100;
+                  const lineTotal = isIncl
+                    ? it.totalPrice
+                    : taxSplit.taxType === "INTRA_STATE"
+                    ? Math.round((lineTaxable + lineCgst + lineSgst) * 100) / 100
+                    : Math.round((lineTaxable + lineIgst) * 100) / 100;
 
                   return (
                     <tr key={it.id || idx} className="hover:bg-slate-50/50">
@@ -339,7 +350,7 @@ export const OfficialTaxInvoiceModal: React.FC<Props> = ({
                           <span className="text-[10px] text-slate-500 block">{it.specs}</span>
                         )}
                         <span className="text-[9px] text-[#A9782B] font-bold block">
-                          600+ DPI Precision Press Run
+                          600+ DPI Precision Press Run {isIncl && "• Rate Includes CGST 9% + SGST 9%"}
                         </span>
                       </td>
                       <td className="py-2.5 px-3 text-center font-mono text-slate-600">{hsn.code}</td>
@@ -350,21 +361,21 @@ export const OfficialTaxInvoiceModal: React.FC<Props> = ({
                         ₹{it.unitPrice.toFixed(2)}
                       </td>
                       <td className="py-2.5 px-3 text-right font-mono font-bold text-slate-900">
-                        ₹{lineTaxable.toLocaleString("en-IN")}
+                        ₹{lineTaxable.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
                       </td>
 
                       {taxSplit.taxType === "INTRA_STATE" ? (
                         <>
                           <td className="py-2.5 px-3 text-right font-mono text-slate-700">
-                            ₹{lineCgst.toLocaleString("en-IN")}
+                            ₹{lineCgst.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
                           </td>
                           <td className="py-2.5 px-3 text-right font-mono text-slate-700">
-                            ₹{lineSgst.toLocaleString("en-IN")}
+                            ₹{lineSgst.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
                           </td>
                         </>
                       ) : (
                         <td className="py-2.5 px-3 text-right font-mono text-slate-700">
-                          ₹{lineIgst.toLocaleString("en-IN")}
+                          ₹{lineIgst.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
                         </td>
                       )}
 
