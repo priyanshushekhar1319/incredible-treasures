@@ -501,10 +501,51 @@
 
 ---
 
-## 🚀 22. ROADMAP FOR UPCOMING WEEK 3 MILESTONES
-1. **Day 18:** Advanced Indian Checkout & Pincode Auto-Detection (City/State auto-lookup expansion & delivery SLAs).
-2. **Day 19:** B2B GST Calculation & Invoicing Module (Karnataka CGST/SGST vs Inter-state IGST with PDF Tax Invoice Generator).
-3. **Day 20:** Razorpay Payment Gateway Integration (UPI QR, Credit/Debit Cards, NetBanking, Webhooks).
+## 📍 22. DAY 18: PINCODE DELIVERY INTELLIGENCE, FACTORY SLA & LIVE PRODUCT LOCATION TRACKER (COMPLETED)
+- **Client-Requested Live Product Location & GPS Air Transit Radar (`OrderLiveTrackingModal.tsx` & `orderTracking.ts`):**
+  - **Real-Time GPS Coordinates & Altitude Radar:** Live telemetry dashboard displaying active GPS coordinates (e.g. `13.1986° N, 77.7066° E`), transit altitude (`FL280 / 28,000 ft`), carrier flight speed (`740 km/h`), and carrier docket reference (`#BD-017378560`).
+  - **Dynamic Route Progression Bar:** Factory Press (Bangalore) -> Air Transit In Progress -> Doorstep Destination.
+  - **6-Stage Factory-to-Doorstep Journey:**
+    1. *600+ DPI Pre-Flight Verification & CTP Laser Imaged* (Peenya Industrial Area Press Works).
+    2. *400µ Pure PVC Offset Litho Run & Curing* (Heidelberg Speedmaster XL 75).
+    3. *24K Gold Stamping & Micro-Bevel Trimming* (Bobst Hot Foil Stamping Cell).
+    4. *Air Cargo Terminal Handover & Security Screening* (Kempegowda Int'l Airport Cargo Terminal 2).
+    5. *Dedicated Cargo Flight In-Transit* (BlueDart Aviation B737 Freighter).
+    6. *Destination Hub Out-for-Delivery* (Assigned BlueDart Prime Lead).
+  - **Interactive AWB / Order Search Omnibar:** Allows corporate clients to look up any past or current order docket (`IT-PRINT-XXXXXX` or `BD-XXXXXX`) with instant telemetry refresh.
+  - **1-Click WhatsApp Live Lead Dispatch Updates:** Direct connection to assigned delivery lead (`+91 98450 18274`) with pre-populated order context.
+  - **Universal Access Points:** Accessible immediately upon order confirmation from the cart drawer receipt AND at any time from the Customer Account Portal (`CustomerAuthModal.tsx`).
+
+- **All-India Pincode Resolution & Delivery Intelligence Engine (`pincodeEngine.ts`):**
+  - Coverage across all 8 Indian postal zones and metro hubs:
+    - Bangalore (`560`, `570`, `575`), Mumbai (`400`, `411`, `440`), Delhi NCR (`110`, `122`, `201`), Hyderabad (`500`), Chennai (`600`, `641`), Kolkata (`700`), Ahmedabad (`380`), Jaipur (`302`), Kochi (`682`), Chandigarh (`160`), plus zone fallback.
+  - Instant auto-population of City, State, District, Postal Zone, Assigned Logistics Partner (`BlueDart Apex Air` or `Delhivery Prime Air`), and Origin-Destination Airport Hubs.
+
+- **Factory Production SLA & Guaranteed Dispatch Calculator (`deliverySla.ts`):**
+  - Production timeline engine accounting for factory working days (skips non-working Sundays).
+  - Daily order cutoff timer calibrated to **5:00 PM IST** offset plate schedule (e.g. *"Orders queue for Tomorrow Morning 8:00 AM Press Run"*).
+  - Guaranteed doorstep delivery date calculations matching tier selection.
+
+- **Corporate Address Book & Priority VIP Express Shipping Tier (`StudioCartDrawer.tsx`):**
+  - 1-Click Corporate Branch address selector:
+    - Bangalore Head Office (`560001`)
+    - Mumbai BKC Suite (`400051`)
+    - Delhi Connaught Place Suite (`110001`)
+  - Dual Shipping Tiers:
+    - *Standard Insured Air* (FREE on ₹3,000+ or ₹150 flat, 3-4 business days transit).
+    - *Priority VIP Express (+₹299)* (Same-day press queue priority + Next-Flight-Out cargo allocation, saves 1 full business day).
+  - Dynamic recalculation of shipping fees, 18% GST, and total payable in real time.
+
+- **Verification & Testing:**
+  - Production build (`npm run build`) succeeded with 0 errors across all routes.
+  - Browser verification executed for both Account Portal Live Radar and Checkout Order Confirmed -> Live Location modal handoff.
+
+---
+
+## 🚀 23. ROADMAP FOR UPCOMING WEEK 3 MILESTONES
+1. **Day 19:** B2B GST Invoicing & PDF Generation Module (Karnataka CGST/SGST vs Inter-state IGST with official MCA/GST Tax Invoice PDF Generator).
+2. **Day 20:** Razorpay Payment Gateway Integration (Instant UPI QR, Corporate Credit/Debit Cards, NetBanking, and Webhook fulfillment).
+
 
 
 
