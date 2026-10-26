@@ -501,44 +501,35 @@
 
 ---
 
-## 📍 22. DAY 18: PINCODE DELIVERY INTELLIGENCE, FACTORY SLA & LIVE PRODUCT LOCATION TRACKER (COMPLETED)
-- **Client-Requested Live Product Location & GPS Air Transit Radar (`OrderLiveTrackingModal.tsx` & `orderTracking.ts`):**
-  - **Real-Time GPS Coordinates & Altitude Radar:** Live telemetry dashboard displaying active GPS coordinates (e.g. `13.1986° N, 77.7066° E`), transit altitude (`FL280 / 28,000 ft`), carrier flight speed (`740 km/h`), and carrier docket reference (`#BD-017378560`).
-  - **Dynamic Route Progression Bar:** Factory Press (Bangalore) -> Air Transit In Progress -> Doorstep Destination.
-  - **6-Stage Factory-to-Doorstep Journey:**
-    1. *600+ DPI Pre-Flight Verification & CTP Laser Imaged* (Peenya Industrial Area Press Works).
-    2. *400µ Pure PVC Offset Litho Run & Curing* (Heidelberg Speedmaster XL 75).
-    3. *24K Gold Stamping & Micro-Bevel Trimming* (Bobst Hot Foil Stamping Cell).
-    4. *Air Cargo Terminal Handover & Security Screening* (Kempegowda Int'l Airport Cargo Terminal 2).
-    5. *Dedicated Cargo Flight In-Transit* (BlueDart Aviation B737 Freighter).
-    6. *Destination Hub Out-for-Delivery* (Assigned BlueDart Prime Lead).
-  - **Interactive AWB / Order Search Omnibar:** Allows corporate clients to look up any past or current order docket (`IT-PRINT-XXXXXX` or `BD-XXXXXX`) with instant telemetry refresh.
-  - **1-Click WhatsApp Live Lead Dispatch Updates:** Direct connection to assigned delivery lead (`+91 98450 18274`) with pre-populated order context.
-  - **Universal Access Points:** Accessible immediately upon order confirmation from the cart drawer receipt AND at any time from the Customer Account Portal (`CustomerAuthModal.tsx`).
+## 📍 22. DAY 18: PINCODE DELIVERY INTELLIGENCE, GENUINE ORDER TRACKING & STOREFRONT DIRECT ONLINE CHECKOUT (COMPLETED)
+- **Direct Online Order on Ready-Made Designs & Storefront Products (`CorporateDirectCheckoutModal.tsx` & `page.tsx`):**
+  - **`[ ⚡ Direct Order & Pay Advance ]` Primary Action:** Prominently embedded on all ready-made visiting card designs, ceramic mugs, and merchandise catalog products on the storefront (`src/app/page.tsx`).
+  - **No Longer Restricted to WhatsApp or Proforma Quotes:** Customers can now directly place real online orders for ready-made designs without needing to create a scratch card on canvas first.
+  - **Real Corporate Checkout Drawer / Modal:**
+    - Corporate Saved Branch Presets (Bangalore HQ, Mumbai BKC, Delhi CP).
+    - 6-digit Indian Pincode Auto-Resolution (City, State, Zone, Courier Partner).
+    - Guaranteed Doorstep Delivery SLA calculation with real cutoff timer.
+    - Shipping Tier selector (Standard Insured Air vs Priority VIP Express +₹299).
+    - 18% Corporate GSTIN input with ITC tax invoice credit.
+    - Advance Payment Methods: Instant UPI QR, Corporate Credit/Debit Cards, B2B PO Invoice (pre-configured for Razorpay Gateway on Day 20).
+    - Confirmation receipt with unique Order ID (`#IT-ORD-XXXXXX`), items summary, and direct link to real order tracking.
+  - **Storefront Cart Drawer Integration:** Prominent primary gold CTA `[ ⚡ Direct Order & Pay Advance Online (₹...) ]` in the cart drawer footer to check out full multi-item orders directly online.
 
-- **All-India Pincode Resolution & Delivery Intelligence Engine (`pincodeEngine.ts`):**
-  - Coverage across all 8 Indian postal zones and metro hubs:
-    - Bangalore (`560`, `570`, `575`), Mumbai (`400`, `411`, `440`), Delhi NCR (`110`, `122`, `201`), Hyderabad (`500`), Chennai (`600`, `641`), Kolkata (`700`), Ahmedabad (`380`), Jaipur (`302`), Kochi (`682`), Chandigarh (`160`), plus zone fallback.
-  - Instant auto-population of City, State, District, Postal Zone, Assigned Logistics Partner (`BlueDart Apex Air` or `Delhivery Prime Air`), and Origin-Destination Airport Hubs.
-
-- **Factory Production SLA & Guaranteed Dispatch Calculator (`deliverySla.ts`):**
-  - Production timeline engine accounting for factory working days (skips non-working Sundays).
-  - Daily order cutoff timer calibrated to **5:00 PM IST** offset plate schedule (e.g. *"Orders queue for Tomorrow Morning 8:00 AM Press Run"*).
-  - Guaranteed doorstep delivery date calculations matching tier selection.
-
-- **Corporate Address Book & Priority VIP Express Shipping Tier (`StudioCartDrawer.tsx`):**
-  - 1-Click Corporate Branch address selector:
-    - Bangalore Head Office (`560001`)
-    - Mumbai BKC Suite (`400051`)
-    - Delhi Connaught Place Suite (`110001`)
-  - Dual Shipping Tiers:
-    - *Standard Insured Air* (FREE on ₹3,000+ or ₹150 flat, 3-4 business days transit).
-    - *Priority VIP Express (+₹299)* (Same-day press queue priority + Next-Flight-Out cargo allocation, saves 1 full business day).
-  - Dynamic recalculation of shipping fees, 18% GST, and total payable in real time.
+- **Genuine Production Order Storage & Tracking Engine (`orderStore.ts`, `orderTracking.ts` & `OrderLiveTrackingModal.tsx`):**
+  - **Eliminated Fake Airplane Telemetry:** Completely replaced mock flight altitude/speedometer data with an authentic, production-grade manufacturing & logistics lifecycle tracking engine.
+  - **Persistent Real Order Registry (`orderStore.ts`):** Every order placed via the Studio or Storefront is saved to local storage with real timestamps, real items, real customer delivery address, real GSTIN, and real SLA dates.
+  - **Real Order Lookup & Search Omnibar:** Customers can enter any Order Reference ID or Master BlueDart AWB docket. If found, it displays their actual ordered items, customer details, and time-aware manufacturing status. If invalid, it honestly informs the customer with error recovery suggestions.
+  - **Authentic 6-Stage Manufacturing & Delivery Lifecycle:**
+    1. *Order Placed & Payment Acknowledged* (Verified with exact placement timestamp).
+    2. *600+ DPI Pre-Flight Verification & CTP Laser Imaged* (Peenya Industrial Area Works).
+    3. *Offset Press Litho Run & Curing* (Heidelberg Speedmaster XL 75).
+    4. *24K Gold Stamping, Micro-Bevel Trimming & Quality Control* (Finishing Vault).
+    5. *Air Cargo Handover (BlueDart Apex Air)* (Master AWB with direct BlueDart tracking portal link).
+    6. *Doorstep Hand-Delivery & Signature Proof* (Assigned BlueDart delivery executive).
 
 - **Verification & Testing:**
-  - Production build (`npm run build`) succeeded with 0 errors across all routes.
-  - Browser verification executed for both Account Portal Live Radar and Checkout Order Confirmed -> Live Location modal handoff.
+  - Full Next.js 16 build (`npm run build`) succeeded with exit code 0 across all routes.
+  - End-to-end browser subagent verification executed on storefront ready-made design direct checkout flow.
 
 ---
 
