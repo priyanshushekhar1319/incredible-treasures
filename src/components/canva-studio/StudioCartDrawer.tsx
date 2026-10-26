@@ -41,6 +41,7 @@ import {
 import { getCustomerSession } from "@/lib/customerSession";
 import { calculateDeliverySla, DeliverySlaResult } from "@/lib/deliverySla";
 import { lookupIndianPincode } from "@/lib/pincodeEngine";
+import { createRealOrder, OrderItem } from "@/lib/orderStore";
 import { OrderLiveTrackingModal } from "@/components/OrderLiveTrackingModal";
 
 export type StudioCartItem = CartCardItem;
@@ -262,8 +263,57 @@ export const StudioCartDrawer: React.FC<Props> = ({
   };
 
   const handlePlaceOrder = () => {
-    const newOrderId = `IT-PRINT-${Date.now().toString().slice(-6)}`;
-    setOrderSuccessId(newOrderId);
+    const orderItems: OrderItem[] = items.map((it) => ({
+      id: it.id,
+      productId: it.substrateId,
+      title: `${it.title} (${it.quantity} pcs)`,
+      quantity: it.quantity,
+      unitPrice: it.pricePerUnit,
+      totalPrice: it.totalPrice,
+      image: it.frontPreviewBg,
+      specs: it.specs,
+      cornerStyle: it.cornerStyle,
+      isGstIncluded: true,
+    }));
+
+    selectedUpsells.forEach((up) => {
+      orderItems.push({
+        id: up.id,
+        title: up.name,
+        quantity: 1,
+        unitPrice: up.price,
+        totalPrice: up.price,
+        specs: up.subtitle,
+      });
+    });
+
+    const realOrder = createRealOrder({
+      source: "studio",
+      items: orderItems,
+      customer: {
+        fullName: fullName || "Mahi Kapoor",
+        companyName: companyName || "Incredible Treasures Luxury Studio",
+        phone: phone || "+91 99450 39266",
+        email: email || "mahi.kapoor@incredibletreasures.com",
+        address: address || "42, Commercial Street, Tasker Town",
+        city: city || "Bengaluru",
+        state: state || "Karnataka",
+        pincode: pincode || "560001",
+        gstin: gstin || undefined,
+      },
+      pricing: {
+        subtotal: printSubtotal + upsellsTotal,
+        gstAmount,
+        shippingFee,
+        shippingTier,
+        couponCode: appliedCouponCode || undefined,
+        couponDiscount,
+        grandTotal,
+      },
+      paymentMethod,
+    });
+
+    setOrderSuccessId(realOrder.id);
     if (onClearCart) onClearCart();
   };
 

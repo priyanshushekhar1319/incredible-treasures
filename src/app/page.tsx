@@ -86,6 +86,8 @@ import {
 import { ALL_PRODUCTS, CatalogProduct, PricingTier } from "@/data/products";
 import { CustomerAuthModal } from "@/components/CustomerAuthModal";
 import { SavedDesignsModal } from "@/components/canva-studio/SavedDesignsModal";
+import { CorporateDirectCheckoutModal, CheckoutCartItem } from "@/components/CorporateDirectCheckoutModal";
+import { OrderLiveTrackingModal } from "@/components/OrderLiveTrackingModal";
 import { CustomerUser, getCustomerSession } from "@/lib/customerSession";
 
 // ==========================================
@@ -1215,6 +1217,12 @@ export default function VistaprintStorePage() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
   const [isSavedDesignsModalOpen, setIsSavedDesignsModalOpen] = useState<boolean>(false);
   const [customerUser, setCustomerUser] = useState<CustomerUser | null>(null);
+
+  // Real Direct Online Checkout & Order Tracking State
+  const [isDirectCheckoutOpen, setIsDirectCheckoutOpen] = useState<boolean>(false);
+  const [directCheckoutItems, setDirectCheckoutItems] = useState<CheckoutCartItem[]>([]);
+  const [isLiveTrackingOpen, setIsLiveTrackingOpen] = useState<boolean>(false);
+  const [activeTrackingOrderId, setActiveTrackingOrderId] = useState<string>("IT-PRINT-017378");
 
   useEffect(() => {
     setCustomerUser(getCustomerSession());
@@ -2750,6 +2758,63 @@ export default function VistaprintStorePage() {
     setIsCartOpen(true);
     setToastMessage(`Added "${item.title}" to your cart!`);
     setTimeout(() => setToastMessage(null), 3500);
+  };
+
+  const handleDirectBuyProduct = (product: CatalogProduct) => {
+    let orderItem: CheckoutCartItem;
+    if (product.pricingTiers && selectedPvcTier) {
+      orderItem = {
+        id: `direct-${product.id}-${Date.now()}`,
+        productId: product.id,
+        title: `${product.title} (${selectedPvcTier.qty} pcs)`,
+        categoryName: product.categoryName,
+        image: product.image,
+        quantity: selectedPvcTier.qty,
+        unitPrice: selectedPvcTier.pricePerUnit,
+        branding: `${product.finishType || "400 Micron"} • ${cornerStyle} Corners`,
+        specs: `Front & Back Proof Configured • Co: ${companyName} • ${product.specs}`,
+        isGstIncluded: true,
+      };
+    } else {
+      const basePriceNum = parseFloat(product.startingPrice.replace(/[^0-9.]/g, "")) || 250;
+      const baseMoqNum = parseInt(product.minQty.replace(/[^0-9]/g, "")) || 50;
+      const totalOrderQty = baseMoqNum * merchTierQty;
+      const discountMultiplier = merchTierQty === 5 ? 0.85 : merchTierQty === 2 ? 0.92 : 1.0;
+      const effectiveUnitPrice = Math.round(basePriceNum * discountMultiplier * 100) / 100;
+      orderItem = {
+        id: `direct-${product.id}-${Date.now()}`,
+        productId: product.id,
+        title: `${product.title} (${totalOrderQty} pcs)`,
+        categoryName: product.categoryName,
+        image: product.image,
+        quantity: totalOrderQty,
+        unitPrice: effectiveUnitPrice,
+        branding: `Front & Back Dual Proof • Co: ${companyName}`,
+        specs: `${product.specs} • Logo Synced • (+18% GST Extra)`,
+        isGstIncluded: false,
+      };
+    }
+    setDirectCheckoutItems([orderItem]);
+    setIsDirectCheckoutOpen(true);
+  };
+
+  const handleCheckoutFromCart = () => {
+    if (cartItems.length === 0) return;
+    const formatted: CheckoutCartItem[] = cartItems.map((ci) => ({
+      id: ci.id,
+      productId: ci.productId,
+      title: ci.title,
+      categoryName: ci.categoryName,
+      image: ci.image,
+      quantity: ci.quantity,
+      unitPrice: ci.unitPrice,
+      branding: ci.branding,
+      specs: ci.specs,
+      isGstIncluded: ci.isGstIncluded,
+    }));
+    setDirectCheckoutItems(formatted);
+    setIsCartOpen(false);
+    setIsDirectCheckoutOpen(true);
   };
 
   const updateCartQty = (id: string, delta: number) => {
@@ -7017,11 +7082,66 @@ export default function VistaprintStorePage() {
                       </span>
                     </div>
 
-                    {/* Action Buttons: WhatsApp Instant Quote & Add to Cart */}
-                    <div className="space-y-3 pt-2">
-                      <a
-                        href={`https://wa.me/919945039266?text=${encodeURIComponent(
-                          `Hello Incredible Treasures,
+                    {/* Action Buttons: Direct Order / Buy Now, Add to Cart & WhatsApp Quote */}
+                    <div className="space-y-2.5 pt-2">
+                      <button
+                        type="button"
+                        onClick={() => handleDirectBuyProduct(selectedProduct)}
+                        className="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-[#A9782B] via-[#8E621E] to-[#734D15] hover:opacity-95 text-white font-black text-sm transition flex items-center justify-center gap-2.5 shadow-xl shadow-[#A9782B]/20 cursor-pointer hover:scale-101"
+                      >
+                        <Check className="w-5 h-5 text-amber-300" />
+                        <span>
+                          {selectedProduct.pricingTiers && selectedPvcTier
+                            ? `⚡ Direct Order & Pay Advance — ₹${selectedPvcTier.total.toLocaleString("en-IN")}`
+                            : `⚡ Direct Order & Pay Advance — ${selectedProduct.title}`}
+                        </span>
+                      </button>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (selectedProduct.pricingTiers && selectedPvcTier) {
+                              addItemToCart({
+                                productId: selectedProduct.id,
+                                title: `${selectedProduct.title} (${selectedPvcTier.qty} pcs)`,
+                                categoryName: selectedProduct.categoryName,
+                                image: selectedProduct.image,
+                                quantity: selectedPvcTier.qty,
+                                unitPrice: selectedPvcTier.pricePerUnit,
+                                branding: `${selectedProduct.finishType || '400 Micron'} • ${cornerStyle} Corners`,
+                                specs: `Front & Back Proof Ready • Co: ${companyName} • ${selectedProduct.specs} • Rate Includes 18% GST`,
+                                isGstIncluded: true,
+                              });
+                            } else {
+                              const basePriceNum = parseFloat(selectedProduct.startingPrice.replace(/[^0-9.]/g, "")) || 250;
+                              const baseMoqNum = parseInt(selectedProduct.minQty.replace(/[^0-9]/g, "")) || 50;
+                              const totalOrderQty = baseMoqNum * merchTierQty;
+                              const discountMultiplier = merchTierQty === 5 ? 0.85 : merchTierQty === 2 ? 0.92 : 1.0;
+                              const effectiveUnitPrice = Math.round(basePriceNum * discountMultiplier * 100) / 100;
+                              addItemToCart({
+                                productId: selectedProduct.id,
+                                title: `${selectedProduct.title} (${totalOrderQty} pcs)`,
+                                categoryName: selectedProduct.categoryName,
+                                image: selectedProduct.image,
+                                quantity: totalOrderQty,
+                                unitPrice: effectiveUnitPrice,
+                                branding: `Front & Back Dual Proof • Co: ${companyName}`,
+                                specs: `${selectedProduct.specs} • Logo Synced • (+18% GST Extra)`,
+                                isGstIncluded: false,
+                              });
+                            }
+                            setIsCartOpen(true);
+                          }}
+                          className="w-full py-3.5 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs transition flex items-center justify-center gap-2 shadow-xs cursor-pointer"
+                        >
+                          <ShoppingBag className="w-4 h-4 text-emerald-400" />
+                          <span>Add to Cart</span>
+                        </button>
+
+                        <a
+                          href={`https://wa.me/919945039266?text=${encodeURIComponent(
+                            `Hello Incredible Treasures,
 
 I want an official quotation for:
 • Product: ${selectedProduct.title}
@@ -7032,59 +7152,15 @@ I want an official quotation for:
 • Proof Status: Dual Side Front & Back Preview Configured
 
 Please confirm order timeline.`
-                        )}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="w-full py-3.5 px-6 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm transition flex items-center justify-center gap-2.5 shadow-md shadow-emerald-600/20 cursor-pointer"
-                      >
-                        <Phone className="w-5 h-5" />
-                        <span>Instant WhatsApp Quote (+91 9945039266)</span>
-                      </a>
-
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (selectedProduct.pricingTiers && selectedPvcTier) {
-                            addItemToCart({
-                              productId: selectedProduct.id,
-                              title: `${selectedProduct.title} (${selectedPvcTier.qty} pcs)`,
-                              categoryName: selectedProduct.categoryName,
-                              image: selectedProduct.image,
-                              quantity: selectedPvcTier.qty,
-                              unitPrice: selectedPvcTier.pricePerUnit,
-                              branding: `${selectedProduct.finishType || '400 Micron'} • ${cornerStyle} Corners`,
-                              specs: `Front & Back Proof Ready • Co: ${companyName} • ${selectedProduct.specs} • Rate Includes 18% GST`,
-                              isGstIncluded: true,
-                            });
-                          } else {
-                            const basePriceNum = parseFloat(selectedProduct.startingPrice.replace(/[^0-9.]/g, "")) || 250;
-                            const baseMoqNum = parseInt(selectedProduct.minQty.replace(/[^0-9]/g, "")) || 50;
-                            const totalOrderQty = baseMoqNum * merchTierQty;
-                            const discountMultiplier = merchTierQty === 5 ? 0.85 : merchTierQty === 2 ? 0.92 : 1.0;
-                            const effectiveUnitPrice = Math.round(basePriceNum * discountMultiplier * 100) / 100;
-                            addItemToCart({
-                              productId: selectedProduct.id,
-                              title: `${selectedProduct.title} (${totalOrderQty} pcs)`,
-                              categoryName: selectedProduct.categoryName,
-                              image: selectedProduct.image,
-                              quantity: totalOrderQty,
-                              unitPrice: effectiveUnitPrice,
-                              branding: `Front & Back Dual Proof • Co: ${companyName}`,
-                              specs: `${selectedProduct.specs} • Logo Synced • (+18% GST Extra)`,
-                              isGstIncluded: false,
-                            });
-                          }
-                          setIsCartOpen(true);
-                        }}
-                        className="w-full py-4 px-6 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-sm transition flex items-center justify-center gap-2.5 shadow-md cursor-pointer"
-                      >
-                        <ShoppingBag className="w-5 h-5 text-emerald-400" />
-                        <span>
-                          {selectedProduct.pricingTiers && selectedPvcTier
-                            ? `Add ${selectedPvcTier.qty} Cards to Cart — ₹${selectedPvcTier.total.toLocaleString("en-IN")} (Incl. GST)`
-                            : `Add to Cart — ${selectedProduct.title}`}
-                        </span>
-                      </button>
+                          )}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="w-full py-3.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition flex items-center justify-center gap-2 shadow-xs cursor-pointer"
+                        >
+                          <Phone className="w-4 h-4" />
+                          <span>WhatsApp Quote</span>
+                        </a>
+                      </div>
                     </div>
                   </div>
 
@@ -9307,6 +9383,15 @@ Please confirm order timeline.`
                 </div>
 
                 <div className="space-y-2.5">
+                  <button
+                    type="button"
+                    onClick={handleCheckoutFromCart}
+                    className="w-full py-3.5 bg-gradient-to-r from-[#A9782B] via-[#8E621E] to-[#734D15] hover:opacity-95 text-white font-black rounded-xl text-xs sm:text-sm transition flex items-center justify-center gap-2 shadow-lg shadow-[#A9782B]/20 cursor-pointer hover:scale-101"
+                  >
+                    <Check className="w-4 h-4 text-amber-300" />
+                    <span>⚡ Direct Order & Pay Advance Online (₹{cartGrandTotal.toFixed(2)})</span>
+                  </button>
+
                   <a
                     href={`https://wa.me/919945039266?text=${encodeURIComponent(
                       `Hello Incredible Treasures,\n\nI would like to place a corporate order with the following items:\n\n` +
@@ -9320,10 +9405,10 @@ Please confirm order timeline.`
                     )}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs sm:text-sm font-bold transition flex items-center justify-center gap-2 shadow-md shadow-emerald-600/20"
+                    className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 shadow-xs cursor-pointer"
                   >
                     <Phone className="w-4 h-4" />
-                    <span>Checkout Entire Order on WhatsApp</span>
+                    <span>Inquire via WhatsApp Desk</span>
                   </a>
 
                   <button
@@ -10035,6 +10120,7 @@ Please confirm order timeline.`
         isOpen={isAuthModalOpen}
         onClose={() => setIsAuthModalOpen(false)}
         onOpenSavedDesigns={() => setIsSavedDesignsModalOpen(true)}
+        onOpenLiveTracking={() => setIsLiveTrackingOpen(true)}
         onUserChange={(u) => setCustomerUser(u)}
       />
 
@@ -10047,6 +10133,26 @@ Please confirm order timeline.`
             window.location.href = `/studio`;
           }
         }}
+      />
+
+      {/* Day 18: Corporate Direct Online Checkout Modal (Real Orders for Ready-Made & Catalog Products) */}
+      <CorporateDirectCheckoutModal
+        isOpen={isDirectCheckoutOpen}
+        onClose={() => setIsDirectCheckoutOpen(false)}
+        items={directCheckoutItems}
+        onOrderSuccess={(order) => {
+          setActiveTrackingOrderId(order.id);
+          setCartItems([]);
+          setToastMessage(`Real Order #${order.id} confirmed and scheduled for press production!`);
+        }}
+        onClearCart={() => setCartItems([])}
+      />
+
+      {/* Day 18: Real Order & Production Lifecycle Tracker Modal */}
+      <OrderLiveTrackingModal
+        isOpen={isLiveTrackingOpen}
+        onClose={() => setIsLiveTrackingOpen(false)}
+        initialOrderId={activeTrackingOrderId}
       />
     </div>
   );
