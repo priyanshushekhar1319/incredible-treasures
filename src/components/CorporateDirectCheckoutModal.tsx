@@ -21,6 +21,8 @@ import {
   FileText,
   Truck,
   Sparkles,
+  Loader2,
+  AlertCircle,
 } from "lucide-react";
 import { lookupIndianPincode } from "@/lib/pincodeEngine";
 import { calculateDeliverySla, DeliverySlaResult } from "@/lib/deliverySla";
@@ -28,6 +30,7 @@ import { createRealOrder, OrderItem, PlacedOrder } from "@/lib/orderStore";
 import { getCustomerSession } from "@/lib/customerSession";
 import { OrderLiveTrackingModal } from "@/components/OrderLiveTrackingModal";
 import { OfficialTaxInvoiceModal } from "@/components/OfficialTaxInvoiceModal";
+import { triggerRazorpayCheckout } from "@/lib/razorpayClient";
 
 export interface CheckoutCartItem {
   id: string;
@@ -104,6 +107,8 @@ export const CorporateDirectCheckoutModal: React.FC<Props> = ({
   const [confirmedOrder, setConfirmedOrder] = useState<PlacedOrder | null>(null);
   const [isTrackingModalOpen, setIsTrackingModalOpen] = useState<boolean>(false);
   const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState<boolean>(false);
+  const [isPaymentProcessing, setIsPaymentProcessing] = useState<boolean>(false);
+  const [paymentError, setPaymentError] = useState<string | null>(null);
 
   // Sync profile from customer session on open
   useEffect(() => {
@@ -187,34 +192,106 @@ export const CorporateDirectCheckoutModal: React.FC<Props> = ({
       isGstIncluded: it.isGstIncluded,
     }));
 
-    const realOrder = createRealOrder({
-      source: "ready_made_storefront",
-      items: orderItems,
+    // B2B Net-30 Purchase Order Flow
+    if (paymentMethod === "po") {
+      const realOrder = createRealOrder({
+        source: "ready_made_storefront",
+        items: orderItems,
+        customer: {
+          fullName,
+          companyName,
+          phone,
+          email,
+          address,
+          city,
+          state,
+          pincode,
+          gstin: gstin.trim() || undefined,
+        },
+        pricing: {
+          subtotal: baseSubtotal,
+          gstAmount,
+          shippingFee,
+          shippingTier,
+          couponDiscount: 0,
+          grandTotal,
+        },
+        paymentMethod: "po",
+      });
+      realOrder.payment.status = "PO_NET30";
+      realOrder.payment.referenceId = `PO-REQ-${Date.now().toString().slice(-6)}`;
+      setConfirmedOrder(realOrder);
+      if (onOrderSuccess) onOrderSuccess(realOrder);
+      if (onClearCart) onClearCart();
+      return;
+    }
+
+    // Razorpay Instant Online Payment Flow (UPI / Corporate Cards)
+    setIsPaymentProcessing(true);
+    setPaymentError(null);
+
+    const generatedOrderRef = `IT-DIR-${Math.floor(100000 + Math.random() * 900000)}`;
+
+    triggerRazorpayCheckout({
+      amountInRupees: grandTotal,
+      orderReferenceId: generatedOrderRef,
       customer: {
         fullName,
-        companyName,
-        phone,
         email,
-        address,
-        city,
-        state,
-        pincode,
-        gstin: gstin.trim() || undefined,
+        phone,
+        companyName,
+        gstin,
       },
-      pricing: {
-        subtotal: baseSubtotal,
-        gstAmount,
-        shippingFee,
-        shippingTier,
-        couponDiscount: 0,
-        grandTotal,
+      description: `Advance Payment for ${items.length} Product(s)`,
+      notes: {
+        itemsCount: items.length,
+        shippingCity: city,
+        shippingPincode: pincode,
       },
-      paymentMethod,
-    });
+      onSuccess: (paymentResult) => {
+        const realOrder = createRealOrder({
+          source: "ready_made_storefront",
+          items: orderItems,
+          customer: {
+            fullName,
+            companyName,
+            phone,
+            email,
+            address,
+            city,
+            state,
+            pincode,
+            gstin: gstin.trim() || undefined,
+          },
+          pricing: {
+            subtotal: baseSubtotal,
+            gstAmount,
+            shippingFee,
+            shippingTier,
+            couponDiscount: 0,
+            grandTotal,
+          },
+          paymentMethod,
+        });
 
-    setConfirmedOrder(realOrder);
-    if (onOrderSuccess) onOrderSuccess(realOrder);
-    if (onClearCart) onClearCart();
+        // Store genuine verified Razorpay Transaction ID
+        realOrder.payment.status = "PAID_ADVANCE";
+        realOrder.payment.referenceId = paymentResult.razorpay_payment_id;
+        realOrder.payment.razorpayReady = true;
+
+        setIsPaymentProcessing(false);
+        setConfirmedOrder(realOrder);
+        if (onOrderSuccess) onOrderSuccess(realOrder);
+        if (onClearCart) onClearCart();
+      },
+      onError: (errMsg) => {
+        setIsPaymentProcessing(false);
+        setPaymentError(errMsg);
+      },
+      onDismiss: () => {
+        setIsPaymentProcessing(false);
+      },
+    });
   };
 
   return (
@@ -580,7 +657,7 @@ export const CorporateDirectCheckoutModal: React.FC<Props> = ({
                 {/* Payment Method Selector */}
                 <div>
                   <label className="font-bold text-slate-700 block mb-1.5">
-                    Advance Payment Method (Razorpay Ready for Day 20):
+                    Advance Payment Gateway (Powered by Razorpay):
                   </label>
                   <div className="grid grid-cols-3 gap-2">
                     <button
@@ -664,23 +741,38 @@ export const CorporateDirectCheckoutModal: React.FC<Props> = ({
                       {shippingFee === 0 ? "FREE" : `₹${shippingFee}`}
                     </strong>
                   </div>
-                  <div className="flex justify-between text-slate-900 font-black text-sm border-t border-slate-200 pt-2">
-                    <span>Total Payable:</span>
-                    <span className="text-[#A9782B] text-base font-black">
-                      ₹{grandTotal.toLocaleString("en-IN")}
-                    </span>
-                  </div>
-                </div>
+                  {/* Payment Error Banner */}
+                  {paymentError && (
+                    <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-center gap-2">
+                      <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
+                      <span>{paymentError}</span>
+                    </div>
+                  )}
 
-                {/* Submit Button */}
-                <button
-                  type="button"
-                  onClick={handleConfirmOrder}
-                  className="w-full py-4 rounded-2xl bg-gradient-to-r from-[#A9782B] via-[#8E621E] to-[#734D15] hover:opacity-95 text-white font-black text-xs transition flex items-center justify-center gap-2 shadow-xl cursor-pointer hover:scale-101"
-                >
-                  <Check className="w-4 h-4" />
-                  <span>Confirm Real Order & Pay (₹{grandTotal.toLocaleString("en-IN")})</span>
-                </button>
+                  {/* Submit Button */}
+                  <button
+                    type="button"
+                    onClick={handleConfirmOrder}
+                    disabled={isPaymentProcessing}
+                    className="w-full py-4 rounded-2xl bg-gradient-to-r from-[#A9782B] via-[#8E621E] to-[#734D15] hover:opacity-95 text-white font-black text-xs transition flex items-center justify-center gap-2 shadow-xl cursor-pointer hover:scale-101 disabled:opacity-60 disabled:cursor-not-allowed"
+                  >
+                    {isPaymentProcessing ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin text-white" />
+                        <span>Opening Razorpay Secure Gateway...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Check className="w-4 h-4" />
+                        <span>
+                          {paymentMethod === "po"
+                            ? `Submit B2B Purchase Order (₹${grandTotal.toLocaleString("en-IN")})`
+                            : `Pay with Razorpay (₹${grandTotal.toLocaleString("en-IN")})`}
+                        </span>
+                      </>
+                    )}
+                  </button>
+                </div>
               </div>
             )}
           </div>

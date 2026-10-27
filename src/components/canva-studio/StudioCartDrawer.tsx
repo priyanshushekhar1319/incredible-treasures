@@ -29,6 +29,8 @@ import {
   Compass,
   Radio,
   FileCheck2,
+  Loader2,
+  AlertCircle,
 } from "lucide-react";
 import {
   CartCardItem,
@@ -45,6 +47,7 @@ import { lookupIndianPincode } from "@/lib/pincodeEngine";
 import { createRealOrder, OrderItem } from "@/lib/orderStore";
 import { OrderLiveTrackingModal } from "@/components/OrderLiveTrackingModal";
 import { OfficialTaxInvoiceModal } from "@/components/OfficialTaxInvoiceModal";
+import { triggerRazorpayCheckout } from "@/lib/razorpayClient";
 
 export type StudioCartItem = CartCardItem;
 
@@ -108,6 +111,8 @@ export const StudioCartDrawer: React.FC<Props> = ({
   const [orderSuccessId, setOrderSuccessId] = useState<string | null>(null);
   const [isTrackingModalOpen, setIsTrackingModalOpen] = useState<boolean>(false);
   const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState<boolean>(false);
+  const [isPaymentProcessing, setIsPaymentProcessing] = useState<boolean>(false);
+  const [paymentError, setPaymentError] = useState<string | null>(null);
 
   // Luxury Upsells Selected
   const [selectedUpsellIds, setSelectedUpsellIds] = useState<string[]>([]);
@@ -290,8 +295,8 @@ export const StudioCartDrawer: React.FC<Props> = ({
       });
     });
 
-    const realOrder = createRealOrder({
-      source: "studio",
+    const baseOrderPayload = {
+      source: "studio" as const,
       items: orderItems,
       customer: {
         fullName: fullName || "Mahi Kapoor",
@@ -314,10 +319,57 @@ export const StudioCartDrawer: React.FC<Props> = ({
         grandTotal,
       },
       paymentMethod,
-    });
+    };
 
-    setOrderSuccessId(realOrder.id);
-    if (onClearCart) onClearCart();
+    if (paymentMethod === "po") {
+      const realOrder = createRealOrder(baseOrderPayload);
+      realOrder.payment.status = "PO_NET30";
+      realOrder.payment.referenceId = `PO-REQ-${Date.now().toString().slice(-6)}`;
+      setOrderSuccessId(realOrder.id);
+      if (onClearCart) onClearCart();
+      return;
+    }
+
+    // Razorpay Instant Online Payment Flow
+    setIsPaymentProcessing(true);
+    setPaymentError(null);
+
+    const generatedOrderRef = `IT-STU-${Math.floor(100000 + Math.random() * 900000)}`;
+
+    triggerRazorpayCheckout({
+      amountInRupees: grandTotal,
+      orderReferenceId: generatedOrderRef,
+      customer: {
+        fullName: fullName || "Mahi Kapoor",
+        email: email || "billing@incredibletreasures.com",
+        phone: phone || "+91 99450 39266",
+        companyName: companyName || "Incredible Treasures Studio Client",
+        gstin,
+      },
+      description: `Advance Payment for Custom Print Job (${items.length} items)`,
+      notes: {
+        cardRunsCount: items.length,
+        destinationCity: city,
+        destinationPincode: pincode,
+      },
+      onSuccess: (paymentResult) => {
+        const realOrder = createRealOrder(baseOrderPayload);
+        realOrder.payment.status = "PAID_ADVANCE";
+        realOrder.payment.referenceId = paymentResult.razorpay_payment_id;
+        realOrder.payment.razorpayReady = true;
+
+        setIsPaymentProcessing(false);
+        setOrderSuccessId(realOrder.id);
+        if (onClearCart) onClearCart();
+      },
+      onError: (errMsg) => {
+        setIsPaymentProcessing(false);
+        setPaymentError(errMsg);
+      },
+      onDismiss: () => {
+        setIsPaymentProcessing(false);
+      },
+    });
   };
 
   return (
@@ -780,15 +832,37 @@ export const StudioCartDrawer: React.FC<Props> = ({
                 </div>
               </div>
 
-              <button
-                type="button"
-                onClick={handlePlaceOrder}
-                className="w-full py-3.5 rounded-xl bg-gradient-to-r from-[#A9782B] to-[#8E621E] hover:from-[#8E621E] hover:to-[#734D15] text-white font-black text-xs transition flex items-center justify-center gap-2 shadow-lg cursor-pointer hover:scale-101"
-              >
-                <Check className="w-4 h-4" />
-                <span>Confirm Order & Send to Print (₹{grandTotal.toLocaleString("en-IN")})</span>
-              </button>
-            </div>
+                {/* Payment Error Banner */}
+                {paymentError && (
+                  <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-center gap-2">
+                    <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
+                    <span>{paymentError}</span>
+                  </div>
+                )}
+
+                <button
+                  type="button"
+                  onClick={handlePlaceOrder}
+                  disabled={isPaymentProcessing}
+                  className="w-full py-3.5 rounded-xl bg-gradient-to-r from-[#A9782B] to-[#8E621E] hover:from-[#8E621E] hover:to-[#734D15] text-white font-black text-xs transition flex items-center justify-center gap-2 shadow-lg cursor-pointer hover:scale-101 disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  {isPaymentProcessing ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin text-white" />
+                      <span>Opening Razorpay Secure Gateway...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Check className="w-4 h-4" />
+                      <span>
+                        {paymentMethod === "po"
+                          ? `Submit PO & Send to Print (₹${grandTotal.toLocaleString("en-IN")})`
+                          : `Pay with Razorpay (₹${grandTotal.toLocaleString("en-IN")})`}
+                      </span>
+                    </>
+                  )}
+                </button>
+              </div>
           ) : (
             /* ========================================================= */
             /* VIEW 3: CART ITEMS LIST + LUXURY UPSELLS + COUPONS        */
