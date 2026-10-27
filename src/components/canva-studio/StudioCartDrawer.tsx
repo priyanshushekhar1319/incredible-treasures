@@ -789,6 +789,20 @@ export const StudioCartDrawer: React.FC<Props> = ({
                       </button>
                     ))}
                   </div>
+
+                  {/* Razorpay Sandbox Testing Tip */}
+                  <div className="mt-2.5 p-3 rounded-xl bg-amber-50/90 border border-amber-200 text-[11px] text-amber-900 space-y-1">
+                    <div className="flex items-center gap-1.5 font-bold text-amber-950">
+                      <Sparkles className="w-3.5 h-3.5 text-[#A9782B]" />
+                      <span>Razorpay Sandbox Testing Guide:</span>
+                    </div>
+                    <p className="text-amber-800 leading-relaxed text-[11px]">
+                      • <strong>UPI Testing:</strong> Real bank apps (PhonePe/GPay) cannot pay sandbox test QRs. In the popup, click <strong>UPI ➔ Enter UPI ID</strong> and enter <strong className="font-mono bg-white px-1.5 py-0.5 rounded border border-amber-300 text-slate-900">success@razorpay</strong> for instant test success!
+                    </p>
+                    <p className="text-amber-800 leading-relaxed text-[11px]">
+                      • <strong>Card Testing:</strong> Enter card <strong className="font-mono bg-white px-1.5 py-0.5 rounded border border-amber-300 text-slate-900">4111 1111 1111 1111</strong> (Any expiry / CVV 123).
+                    </p>
+                  </div>
                 </div>
               </div>
 
