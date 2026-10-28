@@ -341,3 +341,76 @@ export function createRealOrder(params: CreateOrderParams): PlacedOrder {
   savePlacedOrder(newOrder);
   return newOrder;
 }
+
+/**
+ * Update the production status of an order in the pipeline
+ */
+export function updateOrderStatus(
+  orderId: string,
+  newStatus: PlacedOrder["status"],
+  customLabel?: string
+): PlacedOrder | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const orders = getStoredOrders();
+    const idx = orders.findIndex((o) => o.id === orderId);
+    if (idx === -1) return null;
+
+    const defaultLabels: Record<PlacedOrder["status"], string> = {
+      ORDER_CONFIRMED: "Order Confirmed • Queued for Press Run",
+      PRE_FLIGHT_VERIFIED: "Pre-Flight Artwork Approved • Plates Generated",
+      IN_PRODUCTION: "In Production • Offset Press & Foil Stamping",
+      QUALITY_FINISHING: "Finishing & Die-Punching • Quality Inspected",
+      DISPATCHED: "Dispatched via BlueDart Apex Air",
+      DELIVERED: "Delivered to Corporate Recipient",
+    };
+
+    orders[idx] = {
+      ...orders[idx],
+      status: newStatus,
+      statusLabel: customLabel || defaultLabels[newStatus] || orders[idx].statusLabel,
+    };
+
+    localStorage.setItem(STORAGE_KEY_ORDERS, JSON.stringify(orders));
+    window.dispatchEvent(new CustomEvent("it_order_updated", { detail: orders[idx] }));
+    return orders[idx];
+  } catch (err) {
+    console.error("Failed to update order status:", err);
+    return null;
+  }
+}
+
+/**
+ * Assign or update the BlueDart AWB tracking number for an order
+ */
+export function updateOrderAwb(
+  orderId: string,
+  awbNumber: string,
+  courierPartner: string = "BlueDart Apex Air"
+): PlacedOrder | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const orders = getStoredOrders();
+    const idx = orders.findIndex((o) => o.id === orderId);
+    if (idx === -1) return null;
+
+    orders[idx] = {
+      ...orders[idx],
+      status: "DISPATCHED",
+      statusLabel: `Dispatched via ${courierPartner} (AWB: ${awbNumber})`,
+      logistics: {
+        ...orders[idx].logistics,
+        awbNumber,
+        courierPartner,
+        courierTrackingUrl: `https://www.bluedart.com/tracking?handler=t&action=custorder&awb=awb&numbers=${awbNumber}`,
+      },
+    };
+
+    localStorage.setItem(STORAGE_KEY_ORDERS, JSON.stringify(orders));
+    window.dispatchEvent(new CustomEvent("it_order_updated", { detail: orders[idx] }));
+    return orders[idx];
+  } catch (err) {
+    console.error("Failed to update order AWB:", err);
+    return null;
+  }
+}
