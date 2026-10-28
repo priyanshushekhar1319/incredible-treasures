@@ -16,12 +16,67 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import { getOrderById, PlacedOrder } from "@/lib/orderStore";
+import { lookupIndianPincode } from "@/lib/pincodeEngine";
 import {
   SUPPLIER_PROFILE,
   resolveHsnCode,
   calculateGstTaxSplit,
   numberToWordsIndian,
 } from "@/lib/gstEngine";
+
+// Comprehensive All-India GST State Code Mapping
+const INDIAN_STATE_GST_CODES: Record<string, string> = {
+  "jammu and kashmir": "01",
+  "jammu": "01",
+  "kashmir": "01",
+  "himachal pradesh": "02",
+  "himachal": "02",
+  "punjab": "03",
+  "chandigarh": "04",
+  "uttarakhand": "05",
+  "haryana": "06",
+  "delhi": "07",
+  "delhi ncr": "07",
+  "new delhi": "07",
+  "rajasthan": "08",
+  "uttar pradesh": "09",
+  "up": "09",
+  "bihar": "10",
+  "sikkim": "11",
+  "arunachal pradesh": "12",
+  "nagaland": "13",
+  "manipur": "14",
+  "mizoram": "15",
+  "tripura": "16",
+  "meghalaya": "17",
+  "assam": "18",
+  "west bengal": "19",
+  "bengal": "19",
+  "jharkhand": "20",
+  "odisha": "21",
+  "orissa": "21",
+  "chhattisgarh": "22",
+  "madhya pradesh": "23",
+  "mp": "23",
+  "gujarat": "24",
+  "dadra and nagar haveli": "26",
+  "daman and diu": "26",
+  "maharashtra": "27",
+  "andhra pradesh": "37",
+  "andhra": "37",
+  "karnataka": "29",
+  "goa": "30",
+  "lakshadweep": "31",
+  "kerala": "32",
+  "tamil nadu": "33",
+  "tamilnadu": "33",
+  "puducherry": "34",
+  "pondicherry": "34",
+  "andamans": "35",
+  "andaman and nicobar": "35",
+  "telangana": "36",
+  "ladakh": "38",
+};
 
 interface Props {
   isOpen: boolean;
@@ -45,8 +100,14 @@ export const OfficialTaxInvoiceModal: React.FC<Props> = ({
 
   if (!order) {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-200">
-        <div className="bg-white rounded-3xl p-8 max-w-md w-full text-center space-y-4">
+      <div 
+        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-200"
+        onClick={onClose}
+      >
+        <div 
+          className="bg-white rounded-3xl p-8 max-w-md w-full text-center space-y-4 shadow-2xl"
+          onClick={(e) => e.stopPropagation()}
+        >
           <FileCheck2 className="w-12 h-12 text-slate-400 mx-auto" />
           <h4 className="text-base font-black text-slate-900">Tax Invoice Not Found</h4>
           <p className="text-xs text-slate-500">
@@ -55,7 +116,7 @@ export const OfficialTaxInvoiceModal: React.FC<Props> = ({
           <button
             type="button"
             onClick={onClose}
-            className="px-5 py-2.5 rounded-xl bg-slate-900 text-white font-bold text-xs"
+            className="px-5 py-2.5 rounded-xl bg-slate-900 text-white font-bold text-xs hover:bg-slate-800 transition cursor-pointer"
           >
             Close
           </button>
@@ -64,34 +125,63 @@ export const OfficialTaxInvoiceModal: React.FC<Props> = ({
     );
   }
 
-  // Invoice Number derivation from Order ID
-  const invoiceNumber = `INV-IT-${new Date(order.createdAt).getFullYear()}-${(
-    order.id.replace(/\D/g, "") || "017378"
-  ).slice(-6)}`;
+  // Safe Date parsing and Invoice Number derivation
+  const orderDate = order.createdAt ? new Date(order.createdAt) : new Date();
+  const safeYear = !isNaN(orderDate.getTime()) ? orderDate.getFullYear() : new Date().getFullYear();
+  const safeDigits = (order.id.replace(/\D/g, "") || "017378").padStart(6, "0").slice(-6);
+  const invoiceNumber = `INV-IT-${safeYear}-${safeDigits}`;
 
-  const invoiceDate = new Date(order.createdAt).toLocaleDateString("en-IN", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
+  const invoiceDate = !isNaN(orderDate.getTime())
+    ? orderDate.toLocaleDateString("en-IN", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      })
+    : new Date().toLocaleDateString("en-IN", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      });
 
-  // Extract buyer state code from GSTIN or customer pincode
-  const buyerGstin = order.customer.gstin?.trim() || "";
+  // Extract buyer state code:
+  // Priority 1) Valid GSTIN first 2 digits
+  // Priority 2) 6-digit Pincode lookup via Indian postal tree
+  // Priority 3) Customer state name lookup in All-India state codes
+  // Fallback) "29" (Karnataka)
+  const buyerGstin = order.customer?.gstin?.trim() || "";
+  const customerState = (order.customer?.state || "").toLowerCase().trim();
+  const customerPincode = (order.customer?.pincode || "").replace(/\D/g, "");
+
   let buyerStateCode = "29";
+  let resolvedStateName = order.customer?.state || "Karnataka";
+
   if (buyerGstin.length >= 2 && !isNaN(Number(buyerGstin.slice(0, 2)))) {
     buyerStateCode = buyerGstin.slice(0, 2);
-  } else if (order.customer.state.toLowerCase().includes("maharashtra")) {
-    buyerStateCode = "27";
-  } else if (order.customer.state.toLowerCase().includes("delhi")) {
-    buyerStateCode = "07";
-  } else if (order.customer.state.toLowerCase().includes("tamil")) {
-    buyerStateCode = "33";
-  } else if (order.customer.state.toLowerCase().includes("telangana")) {
-    buyerStateCode = "36";
+  } else if (customerPincode.length >= 3) {
+    try {
+      const pinResult = lookupIndianPincode(customerPincode);
+      if (pinResult && pinResult.stateCode) {
+        buyerStateCode = pinResult.stateCode;
+        if (!order.customer?.state || order.customer.state === "Karnataka") {
+          resolvedStateName = pinResult.state;
+        }
+      }
+    } catch {
+      // fallback
+    }
+  }
+
+  if (buyerStateCode === "29" && customerState) {
+    for (const [key, code] of Object.entries(INDIAN_STATE_GST_CODES)) {
+      if (customerState.includes(key)) {
+        buyerStateCode = code;
+        break;
+      }
+    }
   }
 
   // Derive statutory taxable subtotal by segregating inclusive vs exclusive lines
-  const computedTaxableSubtotal = order.items.reduce((sum, it) => {
+  const computedTaxableSubtotal = (order.items || []).reduce((sum, it) => {
     const isIncl = Boolean(it.isGstIncluded);
     const lineTaxable = isIncl ? Math.round((it.totalPrice / 1.18) * 100) / 100 : it.totalPrice;
     return sum + lineTaxable;
@@ -101,10 +191,10 @@ export const OfficialTaxInvoiceModal: React.FC<Props> = ({
   const taxSplit = calculateGstTaxSplit(
     computedTaxableSubtotal,
     buyerStateCode,
-    order.customer.state || "Karnataka"
+    resolvedStateName
   );
 
-  const grandTotal = Math.round(order.pricing.grandTotal);
+  const grandTotal = Math.round(order.pricing?.grandTotal ?? 0);
   const totalInWords = numberToWordsIndian(grandTotal);
 
   const handlePrint = () => {
@@ -112,8 +202,46 @@ export const OfficialTaxInvoiceModal: React.FC<Props> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="bg-white rounded-3xl border border-[#EAD5B3] shadow-2xl max-w-4xl w-full max-h-[94vh] flex flex-col font-sans overflow-hidden">
+    <div 
+      className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-200 print:relative print:inset-auto print:p-0 print:bg-white print:backdrop-blur-none"
+      onClick={onClose}
+    >
+      {/* Global Print Style for clean A4 Paper Generation */}
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
+            @media print {
+              body * {
+                visibility: hidden !important;
+              }
+              #printable-tax-invoice, #printable-tax-invoice * {
+                visibility: visible !important;
+              }
+              #printable-tax-invoice {
+                position: absolute !important;
+                left: 0 !important;
+                top: 0 !important;
+                width: 100% !important;
+                margin: 0 !important;
+                padding: 16px !important;
+                background: #ffffff !important;
+                color: #0f172a !important;
+                box-shadow: none !important;
+                border: none !important;
+              }
+              @page {
+                size: A4 portrait;
+                margin: 8mm;
+              }
+            }
+          `,
+        }}
+      />
+
+      <div 
+        className="bg-white rounded-3xl border border-[#EAD5B3] shadow-2xl max-w-4xl w-full max-h-[94vh] flex flex-col font-sans overflow-hidden print:max-h-none print:shadow-none print:border-none print:w-full print:rounded-none print:overflow-visible"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Top Control Toolbar (Hidden during browser printing) */}
         <div className="px-6 py-3.5 bg-gradient-to-r from-[#FAF8F5] via-white to-[#FAF6EE] border-b border-[#E5E0D8] flex items-center justify-between shrink-0 print:hidden">
           <div className="flex items-center gap-2.5">
@@ -126,11 +254,13 @@ export const OfficialTaxInvoiceModal: React.FC<Props> = ({
                   Official GST Tax Invoice
                 </h3>
                 <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-black uppercase border border-emerald-300">
-                  ITC ELIGIBLE • CGST 9% + SGST 9%
+                  {taxSplit.taxType === "INTRA_STATE"
+                    ? "ITC ELIGIBLE • CGST 9% + SGST 9%"
+                    : "ITC ELIGIBLE • IGST 18%"}
                 </span>
               </div>
               <span className="text-[11px] text-slate-500 font-medium">
-                {invoiceNumber} • {order.customer.companyName}
+                {invoiceNumber} • {order.customer?.companyName || order.customer?.fullName || "Commercial Order"}
               </span>
             </div>
           </div>
@@ -170,6 +300,7 @@ export const OfficialTaxInvoiceModal: React.FC<Props> = ({
 
         {/* Printable Invoice Document Body */}
         <div
+          id="printable-tax-invoice"
           ref={invoiceRef}
           className="flex-1 overflow-y-auto p-6 sm:p-8 space-y-5 bg-white text-slate-900 print:p-0 print:m-0 print:overflow-visible text-xs"
         >
@@ -231,7 +362,7 @@ export const OfficialTaxInvoiceModal: React.FC<Props> = ({
             </div>
             <div>
               <span className="text-[10px] text-slate-400 block font-bold uppercase">Air Cargo Docket</span>
-              <strong className="text-slate-800 font-mono">{order.logistics.awbNumber}</strong>
+              <strong className="text-slate-800 font-mono">{order.logistics?.awbNumber || "BD-017378560"}</strong>
             </div>
             <div>
               <span className="text-[10px] text-slate-400 block font-bold uppercase">Payment Status</span>
@@ -246,30 +377,31 @@ export const OfficialTaxInvoiceModal: React.FC<Props> = ({
                 BILLED TO (BUYER DETAILS)
               </span>
               <h5 className="font-black text-slate-900 text-xs">
-                {order.customer.companyName}
+                {order.customer?.companyName || order.customer?.fullName || "Valued Enterprise Client"}
               </h5>
               <span className="text-[11px] font-semibold text-slate-700 block">
-                Attn: {order.customer.fullName}
+                Attn: {order.customer?.fullName || "Authorized Representative"}
               </span>
               <p className="text-[11px] text-slate-600 mt-1 leading-relaxed">
-                {order.customer.address}, {order.customer.city}, {order.customer.state} - {order.customer.pincode}
+                {[order.customer?.address, order.customer?.city, resolvedStateName].filter(Boolean).join(", ")}
+                {order.customer?.pincode ? ` - ${order.customer.pincode}` : ""}
               </p>
               <div className="mt-2 text-[11px] text-slate-700 space-y-0.5">
                 <div>
                   <span className="text-slate-400 font-medium">Buyer GSTIN: </span>
                   <strong className="font-mono text-slate-900">
-                    {order.customer.gstin || "Unregistered B2C"}
+                    {order.customer?.gstin || "Unregistered B2C"}
                   </strong>
                 </div>
                 <div>
                   <span className="text-slate-400 font-medium">State & Code: </span>
                   <strong className="text-slate-800">
-                    {order.customer.state} (Code: {taxSplit.buyerStateCode})
+                    {resolvedStateName} (Code: {taxSplit.buyerStateCode})
                   </strong>
                 </div>
                 <div>
                   <span className="text-slate-400 font-medium">Contact: </span>
-                  <span className="text-slate-800">{order.customer.phone}</span>
+                  <span className="text-slate-800">{order.customer?.phone || "+91 99450 39266"}</span>
                 </div>
               </div>
             </div>
@@ -279,20 +411,21 @@ export const OfficialTaxInvoiceModal: React.FC<Props> = ({
                 SHIPPED TO (DELIVERY DESTINATION)
               </span>
               <h5 className="font-black text-slate-900 text-xs">
-                {order.customer.companyName}
+                {order.customer?.companyName || order.customer?.fullName || "Valued Enterprise Client"}
               </h5>
               <p className="text-[11px] text-slate-600 mt-1 leading-relaxed">
-                {order.customer.address}, {order.customer.city}, {order.customer.state} - {order.customer.pincode}
+                {[order.customer?.address, order.customer?.city, resolvedStateName].filter(Boolean).join(", ")}
+                {order.customer?.pincode ? ` - ${order.customer.pincode}` : ""}
               </p>
               <div className="mt-2 text-[11px] text-slate-700 space-y-0.5">
                 <div>
                   <span className="text-slate-400 font-medium">Logistics Carrier: </span>
-                  <strong className="text-slate-800">{order.logistics.courierPartner}</strong>
+                  <strong className="text-slate-800">{order.logistics?.courierPartner || "BlueDart Apex Air"}</strong>
                 </div>
                 <div>
                   <span className="text-slate-400 font-medium">Guaranteed ETA: </span>
                   <strong className="text-emerald-700 font-bold">
-                    {order.logistics.guaranteedDeliveryFormatted}
+                    {order.logistics?.guaranteedDeliveryFormatted || "Express Air Delivery"}
                   </strong>
                 </div>
                 <div>
@@ -326,7 +459,7 @@ export const OfficialTaxInvoiceModal: React.FC<Props> = ({
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 text-[11px]">
-                {order.items.map((it, idx) => {
+                {(order.items || []).map((it, idx) => {
                   const hsn = resolveHsnCode(it.title, it.categoryName);
                   const isIncl = Boolean(it.isGstIncluded);
                   const lineTaxable = isIncl
@@ -350,7 +483,7 @@ export const OfficialTaxInvoiceModal: React.FC<Props> = ({
                           <span className="text-[10px] text-slate-500 block">{it.specs}</span>
                         )}
                         <span className="text-[9px] text-[#A9782B] font-bold block">
-                          600+ DPI Precision Press Run {isIncl && "• Rate Includes CGST 9% + SGST 9%"}
+                          600+ DPI Precision Press Run {isIncl && `• Rate Includes ${taxSplit.taxType === "INTRA_STATE" ? "CGST 9% + SGST 9%" : "IGST 18%"}`}
                         </span>
                       </td>
                       <td className="py-2.5 px-3 text-center font-mono text-slate-600">{hsn.code}</td>
@@ -459,10 +592,19 @@ export const OfficialTaxInvoiceModal: React.FC<Props> = ({
                 </div>
               )}
 
+              {Boolean(order.pricing?.couponDiscount && order.pricing.couponDiscount > 0) && (
+                <div className="flex justify-between text-emerald-700 font-semibold">
+                  <span>Coupon Discount ({order.pricing?.couponCode || "SPECIAL"}):</span>
+                  <strong className="font-mono text-emerald-800">
+                    -₹{order.pricing.couponDiscount.toLocaleString("en-IN")}
+                  </strong>
+                </div>
+              )}
+
               <div className="flex justify-between text-slate-600">
-                <span>Insured Air Dispatch ({order.pricing.shippingTier === "priority_vip" ? "Priority VIP" : "Standard"}):</span>
-                <strong className={order.pricing.shippingFee === 0 ? "text-emerald-700" : "text-slate-900 font-mono"}>
-                  {order.pricing.shippingFee === 0 ? "FREE" : `₹${order.pricing.shippingFee}`}
+                <span>Insured Air Dispatch ({order.pricing?.shippingTier === "priority_vip" ? "Priority VIP" : "Standard"}):</span>
+                <strong className={(order.pricing?.shippingFee ?? 0) === 0 ? "text-emerald-700" : "text-slate-900 font-mono"}>
+                  {(order.pricing?.shippingFee ?? 0) === 0 ? "FREE" : `₹${order.pricing?.shippingFee}`}
                 </strong>
               </div>
 
