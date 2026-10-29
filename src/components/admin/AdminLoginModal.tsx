@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { ShieldCheck, Lock, ArrowRight, Sparkles, Building2, KeyRound, AlertCircle } from "lucide-react";
-import { verifyAdminCredentials, createAdminSession } from "@/lib/adminAuth";
+import { verifyAdminCredentialsAsync } from "@/lib/adminAuth";
 
 interface Props {
   onSuccess: () => void;
@@ -13,21 +13,29 @@ export const AdminLoginModal: React.FC<Props> = ({ onSuccess }) => {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!credentials.trim()) {
+      setError("Please enter the Master PIN or Password.");
+      return;
+    }
+
     setError(null);
     setIsLoading(true);
 
-    setTimeout(() => {
-      if (verifyAdminCredentials(credentials)) {
-        createAdminSession();
+    try {
+      const isValid = await verifyAdminCredentialsAsync(credentials);
+      if (isValid) {
         setIsLoading(false);
         onSuccess();
       } else {
         setIsLoading(false);
         setError("Invalid Master Security PIN or Password. Access Denied.");
       }
-    }, 400);
+    } catch {
+      setIsLoading(false);
+      setError("Authentication failed. Please verify credentials.");
+    }
   };
 
   return (

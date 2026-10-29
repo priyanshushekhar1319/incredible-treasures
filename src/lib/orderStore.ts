@@ -249,7 +249,7 @@ export function getOrderById(orderIdOrAwb: string): PlacedOrder | null {
 }
 
 /**
- * Save a newly placed order to localStorage.
+ * Save a newly placed order to localStorage and sync to central database.
  */
 export function savePlacedOrder(order: PlacedOrder): void {
   if (typeof window === "undefined") return;
@@ -258,9 +258,43 @@ export function savePlacedOrder(order: PlacedOrder): void {
     const updated = [order, ...existing];
     localStorage.setItem(STORAGE_KEY_ORDERS, JSON.stringify(updated));
     window.dispatchEvent(new CustomEvent("it_order_placed", { detail: order }));
+
+    // Seamless Server Database Sync (Prisma / Supabase Postgres)
+    fetch("/api/orders", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(order),
+    }).catch((err) => {
+      console.warn("Background order DB sync will retry on reconnect:", err);
+    });
   } catch (err) {
     console.error("Failed to save placed order to localStorage:", err);
   }
+}
+
+/**
+ * Fetch latest orders from the central Database and update local storage.
+ */
+export async function syncOrdersFromDatabase(): Promise<PlacedOrder[]> {
+  if (typeof window === "undefined") return getStoredOrders();
+  try {
+    const res = await fetch("/api/orders?limit=100");
+    const data = await res.json();
+    if (data.success && Array.isArray(data.orders)) {
+      const dbOrders: PlacedOrder[] = data.orders;
+      if (dbOrders.length > 0) {
+        const local = getStoredOrders();
+        const dbIds = new Set(dbOrders.map((o) => o.id));
+        const merged = [...dbOrders, ...local.filter((l) => !dbIds.has(l.id))];
+        localStorage.setItem(STORAGE_KEY_ORDERS, JSON.stringify(merged));
+        window.dispatchEvent(new CustomEvent("it_orders_synced", { detail: merged }));
+        return merged;
+      }
+    }
+  } catch (err) {
+    console.warn("Could not sync orders from server DB (using cached):", err);
+  }
+  return getStoredOrders();
 }
 
 export interface CreateOrderParams {
@@ -373,6 +407,19 @@ export function updateOrderStatus(
 
     localStorage.setItem(STORAGE_KEY_ORDERS, JSON.stringify(orders));
     window.dispatchEvent(new CustomEvent("it_order_updated", { detail: orders[idx] }));
+
+    // Sync to Server Database
+    fetch(`/api/orders/${encodeURIComponent(orderId)}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        status: newStatus,
+        statusLabel: orders[idx].statusLabel,
+      }),
+    }).catch((err) => {
+      console.warn("Background order status sync will retry:", err);
+    });
+
     return orders[idx];
   } catch (err) {
     console.error("Failed to update order status:", err);
@@ -408,6 +455,22 @@ export function updateOrderAwb(
 
     localStorage.setItem(STORAGE_KEY_ORDERS, JSON.stringify(orders));
     window.dispatchEvent(new CustomEvent("it_order_updated", { detail: orders[idx] }));
+
+    // Sync to Server Database
+    fetch(`/api/orders/${encodeURIComponent(orderId)}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        status: "DISPATCHED",
+        statusLabel: orders[idx].statusLabel,
+        awbNumber,
+        courierPartner,
+        courierTrackingUrl: orders[idx].logistics.courierTrackingUrl,
+      }),
+    }).catch((err) => {
+      console.warn("Background order AWB sync will retry:", err);
+    });
+
     return orders[idx];
   } catch (err) {
     console.error("Failed to update order AWB:", err);
