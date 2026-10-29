@@ -13,7 +13,7 @@ export interface AdminUserSession {
 }
 
 /**
- * Verify master admin credentials (Password or Security PIN).
+ * Verify master admin credentials synchronously (PIN or Password).
  */
 export function verifyAdminCredentials(input: string): boolean {
   const clean = input.trim();
@@ -21,20 +21,50 @@ export function verifyAdminCredentials(input: string): boolean {
 }
 
 /**
+ * Verify master admin credentials against server API.
+ */
+export async function verifyAdminCredentialsAsync(input: string): Promise<boolean> {
+  const clean = input.trim();
+  try {
+    const res = await fetch("/api/auth/admin", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ pin: clean, password: clean }),
+    });
+    const data = await res.json();
+    if (data.success && data.token) {
+      createAdminSession(MASTER_ADMIN_EMAIL, data.token);
+      return true;
+    }
+    return false;
+  } catch {
+    // Graceful offline fallback
+    if (verifyAdminCredentials(clean)) {
+      createAdminSession(MASTER_ADMIN_EMAIL);
+      return true;
+    }
+    return false;
+  }
+}
+
+/**
  * Create an admin session in localStorage and cookie
  */
-export function createAdminSession(email: string = MASTER_ADMIN_EMAIL): AdminUserSession {
+export function createAdminSession(
+  email: string = MASTER_ADMIN_EMAIL,
+  token?: string
+): AdminUserSession {
+  const sessionToken = token || `IT-ADMIN-AUTH-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
   const session: AdminUserSession = {
     email,
     role: "SUPER_ADMIN",
     authenticatedAt: new Date().toISOString(),
-    token: `IT-ADMIN-AUTH-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`,
+    token: sessionToken,
   };
 
   if (typeof window !== "undefined") {
     localStorage.setItem(STORAGE_KEY_ADMIN_SESSION, JSON.stringify(session));
-    // Set a lightweight cookie for Next.js middleware / layout check
-    document.cookie = `it_admin_token=${session.token}; path=/; max-age=86400; SameSite=Strict`;
+    document.cookie = `it_admin_token=${session.token}; path=/; max-age=604800; SameSite=Strict`;
     window.dispatchEvent(new CustomEvent("it_admin_login", { detail: session }));
   }
 
@@ -58,12 +88,14 @@ export function getAdminSession(): AdminUserSession | null {
 }
 
 /**
- * Clear admin session on logout
+ * Destroy admin session and remove auth cookie
  */
 export function logoutAdmin(): void {
   if (typeof window !== "undefined") {
     localStorage.removeItem(STORAGE_KEY_ADMIN_SESSION);
-    document.cookie = `it_admin_token=; path=/; max-age=0; SameSite=Strict`;
+    document.cookie = "it_admin_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+    document.cookie = "it_admin_jwt=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+    fetch("/api/auth/admin", { method: "DELETE" }).catch(() => {});
     window.dispatchEvent(new CustomEvent("it_admin_logout"));
   }
 }

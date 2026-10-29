@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { getAdminSession, logoutAdmin } from "@/lib/adminAuth";
-import { getStoredOrders, PlacedOrder } from "@/lib/orderStore";
+import { getStoredOrders, syncOrdersFromDatabase, PlacedOrder } from "@/lib/orderStore";
 import { AdminLoginModal } from "@/components/admin/AdminLoginModal";
 import { AdminHeader, AdminTab } from "@/components/admin/AdminHeader";
 import { AdminPipelineTab } from "@/components/admin/AdminPipelineTab";
@@ -18,8 +18,18 @@ export default function AdminDashboardPage() {
   const [orders, setOrders] = useState<PlacedOrder[]>([]);
   const [isClientReady, setIsClientReady] = useState<boolean>(false);
 
-  const reloadOrders = () => {
+  const reloadOrders = async () => {
+    // 1. Immediate local cache rendering
     setOrders(getStoredOrders());
+    // 2. Live Server Database sync (Postgres / Prisma)
+    try {
+      const live = await syncOrdersFromDatabase();
+      if (live && live.length > 0) {
+        setOrders(live);
+      }
+    } catch (e) {
+      console.warn("Could not sync live DB orders:", e);
+    }
   };
 
   useEffect(() => {
@@ -45,11 +55,21 @@ export default function AdminDashboardPage() {
     window.addEventListener("it_admin_login", handleAdminLogin);
     window.addEventListener("it_admin_logout", handleAdminLogout);
 
+    // Live Database polling every 12 seconds so new customer orders appear in real-time
+    const pollInterval = setInterval(() => {
+      if (session) {
+        syncOrdersFromDatabase().then((live) => {
+          if (live && live.length > 0) setOrders(live);
+        });
+      }
+    }, 12000);
+
     return () => {
       window.removeEventListener("it_order_placed", handleOrderPlaced);
       window.removeEventListener("it_order_updated", handleOrderUpdated);
       window.removeEventListener("it_admin_login", handleAdminLogin);
       window.removeEventListener("it_admin_logout", handleAdminLogout);
+      clearInterval(pollInterval);
     };
   }, []);
 

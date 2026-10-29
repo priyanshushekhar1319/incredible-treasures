@@ -90,13 +90,15 @@ model Template {
 }
 
 model User {
-  id           String    @id @default(cuid())
-  email        String    @unique
+  id           String        @id @default(cuid())
+  supabaseId   String?       @unique
+  email        String        @unique
+  passwordHash String?
   name         String?
   phone        String?
   companyName  String?
   gstin        String?
-  role         String    @default("CUSTOMER") // "CUSTOMER", "STAFF", "SUPER_ADMIN"
+  role         String        @default("CUSTOMER") // "CUSTOMER", "STAFF", "SUPER_ADMIN"
   orders       Order[]
   savedDesigns SavedDesign[]
   createdAt    DateTime      @default(now())
@@ -141,54 +143,65 @@ model SavedDesign {
 }
 
 model Order {
-  id                 String      @id @default(cuid())
-  orderNumber        String      @unique // e.g. "IT-2026-1001"
-  userId             String?
-  user               User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
-  customerName       String
-  customerEmail      String
-  customerPhone      String
-  shippingAddress    String
-  city               String
-  state              String
-  pincode            String
-  isB2B              Boolean     @default(false)
-  companyName        String?
-  gstin              String?
-  subtotal           Float
-  taxAmount          Float       // 18% GST (CGST+SGST or IGST)
-  cgstAmount         Float       @default(0.0)
-  sgstAmount         Float       @default(0.0)
-  igstAmount         Float       @default(0.0)
-  shippingFee        Float       @default(0.0)
-  discountAmount     Float       @default(0.0)
-  totalAmount        Float
-  status             String      @default("PENDING") // PENDING, PROCESSING, PREPRESS_CHECK, PRINTING, SHIPPED, DELIVERED, CANCELLED
-  paymentStatus      String      @default("PENDING") // PENDING, PAID, FAILED, REFUNDED
-  razorpayOrderId    String?
-  razorpayPaymentId  String?
-  trackingNumber     String?
-  courierPartner     String?     @default("Shiprocket")
-  items              OrderItem[]
-  createdAt          DateTime    @default(now())
-  updatedAt          DateTime    @updatedAt
+  id                          String      @id @default(cuid())
+  orderNumber                 String      @unique // e.g. "IT-PRINT-017378"
+  userId                      String?
+  user                        User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
+  source                      String      @default("studio")
+  customerName                String
+  customerEmail               String
+  customerPhone               String
+  shippingAddress             String
+  city                        String
+  state                       String
+  pincode                     String
+  isB2B                       Boolean     @default(false)
+  companyName                 String?
+  gstin                       String?
+  subtotal                    Float
+  taxAmount                   Float       // 18% GST (CGST+SGST or IGST)
+  cgstAmount                  Float       @default(0.0)
+  sgstAmount                  Float       @default(0.0)
+  igstAmount                  Float       @default(0.0)
+  shippingFee                 Float       @default(0.0)
+  shippingTier                String      @default("standard")
+  couponCode                  String?
+  discountAmount              Float       @default(0.0)
+  totalAmount                 Float
+  status                      String      @default("ORDER_CONFIRMED") // ORDER_CONFIRMED, PRE_FLIGHT_VERIFIED, IN_PRODUCTION, QUALITY_FINISHING, DISPATCHED, DELIVERED
+  statusLabel                 String?
+  paymentStatus               String      @default("PAID_ADVANCE") // PAID_ADVANCE, AWAITING_PAYMENT, PO_NET30
+  paymentMethod               String      @default("card")
+  razorpayOrderId             String?
+  razorpayPaymentId           String?
+  trackingNumber              String?
+  awbNumber                   String?
+  courierPartner              String?     @default("BlueDart Apex Air")
+  courierTrackingUrl          String?
+  destinationCity             String?
+  guaranteedDeliveryFormatted String?
+  items                       OrderItem[]
+  createdAt                   DateTime    @default(now())
+  updatedAt                   DateTime    @updatedAt
 }
 
 model OrderItem {
   id                String   @id @default(cuid())
   orderId           String
   order             Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  productId         String
-  product           Product  @relation(fields: [productId], references: [id])
+  productId         String?
+  product           Product? @relation(fields: [productId], references: [id])
   productName       String
-  variantName       String
+  categoryName      String?
+  variantName       String?
   quantity          Int
   unitPrice         Float
   totalPrice        Float
-  specsJson         String   // JSON string of selected paper, finish, corners
+  specsJson         String?  // JSON string of selected paper, finish, corners
   customDesignFront String?  // High-res preview / storage URL
   customDesignBack  String?  // High-res preview / storage URL
   printReadyPdfUrl  String?  // 300 DPI vector PDF URL for print press
+  isGstIncluded     Boolean  @default(false)
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 }

@@ -18,6 +18,7 @@ import {
   Navigation,
   FileCheck2,
   Download,
+  Lock,
 } from "lucide-react";
 import {
   CustomerUser,
@@ -52,6 +53,7 @@ export const CustomerAuthModal: React.FC<Props> = ({
   // Form State
   const [name, setName] = useState<string>("");
   const [email, setEmail] = useState<string>("");
+  const [password, setPassword] = useState<string>("");
   const [phone, setPhone] = useState<string>("");
   const [companyName, setCompanyName] = useState<string>("");
   const [gstin, setGstin] = useState<string>("");
@@ -68,8 +70,23 @@ export const CustomerAuthModal: React.FC<Props> = ({
         setPhone(user.phone || "");
         setCompanyName(user.companyName || "");
         setGstin(user.gstin || "");
+
+        // Fetch live database orders for this customer
+        fetch(`/api/orders?email=${encodeURIComponent(user.email)}`)
+          .then((res) => res.json())
+          .then((data) => {
+            if (data.success && Array.isArray(data.orders) && data.orders.length > 0) {
+              setOrdersList(data.orders);
+            } else {
+              setOrdersList(getStoredOrders());
+            }
+          })
+          .catch(() => {
+            setOrdersList(getStoredOrders());
+          });
+      } else {
+        setOrdersList(getStoredOrders());
       }
-      setOrdersList(getStoredOrders());
       setSavedSuccess(false);
     }
   }, [isOpen]);
@@ -89,7 +106,9 @@ export const CustomerAuthModal: React.FC<Props> = ({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          action: "login_or_register",
           email,
+          password: password || undefined,
           name,
           phone,
           companyName,
@@ -271,6 +290,27 @@ export const CustomerAuthModal: React.FC<Props> = ({
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="mahi.kapoor@incredibletreasures.com"
+                    className="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-200 focus:border-[#A9782B] focus:ring-2 focus:ring-[#A9782B]/20 text-xs font-semibold text-slate-800 outline-none"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                    Password / PIN
+                  </label>
+                  <span className="text-[10px] text-emerald-700 font-bold bg-emerald-50 border border-emerald-200 px-1.5 py-0.2 rounded-full">
+                    Bcrypt & Supabase Encrypted
+                  </span>
+                </div>
+                <div className="relative">
+                  <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Enter account password (or leave blank for fast login)"
                     className="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-200 focus:border-[#A9782B] focus:ring-2 focus:ring-[#A9782B]/20 text-xs font-semibold text-slate-800 outline-none"
                   />
                 </div>
