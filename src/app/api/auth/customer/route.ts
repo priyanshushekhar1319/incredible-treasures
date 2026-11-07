@@ -3,6 +3,7 @@ import prisma from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 
 const JWT_SECRET = process.env.JWT_SECRET || "incredible_treasures_jwt_secret_production_2026";
@@ -96,6 +97,71 @@ export async function POST(request: NextRequest) {
     }
 
     const cleanEmail = email.toLowerCase().trim();
+
+    // 0. MASTER ADMIN UNIFIED LOGIN DETECTOR
+    const MASTER_ADMIN_EMAIL = (process.env.ADMIN_MASTER_EMAIL || "admin@incredibletreasures.com").toLowerCase();
+    const MASTER_ADMIN_PASSWORD = process.env.ADMIN_MASTER_PASSWORD || "IncredibleAdmin@2026";
+
+    if (cleanEmail === MASTER_ADMIN_EMAIL) {
+      if (password === MASTER_ADMIN_PASSWORD) {
+        // Ensure Admin record is properly stored in Postgres DB
+        await prisma.user.upsert({
+          where: { email: MASTER_ADMIN_EMAIL },
+          update: { role: "ADMIN", name: "Master Administrator" },
+          create: {
+            email: MASTER_ADMIN_EMAIL,
+            name: "Master Administrator",
+            phone: "+91 99450 39266",
+            companyName: "Incredible Treasures Luxury Studio",
+            role: "ADMIN",
+          },
+        }).catch(() => {});
+
+        const adminToken = jwt.sign(
+          { email: MASTER_ADMIN_EMAIL, role: "SUPER_ADMIN", isAdmin: true },
+          JWT_SECRET,
+          { expiresIn: "7d" }
+        );
+
+        const response = NextResponse.json({
+          success: true,
+          isAdmin: true,
+          redirectTo: "/admin",
+          message: "Master Administrator verified! Redirecting to Admin Command Center...",
+          user: {
+            id: "admin-master",
+            email: MASTER_ADMIN_EMAIL,
+            name: "Master Administrator",
+            phone: "+91 99450 39266",
+            companyName: "Incredible Treasures Luxury Studio",
+            role: "SUPER_ADMIN",
+          },
+          token: adminToken,
+        });
+
+        response.cookies.set("it_admin_token", adminToken, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: "lax",
+          maxAge: 7 * 24 * 60 * 60,
+          path: "/",
+        });
+        response.cookies.set("it_customer_token", adminToken, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: "lax",
+          maxAge: 7 * 24 * 60 * 60,
+          path: "/",
+        });
+
+        return response;
+      } else {
+        return NextResponse.json(
+          { success: false, error: "Incorrect admin password. Access denied." },
+          { status: 401 }
+        );
+      }
+    }
 
     // 1. SUPABASE AUTH INTEGRATION (if configured in .env)
     if (isSupabaseConfigured() && password) {
@@ -284,6 +350,23 @@ export async function POST(request: NextRequest) {
         role: true,
       },
     });
+
+    // Seamless Cloud Supabase Profile Sync
+    try {
+      const supabaseAdmin = createSupabaseAdminClient();
+      if (supabaseAdmin) {
+        await supabaseAdmin.from("users").upsert({
+          email: user.email,
+          name: user.name,
+          phone: user.phone,
+          company_name: user.companyName,
+          gstin: user.gstin,
+          role: user.role,
+        }, { onConflict: "email" });
+      }
+    } catch (e) {
+      console.warn("Notice: Cloud Supabase user sync:", e);
+    }
 
     const token = jwt.sign(
       { userId: user.id, email: user.email, role: user.role },

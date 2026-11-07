@@ -133,6 +133,19 @@ export const AdminCorporateRosterTab: React.FC = () => {
       </div>
 
       {/* Main Layout */}
+      {roster.length === 0 ? (
+        <div className="py-20 text-center bg-white rounded-3xl border border-[#EAD5B3] space-y-4 p-8 shadow-xs">
+          <div className="w-16 h-16 rounded-full bg-[#FAF8F5] border border-[#EAD5B3] text-[#A9782B] flex items-center justify-center mx-auto shadow-xs">
+            <Building2 className="w-8 h-8" />
+          </div>
+          <div>
+            <h4 className="font-serif font-bold text-lg text-slate-900">0 Corporate Accounts Enrolled</h4>
+            <p className="text-xs text-slate-500 max-w-md mx-auto mt-1">
+              No enterprise corporate clients are registered yet. Register client companies with verified GSTIN, approved corporate hex colors, and standard substrates to enable instant 1-click employee visiting card runs.
+            </p>
+          </div>
+        </div>
+      ) : (
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 text-xs">
         {/* Left Column: Companies List (4 cols) */}
         <div className="lg:col-span-4 space-y-3">
@@ -300,6 +313,8 @@ export const AdminCorporateRosterTab: React.FC = () => {
           </div>
         )}
       </div>
+
+      )}
 
       {/* New Employee Modal */}
       {isAddEmployeeOpen && activeClient && (

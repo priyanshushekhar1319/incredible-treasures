@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 // GET /api/orders - Fetch orders from the central database
 export async function GET(request: NextRequest) {
@@ -11,7 +12,10 @@ export async function GET(request: NextRequest) {
     const query = searchParams.get("q")?.trim().toUpperCase();
     const limit = parseInt(searchParams.get("limit") || "50", 10);
 
-    const where: any = {};
+    const where: any = {
+      orderNumber: { notIn: ["IT-PRINT-017378", "IT-PRINT-017379", "IT-TEST-999999"] },
+      customerName: { notIn: ["Mahi Kapoor", "Anand Singhania", "Ratan Tata", "Narayana Murthy", "Mahi Kapoor (Demo)"] },
+    };
 
     if (userId) {
       where.userId = userId;
@@ -236,6 +240,68 @@ export async function POST(request: NextRequest) {
         items: true,
       },
     });
+
+    // Seamless Cloud Supabase Sync
+    try {
+      const supabaseAdmin = createSupabaseAdminClient();
+      if (supabaseAdmin) {
+        const { data: cloudOrder } = await supabaseAdmin.from("orders").insert({
+          order_number: newOrder.orderNumber,
+          source: newOrder.source,
+          customer_name: newOrder.customerName,
+          customer_email: newOrder.customerEmail,
+          customer_phone: newOrder.customerPhone,
+          shipping_address: newOrder.shippingAddress,
+          city: newOrder.city,
+          state: newOrder.state,
+          pincode: newOrder.pincode,
+          is_b2b: newOrder.isB2B,
+          company_name: newOrder.companyName,
+          gstin: newOrder.gstin,
+          subtotal: newOrder.subtotal,
+          tax_amount: newOrder.taxAmount,
+          cgst_amount: newOrder.cgstAmount,
+          sgst_amount: newOrder.sgstAmount,
+          igst_amount: newOrder.igstAmount,
+          shipping_fee: newOrder.shippingFee,
+          shipping_tier: newOrder.shippingTier,
+          coupon_code: newOrder.couponCode,
+          discount_amount: newOrder.discountAmount,
+          total_amount: newOrder.totalAmount,
+          status: newOrder.status,
+          status_label: newOrder.statusLabel,
+          payment_status: newOrder.paymentStatus,
+          payment_method: newOrder.paymentMethod,
+          razorpay_order_id: newOrder.razorpayOrderId,
+          razorpay_payment_id: newOrder.razorpayPaymentId,
+          awb_number: newOrder.awbNumber,
+          courier_partner: newOrder.courierPartner,
+          courier_tracking_url: newOrder.courierTrackingUrl,
+          destination_city: newOrder.destinationCity,
+          guaranteed_delivery_formatted: newOrder.guaranteedDeliveryFormatted,
+        }).select().single();
+
+        if (cloudOrder && newOrder.items?.length > 0) {
+          await supabaseAdmin.from("order_items").insert(
+            newOrder.items.map((it: any) => ({
+              order_id: cloudOrder.id,
+              product_name: it.productName,
+              category_name: it.categoryName,
+              variant_name: it.variantName,
+              quantity: it.quantity,
+              unit_price: it.unitPrice,
+              total_price: it.totalPrice,
+              specs_json: it.specsJson,
+              custom_design_front: it.customDesignFront,
+              custom_design_back: it.customDesignBack,
+              is_gst_included: it.isGstIncluded,
+            }))
+          );
+        }
+      }
+    } catch (cloudErr) {
+      console.warn("Notice: Cloud Supabase background sync:", cloudErr);
+    }
 
     return NextResponse.json({
       success: true,

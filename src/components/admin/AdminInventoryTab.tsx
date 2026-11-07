@@ -19,6 +19,7 @@ import {
   updateStockQuantity,
   saveInventoryItem,
   InventoryStockItem,
+  RECOMMENDED_INVENTORY_PRESETS,
 } from "@/lib/adminStore";
 
 export const AdminInventoryTab: React.FC = () => {
@@ -71,25 +72,30 @@ export const AdminInventoryTab: React.FC = () => {
     reloadStock();
   };
 
+  const handleLoadPresets = () => {
+    RECOMMENDED_INVENTORY_PRESETS.forEach((item) => saveInventoryItem(item));
+    reloadStock();
+  };
+
   const lowStockItems = stock.filter((s) => s.currentQuantity <= s.minThreshold);
 
   return (
     <div className="space-y-6">
       {/* Top Banner & KPI Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-white p-4 rounded-2xl border border-slate-200 space-y-1 shadow-xs">
-          <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 block">
+        <div className="bg-white p-5 rounded-3xl border border-[#EAD5B3] space-y-1 shadow-xs">
+          <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#734D15] block">
             Total Raw Materials
           </span>
           <div className="flex items-center justify-between">
             <span className="text-2xl font-black text-slate-900 font-mono">{stock.length}</span>
             <Package className="w-5 h-5 text-[#A9782B]" />
           </div>
-          <span className="text-[11px] text-slate-500">Active Substrates & Accessories</span>
+          <span className="text-[11px] text-slate-500 font-serif">Active Substrates & Accessories</span>
         </div>
 
-        <div className="bg-white p-4 rounded-2xl border border-slate-200 space-y-1 shadow-xs">
-          <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 block">
+        <div className="bg-white p-5 rounded-3xl border border-[#EAD5B3] space-y-1 shadow-xs">
+          <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#734D15] block">
             Stock Health Status
           </span>
           <div className="flex items-center justify-between">
@@ -104,7 +110,7 @@ export const AdminInventoryTab: React.FC = () => {
               className={`w-5 h-5 ${lowStockItems.length > 0 ? "text-rose-500" : "text-emerald-500"}`}
             />
           </div>
-          <span className="text-[11px] text-slate-500">
+          <span className="text-[11px] text-slate-500 font-serif">
             {lowStockItems.length > 0
               ? "Reorder recommended for flagged substrates"
               : "All substrate reserves above reorder limits"}
@@ -149,7 +155,38 @@ export const AdminInventoryTab: React.FC = () => {
         </div>
 
         <div className="divide-y divide-slate-100 text-xs">
-          {stock.map((item) => {
+          {stock.length === 0 ? (
+            <div className="p-12 text-center space-y-4">
+              <div className="w-14 h-14 rounded-full bg-[#FAF8F5] border border-[#EAD5B3] text-[#A9782B] flex items-center justify-center mx-auto shadow-xs">
+                <Package className="w-7 h-7" />
+              </div>
+              <div className="space-y-1">
+                <h4 className="font-serif font-bold text-base text-slate-900">0 Raw Material SKUs Tracked</h4>
+                <p className="text-xs text-slate-500 max-w-md mx-auto">
+                  Your warehouse ledger is currently empty. Record raw materials as your printing facility receives new paper reams, PVC blanks, or foil rolls.
+                </p>
+              </div>
+              <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setIsAddModalOpen(true)}
+                  className="px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs transition cursor-pointer flex items-center gap-1.5 shadow-sm"
+                >
+                  <Plus className="w-4 h-4 text-[#CBA768]" />
+                  <span>Log First Raw Material SKU</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={handleLoadPresets}
+                  className="px-4 py-2.5 rounded-xl bg-[#FAF6EE] hover:bg-[#F3EAD8] text-[#734D15] border border-[#EAD5B3] font-bold text-xs transition cursor-pointer flex items-center gap-1.5"
+                >
+                  <Sparkles className="w-4 h-4 text-[#A9782B]" />
+                  <span>Load Standard Substrates Template</span>
+                </button>
+              </div>
+            </div>
+          ) : (
+            stock.map((item) => {
             const isLow = item.currentQuantity <= item.minThreshold;
             return (
               <div
@@ -228,7 +265,7 @@ export const AdminInventoryTab: React.FC = () => {
                 </div>
               </div>
             );
-          })}
+          }))}
         </div>
       </div>
 

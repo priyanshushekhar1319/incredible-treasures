@@ -6,6 +6,8 @@ import { getStoredOrders, syncOrdersFromDatabase, PlacedOrder } from "@/lib/orde
 import { AdminLoginModal } from "@/components/admin/AdminLoginModal";
 import { AdminHeader, AdminTab } from "@/components/admin/AdminHeader";
 import { AdminPipelineTab } from "@/components/admin/AdminPipelineTab";
+import { AdminMarketingTab } from "@/components/admin/AdminMarketingTab";
+import { AdminTaxLedgerTab } from "@/components/admin/AdminTaxLedgerTab";
 import { AdminCatalogTab } from "@/components/admin/AdminCatalogTab";
 import { AdminPricingTab } from "@/components/admin/AdminPricingTab";
 import { AdminInventoryTab } from "@/components/admin/AdminInventoryTab";
@@ -94,7 +96,7 @@ export default function AdminDashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F8F9FA] flex flex-col font-sans text-slate-900">
+    <div className="min-h-screen bg-[#FAF8F5] flex flex-col font-sans text-slate-900">
       <AdminHeader
         activeTab={activeTab}
         onSelectTab={setActiveTab}
@@ -107,6 +109,10 @@ export default function AdminDashboardPage() {
           <AdminPipelineTab orders={orders} onRefreshOrders={reloadOrders} />
         )}
 
+        {activeTab === "marketing" && <AdminMarketingTab />}
+
+        {activeTab === "tax" && <AdminTaxLedgerTab orders={orders} />}
+
         {activeTab === "catalog" && <AdminCatalogTab />}
 
         {activeTab === "pricing" && <AdminPricingTab />}
@@ -118,8 +124,18 @@ export default function AdminDashboardPage() {
         {activeTab === "roster" && <AdminCorporateRosterTab />}
       </main>
 
-      <footer className="py-4 border-t border-slate-200 bg-white text-center text-xs text-slate-500 font-medium">
-        <span>Incredible Treasures Industrial Web-to-Print ERP • Automated Indian GST & CTP Production Active</span>
+      <footer className="py-6 border-t border-[#EAD5B3] bg-white text-center text-xs text-slate-600 font-sans">
+        <div className="max-w-7xl mx-auto px-4 space-y-1">
+          <p className="font-serif font-bold text-slate-900 tracking-wide">
+            INCREDIBLE TREASURES LUXURY STUDIO & PRESS WORKS
+          </p>
+          <p className="text-[11px] text-[#734D15]">
+            Corporate Office: Tasker Town • Offset Press Works: Peenya 2nd Stage • Bengaluru, India • GSTIN: 29AAKFI2392F1Z5
+          </p>
+          <p className="text-[10px] text-slate-400 font-mono pt-1">
+            Statutory MCA/GST Compliance • BlueDart Kempegowda Cargo Air Dispatch • 256-Bit Cryptographic Authorization
+          </p>
+        </div>
       </footer>
     </div>
   );

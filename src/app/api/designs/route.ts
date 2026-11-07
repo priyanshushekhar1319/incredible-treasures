@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 // GET /api/designs - Fetch saved designs for user or guest session
 export async function GET(request: NextRequest) {
@@ -159,6 +160,36 @@ export async function POST(request: NextRequest) {
           userId: resolvedUserId || null,
         },
       });
+    }
+
+    // Seamless Cloud Supabase Sync for 3D Studio Designs
+    try {
+      const supabaseAdmin = createSupabaseAdminClient();
+      if (supabaseAdmin) {
+        await supabaseAdmin.from("saved_designs").insert({
+          name: savedDesign.name,
+          product_slug: savedDesign.productSlug,
+          substrate_id: savedDesign.substrateId,
+          orientation: savedDesign.orientation,
+          corner_style: savedDesign.cornerStyle,
+          background_color: savedDesign.backgroundColor,
+          gilded_edge: savedDesign.gildedEdge,
+          card_texture: savedDesign.cardTexture,
+          front_elements: savedDesign.frontElements,
+          back_elements: savedDesign.backElements,
+          front_bg_image: savedDesign.frontBgImage,
+          back_bg_image: savedDesign.backBgImage,
+          front_bg_opacity: savedDesign.frontBgOpacity,
+          back_bg_opacity: savedDesign.backBgOpacity,
+          front_bg_fit: savedDesign.frontBgFit,
+          back_bg_fit: savedDesign.backBgFit,
+          preview_front: savedDesign.previewFront,
+          preview_back: savedDesign.previewBack,
+          session_id: savedDesign.sessionId,
+        });
+      }
+    } catch (cloudErr) {
+      console.warn("Notice: Cloud Supabase design sync:", cloudErr);
     }
 
     return NextResponse.json({

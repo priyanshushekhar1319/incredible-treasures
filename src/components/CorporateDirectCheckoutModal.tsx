@@ -88,15 +88,15 @@ export const CorporateDirectCheckoutModal: React.FC<Props> = ({
   onClearCart,
 }) => {
   // Customer & Delivery Address Form State
-  const [fullName, setFullName] = useState<string>("Mahi Kapoor");
-  const [companyName, setCompanyName] = useState<string>("Incredible Treasures Luxury Studio");
-  const [phone, setPhone] = useState<string>("+91 99450 39266");
-  const [email, setEmail] = useState<string>("mahi.kapoor@incredibletreasures.com");
-  const [address, setAddress] = useState<string>("42, Commercial Street, Tasker Town");
-  const [pincode, setPincode] = useState<string>("560001");
-  const [city, setCity] = useState<string>("Bengaluru");
-  const [state, setState] = useState<string>("Karnataka");
-  const [gstin, setGstin] = useState<string>("29AAKFI2392F1Z5");
+  const [fullName, setFullName] = useState<string>("");
+  const [companyName, setCompanyName] = useState<string>("");
+  const [phone, setPhone] = useState<string>("");
+  const [email, setEmail] = useState<string>("");
+  const [address, setAddress] = useState<string>("");
+  const [pincode, setPincode] = useState<string>("");
+  const [city, setCity] = useState<string>("");
+  const [state, setState] = useState<string>("");
+  const [gstin, setGstin] = useState<string>("");
   const [activeBranchId, setActiveBranchId] = useState<string>("hq");
 
   // Shipping & Payment Options

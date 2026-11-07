@@ -37,6 +37,7 @@ import {
   LuxuryUpsell,
   LUXURY_UPSELLS,
   VALID_COUPONS,
+  resolveCoupon,
   FREE_SHIPPING_THRESHOLD,
   STANDARD_SHIPPING_FEE,
   saveStoredCart,
@@ -126,15 +127,15 @@ export const StudioCartDrawer: React.FC<Props> = ({
   const [shippingTier, setShippingTier] = useState<"standard" | "priority_vip">("standard");
 
   // Customer Delivery & Invoicing Details
-  const [fullName, setFullName] = useState<string>("Mahi Kapoor");
-  const [companyName, setCompanyName] = useState<string>("Incredible Treasures Luxury Studio");
-  const [phone, setPhone] = useState<string>("+91 99450 39266");
-  const [email, setEmail] = useState<string>("mahi.kapoor@incredibletreasures.com");
-  const [address, setAddress] = useState<string>("42, Commercial Street, Tasker Town");
-  const [pincode, setPincode] = useState<string>("560001");
-  const [city, setCity] = useState<string>("Bengaluru");
-  const [state, setState] = useState<string>("Karnataka");
-  const [gstin, setGstin] = useState<string>("29AAKFI2392F1Z5");
+  const [fullName, setFullName] = useState<string>("");
+  const [companyName, setCompanyName] = useState<string>("");
+  const [phone, setPhone] = useState<string>("");
+  const [email, setEmail] = useState<string>("");
+  const [address, setAddress] = useState<string>("");
+  const [pincode, setPincode] = useState<string>("");
+  const [city, setCity] = useState<string>("");
+  const [state, setState] = useState<string>("");
+  const [gstin, setGstin] = useState<string>("");
   const [paymentMethod, setPaymentMethod] = useState<"upi" | "card" | "po">("upi");
   const [activeBranchId, setActiveBranchId] = useState<string>("hq");
 
@@ -171,7 +172,7 @@ export const StudioCartDrawer: React.FC<Props> = ({
 
   // Coupon discount calculation
   let couponDiscount = 0;
-  let activeCoupon = appliedCouponCode ? VALID_COUPONS[appliedCouponCode] : null;
+  let activeCoupon = appliedCouponCode ? resolveCoupon(appliedCouponCode) : null;
 
   if (activeCoupon) {
     if (activeCoupon.type === "flat") {
@@ -228,9 +229,9 @@ export const StudioCartDrawer: React.FC<Props> = ({
       return;
     }
 
-    const coupon = VALID_COUPONS[rawCode];
+    const coupon = resolveCoupon(rawCode);
     if (!coupon) {
-      setCouponError(`Invalid code "${rawCode}". Try FIRST500 or MAHI20.`);
+      setCouponError(`Invalid code "${rawCode}". Try DIWALI20, FIRST500 or MAHI20.`);
       return;
     }
 

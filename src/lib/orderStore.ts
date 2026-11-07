@@ -78,155 +78,72 @@ export interface PlacedOrder {
 
 const STORAGE_KEY_ORDERS = "it_production_orders";
 
-// Pre-seeded realistic orders for demonstration & client lookup
-const DEFAULT_DEMO_ORDERS: PlacedOrder[] = [
-  {
-    id: "IT-PRINT-017378",
-    createdAt: new Date(Date.now() - 36 * 3600 * 1000).toISOString(), // 36 hours ago (Dispatched stage)
-    source: "studio",
-    status: "DISPATCHED",
-    statusLabel: "Dispatched via BlueDart Apex Air",
-    items: [
-      {
-        id: "item-demo-1",
-        productId: "pvc-regular-glossy",
-        title: "400-Micron Luxury Glossy PVC Visiting Cards (500 pcs)",
-        categoryName: "Visiting Cards",
-        quantity: 500,
-        unitPrice: 5.0,
-        totalPrice: 2500,
-        image: "/images/hero-banner-1.png",
-        branding: "24K Gold Stamped • Rounded Corners",
-        specs: "Dual-Face Custom Layout • Mahi Kapoor (Managing Director)",
-        isGstIncluded: true,
-      },
-    ],
-    customer: {
-      fullName: "Mahi Kapoor",
-      companyName: "Incredible Treasures Luxury Studio",
-      phone: "+91 99450 39266",
-      email: "mahi.kapoor@incredibletreasures.com",
-      address: "42, Commercial Street, Tasker Town",
-      city: "Bengaluru",
-      state: "Karnataka",
-      pincode: "560001",
-      gstin: "29AAKFI2392F1Z5",
-    },
-    pricing: {
-      subtotal: 2118.64,
-      gstAmount: 381.36,
-      shippingFee: 0,
-      shippingTier: "standard",
-      couponDiscount: 0,
-      grandTotal: 2500,
-    },
-    payment: {
-      method: "upi",
-      status: "PAID_ADVANCE",
-      referenceId: "UPI-TXN-9945038192",
-      razorpayReady: true,
-    },
-    logistics: {
-      courierPartner: "BlueDart Apex Air",
-      awbNumber: "BD-017378560",
-      courierTrackingUrl:
-        "https://www.bluedart.com/tracking?handler=t&action=custorder&awb=awb&numbers=BD-017378560",
-      courierHelpline: "1860 233 1234",
-      guaranteedDeliveryFormatted: "Tomorrow by 01:30 PM",
-      originFacility: "Incredible Treasures Offset Press Works • Peenya Industrial Area, Bengaluru",
-      destinationCity: "Bengaluru",
-      cutoffCountdownText: "Dispatched on schedule",
-      deliveryExecutive: {
-        name: "Rameshwar Rao (BlueDart Prime Lead)",
-        phone: "+91 98450 18274",
-        vehicleNumber: "KA-04-BD-8921",
-        badge: "BlueDart Air Verified Specialist",
-      },
-    },
-  },
-  {
-    id: "IT-PRINT-018241",
-    createdAt: new Date(Date.now() - 4 * 3600 * 1000).toISOString(), // 4 hours ago (In Production stage)
-    source: "ready_made_storefront",
-    status: "IN_PRODUCTION",
-    statusLabel: "In Production • Offset Press & Foil Stamping",
-    items: [
-      {
-        id: "item-demo-2",
-        productId: "mug-matte-black",
-        title: "Executive Ceramic Matte Black Mugs (100 pcs)",
-        categoryName: "Ceramic Mugs",
-        quantity: 100,
-        unitPrice: 280,
-        totalPrice: 28000,
-        image: "/images/hero-banner-3.png",
-        branding: "Gold Leaf Screen Printed • Grade-A Ceramic",
-        specs: "350ml Ceramic Mug • Corporate Logo Imprint",
-        isGstIncluded: false,
-      },
-    ],
-    customer: {
-      fullName: "Anand Singhania",
-      companyName: "Singhania FinCorp HQ",
-      phone: "+91 98201 44820",
-      email: "anand.s@singhaniafincorp.com",
-      address: "Level 8, Platina Tower, G-Block, Bandra Kurla Complex",
-      city: "Mumbai",
-      state: "Maharashtra",
-      pincode: "400051",
-      gstin: "27AAACS1482E1Z8",
-    },
-    pricing: {
-      subtotal: 28000,
-      gstAmount: 5040,
-      shippingFee: 0,
-      shippingTier: "priority_vip",
-      couponDiscount: 2800,
-      grandTotal: 30240,
-    },
-    payment: {
-      method: "card",
-      status: "PAID_ADVANCE",
-      referenceId: "CARD-AUTH-88291039",
-      razorpayReady: true,
-    },
-    logistics: {
-      courierPartner: "BlueDart Apex Air",
-      awbNumber: "BD-018241400",
-      courierTrackingUrl:
-        "https://www.bluedart.com/tracking?handler=t&action=custorder&awb=awb&numbers=BD-018241400",
-      courierHelpline: "1860 233 1234",
-      guaranteedDeliveryFormatted: "In 2 Business Days",
-      originFacility: "Incredible Treasures Ceramic Print Line • Bengaluru",
-      destinationCity: "Mumbai",
-      cutoffCountdownText: "Press curing completed",
-      deliveryExecutive: {
-        name: "Vikram Jadhav (BlueDart Mumbai Prime)",
-        phone: "+91 98202 81920",
-        vehicleNumber: "MH-02-BD-1829",
-        badge: "BlueDart BKC Priority Courier",
-      },
-    },
-  },
-];
-
-/**
- * Retrieve all placed orders from localStorage, merged with demo orders.
- */
+// Clean Real Orders Only - No fake or pre-seeded dummy orders
 export function getStoredOrders(): PlacedOrder[] {
-  if (typeof window === "undefined") return DEFAULT_DEMO_ORDERS;
+  if (typeof window === "undefined") return [];
   try {
     const raw = localStorage.getItem(STORAGE_KEY_ORDERS);
-    if (!raw) return DEFAULT_DEMO_ORDERS;
+    if (!raw) return [];
     const parsed: PlacedOrder[] = JSON.parse(raw);
-    if (!Array.isArray(parsed) || parsed.length === 0) return DEFAULT_DEMO_ORDERS;
+    if (!Array.isArray(parsed)) return [];
 
-    // Merge: user's real placed orders first, followed by default demos
-    const userOrderIds = new Set(parsed.map((o) => o.id));
-    const unseeded = DEFAULT_DEMO_ORDERS.filter((o) => !userOrderIds.has(o.id));
-    return [...parsed, ...unseeded];
+    // Filter out any legacy dummy demo orders or test orders
+    const realOrders = parsed.filter(
+      (o) =>
+        o &&
+        o.id &&
+        o.id !== "IT-PRINT-017378" &&
+        o.id !== "IT-PRINT-017379" &&
+        o.id !== "IT-TEST-999999" &&
+        !o.id.startsWith("IT-PRINT-") &&
+        !o.id.startsWith("IT-TEST-") &&
+        !o.id.startsWith("demo-") &&
+        o.customer?.fullName !== "Mahi Kapoor" &&
+        o.customer?.fullName !== "Anand Singhania" &&
+        o.customer?.fullName !== "Ratan Tata" &&
+        o.customer?.fullName !== "Narayana Murthy" &&
+        o.customer?.fullName !== "Mahi Kapoor (Demo)"
+    );
+
+    if (realOrders.length !== parsed.length) {
+      localStorage.setItem(STORAGE_KEY_ORDERS, JSON.stringify(realOrders));
+    }
+
+    return realOrders;
   } catch {
-    return DEFAULT_DEMO_ORDERS;
+    return [];
+  }
+}
+
+/**
+ * Clean all legacy demo orders completely
+ */
+export function clearAllDemoOrders(): void {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.removeItem(STORAGE_KEY_ORDERS);
+    window.dispatchEvent(new CustomEvent("it_order_updated", { detail: [] }));
+    window.dispatchEvent(new CustomEvent("it_orders_synced", { detail: [] }));
+  } catch (err) {
+    console.error("Failed to clear demo orders:", err);
+  }
+}
+
+/**
+ * Delete a specific order by ID
+ */
+export function deleteOrder(orderId: string): void {
+  if (typeof window === "undefined") return;
+  try {
+    const current = getStoredOrders().filter((o) => o.id !== orderId);
+    localStorage.setItem(STORAGE_KEY_ORDERS, JSON.stringify(current));
+    window.dispatchEvent(new CustomEvent("it_order_updated", { detail: current }));
+
+    fetch(`/api/orders/${encodeURIComponent(orderId)}`, {
+      method: "DELETE",
+    }).catch(() => {});
+  } catch (err) {
+    console.error("Failed to delete order:", err);
   }
 }
 
@@ -281,15 +198,32 @@ export async function syncOrdersFromDatabase(): Promise<PlacedOrder[]> {
     const res = await fetch("/api/orders?limit=100");
     const data = await res.json();
     if (data.success && Array.isArray(data.orders)) {
-      const dbOrders: PlacedOrder[] = data.orders;
-      if (dbOrders.length > 0) {
-        const local = getStoredOrders();
-        const dbIds = new Set(dbOrders.map((o) => o.id));
-        const merged = [...dbOrders, ...local.filter((l) => !dbIds.has(l.id))];
-        localStorage.setItem(STORAGE_KEY_ORDERS, JSON.stringify(merged));
-        window.dispatchEvent(new CustomEvent("it_orders_synced", { detail: merged }));
-        return merged;
+      const dbOrders: PlacedOrder[] = data.orders.filter(
+        (o: PlacedOrder) =>
+          o &&
+          o.id &&
+          !o.id.startsWith("IT-PRINT-") &&
+          !o.id.startsWith("IT-TEST-") &&
+          !o.id.startsWith("demo-") &&
+          o.id !== "IT-TEST-999999" &&
+          o.customer?.fullName !== "Ratan Tata" &&
+          o.customer?.fullName !== "Mahi Kapoor" &&
+          o.customer?.fullName !== "Anand Singhania" &&
+          o.customer?.fullName !== "Narayana Murthy"
+      );
+      if (dbOrders.length === 0) {
+        // Central DB has 0 genuine orders; clean local cache as well
+        const cleanLocal = getStoredOrders();
+        localStorage.setItem(STORAGE_KEY_ORDERS, JSON.stringify(cleanLocal));
+        window.dispatchEvent(new CustomEvent("it_orders_synced", { detail: cleanLocal }));
+        return cleanLocal;
       }
+      const local = getStoredOrders();
+      const dbIds = new Set(dbOrders.map((o) => o.id));
+      const merged = [...dbOrders, ...local.filter((l) => !dbIds.has(l.id))];
+      localStorage.setItem(STORAGE_KEY_ORDERS, JSON.stringify(merged));
+      window.dispatchEvent(new CustomEvent("it_orders_synced", { detail: merged }));
+      return merged;
     }
   } catch (err) {
     console.warn("Could not sync orders from server DB (using cached):", err);
@@ -355,20 +289,14 @@ export function createRealOrder(params: CreateOrderParams): PlacedOrder {
       razorpayReady: true,
     },
     logistics: {
-      courierPartner: sla.pincodeInfo.courierPartner,
-      awbNumber,
-      courierTrackingUrl: `https://www.bluedart.com/tracking?handler=t&action=custorder&awb=awb&numbers=${awbNumber}`,
+      courierPartner: sla.pincodeInfo.courierPartner || "BlueDart Express",
+      awbNumber: "Pending Dispatch",
+      courierTrackingUrl: "",
       courierHelpline: "1860 233 1234",
       guaranteedDeliveryFormatted: sla.guaranteedDeliveryFormatted,
       originFacility: "Incredible Treasures Press Works • Peenya Industrial Area, Bengaluru",
       destinationCity: params.customer.city || sla.pincodeInfo.city,
       cutoffCountdownText: sla.cutoffCountdownText,
-      deliveryExecutive: {
-        name: "Rameshwar Rao (BlueDart Lead)",
-        phone: "+91 98450 18274",
-        vehicleNumber: "KA-04-BD-8921",
-        badge: "BlueDart Air Verified Specialist",
-      },
     },
   };
 

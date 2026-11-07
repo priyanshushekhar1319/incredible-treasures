@@ -1,7 +1,10 @@
-@import url('https://fonts.googleapis.com/css2?family=Alex+Brush&family=Cinzel:wght@500;600;700;800;900&family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600;1,700&family=Dancing+Script:wght@500;600;700&family=Inter:wght@400;500;600;700;800&family=Montserrat:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500;1,600;1,700&family=Playfair+Display:ital,wght@0,500;0,600;0,700;0,800;0,900;1,500;1,600;1,700&family=Poppins:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,600&family=Roboto:ital,wght@0,400;0,500;0,700;1,400;1,700&family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Alex+Brush&family=Cinzel:wght@500;600;700;800;900&family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600;1,700&family=Dancing+Script:wght@500;600;700&family=Inter:wght@400;500;600;700;800&family=Montserrat:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500;1,600;1,700&family=Playfair+Display:ital,wght@0,500;0,600;0,700;0,800;0,900;1,500;1,600;1,700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Poppins:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,600&family=Roboto:ital,wght@0,400;0,500;0,700;1,400;1,700&family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap');
 @import "tailwindcss";
 
 @theme {
+  --font-sans: "Plus Jakarta Sans", "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-serif: "Cinzel", "Playfair Display", "Cormorant Garamond", Georgia, serif;
+  --font-display: "Cinzel", "Playfair Display", Georgia, serif;
   --color-emerald-50: #faf6ee;
   --color-emerald-100: #f5ebd7;
   --color-emerald-200: #ead5b3;
@@ -28,6 +31,7 @@
   body {
     background-color: var(--background);
     color: var(--foreground);
+    font-family: var(--font-sans);
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -77,116 +81,46 @@
 @keyframes visualLaserScan {
   0% {
     top: 2%;
-    opacity: 0.85;
+    opacity: 0.8;
   }
   50% {
-    top: 95%;
+    top: 96%;
     opacity: 1;
   }
   100% {
     top: 2%;
-    opacity: 0.85;
+    opacity: 0.8;
   }
 }
 
 .animate-laser-scan {
-  animation: visualLaserScan 2.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  animation: visualLaserScan 2.4s ease-in-out infinite;
 }
 
-/* Voice Search Sound Wave Equalizer */
-@keyframes voiceWave {
-  0%, 100% {
-    height: 6px;
-  }
-  50% {
-    height: 32px;
-  }
+/* Voice Equalizer Audio Wave Animations */
+@keyframes voiceWave1 {
+  0%, 100% { height: 6px; }
+  50% { height: 28px; }
+}
+@keyframes voiceWave2 {
+  0%, 100% { height: 16px; }
+  50% { height: 36px; }
+}
+@keyframes voiceWave3 {
+  0%, 100% { height: 26px; }
+  50% { height: 12px; }
+}
+@keyframes voiceWave4 {
+  0%, 100% { height: 10px; }
+  50% { height: 32px; }
+}
+@keyframes voiceWave5 {
+  0%, 100% { height: 18px; }
+  50% { height: 22px; }
 }
 
-.animate-voice-wave-1 {
-  animation: voiceWave 0.75s ease-in-out infinite;
-}
-.animate-voice-wave-2 {
-  animation: voiceWave 0.75s ease-in-out 0.15s infinite;
-}
-.animate-voice-wave-3 {
-  animation: voiceWave 0.75s ease-in-out 0.3s infinite;
-}
-.animate-voice-wave-4 {
-  animation: voiceWave 0.75s ease-in-out 0.45s infinite;
-}
-.animate-voice-wave-5 {
-  animation: voiceWave 0.75s ease-in-out 0.2s infinite;
-}
-
-/* Dynamic Card Studio Typography Engine */
-.card-custom-font {
-  font-family: var(--card-font, inherit);
-  font-style: var(--card-font-style, inherit);
-}
-
-/* Individual Field Typography & Color Engine */
-.font-companyName,
-.font-companyName *,
-[data-field="companyName"],
-[data-field="companyName"] * {
-  font-family: var(--font-companyName, inherit) !important;
-  font-style: var(--style-companyName, normal) !important;
-  color: var(--color-companyName, inherit) !important;
-}
-
-.font-customerName,
-.font-customerName *,
-[data-field="customerName"],
-[data-field="customerName"] * {
-  font-family: var(--font-customerName, inherit) !important;
-  font-style: var(--style-customerName, normal) !important;
-  color: var(--color-customerName, inherit) !important;
-}
-
-.font-customerDesignation,
-.font-customerDesignation *,
-[data-field="customerDesignation"],
-[data-field="customerDesignation"] * {
-  font-family: var(--font-customerDesignation, inherit) !important;
-  font-style: var(--style-customerDesignation, normal) !important;
-  color: var(--color-customerDesignation, inherit) !important;
-}
-
-.font-phone,
-.font-phone *,
-[data-field="phone"],
-[data-field="phone"] * {
-  font-family: var(--font-phone, inherit) !important;
-  font-style: var(--style-phone, normal) !important;
-  color: var(--color-phone, inherit) !important;
-}
-
-.font-email,
-.font-email *,
-[data-field="email"],
-[data-field="email"] * {
-  font-family: var(--font-email, inherit) !important;
-  font-style: var(--style-email, normal) !important;
-  color: var(--color-email, inherit) !important;
-}
-
-.font-website,
-.font-website *,
-[data-field="website"],
-[data-field="website"] * {
-  font-family: var(--font-website, inherit) !important;
-  font-style: var(--style-website, normal) !important;
-  color: var(--color-website, inherit) !important;
-}
-
-.font-address,
-.font-address *,
-[data-field="address"],
-[data-field="address"] * {
-  font-family: var(--font-address, inherit) !important;
-  font-style: var(--style-address, normal) !important;
-  color: var(--color-address, inherit) !important;
-}
-
-
+.animate-voice-wave-1 { animation: voiceWave1 0.7s ease-in-out infinite; }
+.animate-voice-wave-2 { animation: voiceWave2 0.5s ease-in-out infinite 0.1s; }
+.animate-voice-wave-3 { animation: voiceWave3 0.6s ease-in-out infinite 0.2s; }
+.animate-voice-wave-4 { animation: voiceWave4 0.55s ease-in-out infinite 0.15s; }
+.animate-voice-wave-5 { animation: voiceWave5 0.65s ease-in-out infinite 0.05s; }

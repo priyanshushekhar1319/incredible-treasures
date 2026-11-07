@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import {
   Menu,
   CreditCard,
@@ -9,6 +10,7 @@ import {
   ShoppingBag,
   Truck,
   ShieldCheck,
+  Shield,
   CheckCircle2,
   UploadCloud,
   FileCheck2,
@@ -82,6 +84,7 @@ import {
   MicOff,
   Volume2,
   FolderHeart,
+  Zap,
 } from "lucide-react";
 import { ALL_PRODUCTS, CatalogProduct, PricingTier } from "@/data/products";
 import { CustomerAuthModal } from "@/components/CustomerAuthModal";
@@ -89,6 +92,17 @@ import { SavedDesignsModal } from "@/components/canva-studio/SavedDesignsModal";
 import { CorporateDirectCheckoutModal, CheckoutCartItem } from "@/components/CorporateDirectCheckoutModal";
 import { OrderLiveTrackingModal } from "@/components/OrderLiveTrackingModal";
 import { CustomerUser, getCustomerSession } from "@/lib/customerSession";
+import {
+  HeroBannerItem,
+  getActiveHeroBanners,
+  getAnnouncementConfig,
+  AnnouncementBarConfig,
+  syncBannersFromServer,
+} from "@/lib/marketingStore";
+import { getAdminCatalog, syncCatalogFromServer } from "@/lib/adminStore";
+import { CelebrationCrackersEffect } from "@/components/CelebrationCrackersEffect";
+import { getAdminSession } from "@/lib/adminAuth";
+import { deduplicateBanners } from "@/lib/marketingStore";
 
 // ==========================================
 // HIGH-AESTHETIC BOTANICAL & ORNATE SVG ICONS
@@ -132,7 +146,7 @@ interface ProductTemplate {
   tag: string;
 }
 
-export interface CardFontOption {
+interface CardFontOption {
   id: string;
   name: string;
   category: "Sans" | "Serif" | "Script" | "Display" | "Mono";
@@ -529,9 +543,9 @@ const PRODUCT_TEMPLATES: ProductTemplate[] = [
   },
 ];
 
-export interface HeroBannerItem {
+interface LocalHeroBannerUnused {
   id: string;
-  category: "visiting-cards" | "letterheads" | "mugs" | "labels" | "tshirts";
+  category: "visiting-cards" | "letterheads" | "mugs" | "labels" | "tshirts" | "festive";
   breadcrumb: string;
   badge: string;
   eyebrow: string;
@@ -544,7 +558,7 @@ export interface HeroBannerItem {
   features: string[];
 }
 
-export const HERO_BANNERS: HeroBannerItem[] = [
+const HERO_BANNERS: HeroBannerItem[] = [
   {
     id: "visiting-cards",
     category: "visiting-cards",
@@ -619,7 +633,7 @@ export const HERO_BANNERS: HeroBannerItem[] = [
 
 // ALL_PRODUCTS and CatalogProduct are imported from @/data/products
 
-export const NAV_CATEGORIES = [
+const NAV_CATEGORIES = [
   { id: "visiting-cards", label: "Visiting Cards" },
   { id: "letterheads", label: "Letterheads" },
   { id: "mugs", label: "Mugs" },
@@ -627,7 +641,7 @@ export const NAV_CATEGORIES = [
   { id: "tshirts", label: "T-Shirts" },
 ];
 
-export interface CartItem {
+interface CartItem {
   id: string;
   productId: string;
   title: string;
@@ -1260,8 +1274,26 @@ export default function VistaprintStorePage() {
   // Responsive Mobile Navigation Drawer state
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
 
+  // Dynamic Product Catalog Synced with Admin Backoffice
+  const [catalogProducts, setCatalogProducts] = useState<CatalogProduct[]>(ALL_PRODUCTS);
+
+  useEffect(() => {
+    const syncCatalog = () => {
+      const current = getAdminCatalog();
+      if (current && current.length > 0) {
+        setCatalogProducts(current);
+      }
+    };
+    syncCatalog();
+    syncCatalogFromServer().then((live) => {
+      if (live && live.length > 0) setCatalogProducts(live);
+    });
+    window.addEventListener("it_catalog_updated", syncCatalog);
+    return () => window.removeEventListener("it_catalog_updated", syncCatalog);
+  }, []);
+
   const searchResults = searchQuery.trim()
-    ? ALL_PRODUCTS.filter(
+    ? catalogProducts.filter(
         (p) =>
           p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
           p.specs.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -1271,7 +1303,7 @@ export default function VistaprintStorePage() {
     : [];
 
   const selectProductById = (id: string, openEditor = false) => {
-    const p = ALL_PRODUCTS.find((item) => item.id === id) || ALL_PRODUCTS[0];
+    const p = catalogProducts.find((item) => item.id === id) || catalogProducts[0];
     setSelectedProduct(p);
     setIsEditorOpen(true);
     setProductViewTab("studio");
@@ -1307,14 +1339,45 @@ export default function VistaprintStorePage() {
   // Hero Banner Carousel State (Cinematic Full-Page Presentation)
   const [activeBannerIndex, setActiveBannerIndex] = useState<number>(0);
   const [isBannerPaused, setIsBannerPaused] = useState<boolean>(false);
+  const [liveBanners, setLiveBanners] = useState<HeroBannerItem[]>(HERO_BANNERS);
+  const [liveAnnouncement, setLiveAnnouncement] = useState<AnnouncementBarConfig | null>(null);
+  const [copiedTickerCoupon, setCopiedTickerCoupon] = useState<boolean>(false);
+  const [hasAdminSession, setHasAdminSession] = useState<boolean>(false);
 
   useEffect(() => {
-    if (isBannerPaused) return;
+    const syncMarketing = () => {
+      const active = getActiveHeroBanners();
+      if (active && active.length > 0) {
+        setLiveBanners(deduplicateBanners(active));
+      }
+      setLiveAnnouncement(getAnnouncementConfig());
+    };
+    syncMarketing();
+    syncBannersFromServer().then((live) => {
+      if (live && live.length > 0) {
+        const activeOnly = live.filter((b) => b.isActive);
+        if (activeOnly.length > 0) setLiveBanners(deduplicateBanners(activeOnly));
+      }
+    });
+    const checkAdmin = () => setHasAdminSession(Boolean(getAdminSession()));
+    checkAdmin();
+    window.addEventListener("it_admin_login", checkAdmin);
+    window.addEventListener("it_admin_logout", checkAdmin);
+    window.addEventListener("it_marketing_updated", syncMarketing);
+    return () => {
+      window.removeEventListener("it_admin_login", checkAdmin);
+      window.removeEventListener("it_admin_logout", checkAdmin);
+      window.removeEventListener("it_marketing_updated", syncMarketing);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (isBannerPaused || liveBanners.length === 0) return;
     const timer = setInterval(() => {
-      setActiveBannerIndex((prev) => (prev + 1) % HERO_BANNERS.length);
+      setActiveBannerIndex((prev) => (prev + 1) % liveBanners.length);
     }, 6000);
     return () => clearInterval(timer);
-  }, [isBannerPaused]);
+  }, [isBannerPaused, liveBanners.length]);
 
   // Template browser state
   const [templateFilter, setTemplateFilter] = useState<string>("all");
@@ -2768,15 +2831,16 @@ export default function VistaprintStorePage() {
 
   const handleDirectBuyProduct = (product: CatalogProduct) => {
     let orderItem: CheckoutCartItem;
-    if (product.pricingTiers && selectedPvcTier) {
+    const tier = product.pricingTiers && product.pricingTiers.length > 0 ? (selectedPvcTier || product.pricingTiers[0]) : null;
+    if (tier) {
       orderItem = {
         id: `direct-${product.id}-${Date.now()}`,
         productId: product.id,
-        title: `${product.title} (${selectedPvcTier.qty} pcs)`,
+        title: `${product.title} (${tier.qty} pcs)`,
         categoryName: product.categoryName,
         image: product.image,
-        quantity: selectedPvcTier.qty,
-        unitPrice: selectedPvcTier.pricePerUnit,
+        quantity: tier.qty,
+        unitPrice: tier.pricePerUnit,
         branding: `${product.finishType || "400 Micron"} • ${cornerStyle} Corners`,
         specs: `Front & Back Proof Configured • Co: ${companyName} • ${product.specs}`,
         isGstIncluded: true,
@@ -2979,7 +3043,7 @@ export default function VistaprintStorePage() {
   });
 
   // Filter and sort catalog products for sidebar, price filter & sort dropdown
-  const filteredCatalog = ALL_PRODUCTS.filter((p) => {
+  const filteredCatalog = catalogProducts.filter((p) => {
     const matchesCategory = activeCatalogCategory === "all" || p.category === activeCatalogCategory;
     if (!matchesCategory) return false;
 
@@ -3236,6 +3300,45 @@ export default function VistaprintStorePage() {
         </div>
       )}
 
+      {/* 1.5. Dynamic Top Announcement Bar & Marquee Ticker */}
+      {liveAnnouncement && liveAnnouncement.enabled && (
+        <div
+          className={`w-full py-2 px-4 text-xs flex flex-wrap items-center justify-center gap-3 transition font-sans z-50 ${
+            liveAnnouncement.accentTheme === "crimson"
+              ? "bg-gradient-to-r from-rose-950 via-rose-900 to-rose-950 text-rose-100 border-b border-rose-800"
+              : liveAnnouncement.accentTheme === "emerald"
+              ? "bg-gradient-to-r from-emerald-950 via-emerald-900 to-emerald-950 text-emerald-100 border-b border-emerald-800"
+              : liveAnnouncement.accentTheme === "dark"
+              ? "bg-slate-950 text-slate-200 border-b border-slate-800"
+              : "bg-gradient-to-r from-amber-950 via-[#3a270f] to-amber-950 text-amber-200 border-b border-[#A9782B]/30"
+          }`}
+        >
+          <div className="flex items-center gap-2">
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-[#A9782B] text-slate-950">
+              {liveAnnouncement.badgeText || "OFFER"}
+            </span>
+            <span className="font-bold text-center">{liveAnnouncement.message}</span>
+          </div>
+
+          {liveAnnouncement.couponCode && (
+            <button
+              type="button"
+              onClick={() => {
+                navigator.clipboard.writeText(liveAnnouncement.couponCode || "");
+                setCopiedTickerCoupon(true);
+                setTimeout(() => setCopiedTickerCoupon(false), 2000);
+              }}
+              className="flex items-center gap-1.5 bg-black/40 hover:bg-black/60 px-2.5 py-1 rounded-full border border-white/20 text-[11px] font-mono cursor-pointer transition"
+            >
+              <span>Code: <strong>{liveAnnouncement.couponCode}</strong></span>
+              <span className="text-[10px] bg-white/20 px-1.5 py-0.5 rounded text-white font-bold">
+                {copiedTickerCoupon ? "Copied ✓" : "Copy"}
+              </span>
+            </button>
+          )}
+        </div>
+      )}
+
       {/* 2. Main Brand Header with Omnibar, Sign In & Cart */}
       <header className="sticky top-0 z-40 bg-white border-b border-slate-200 shadow-xs">
         <div className="w-full max-w-[1780px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 py-3.5 sm:py-4 flex items-center justify-between gap-4 lg:gap-8">
@@ -3406,6 +3509,17 @@ export default function VistaprintStorePage() {
               <FolderHeart className="w-4 h-4 text-[#A9782B]" />
               <span>My Designs</span>
             </button>
+
+            {hasAdminSession && (
+              <Link
+                href="/admin"
+                className="flex items-center gap-1.5 text-xs sm:text-sm font-bold bg-[#FAF6EE] text-[#734D15] hover:bg-[#A9782B] hover:text-white px-3 sm:px-4 py-2 sm:py-2.5 rounded-full border border-[#EAD5B3] transition cursor-pointer shadow-2xs"
+                title="Open Admin Command Center"
+              >
+                <Shield className="w-4 h-4 text-[#A9782B]" />
+                <span>Admin Portal</span>
+              </Link>
+            )}
 
             {/* Sign In Button beside Cart */}
             <button
@@ -4412,9 +4526,10 @@ export default function VistaprintStorePage() {
             aria-label="Featured Collections"
             className="w-full relative overflow-hidden bg-black h-[calc(100vh-120px)] min-h-[540px] max-h-[860px] flex items-center justify-center group"
           >
-            {/* Carousel Slides (All 5 Categories Transitioning Smoothly) */}
-            {HERO_BANNERS.map((banner, idx) => {
+            {/* Carousel Slides (All Unique Categories Transitioning Smoothly) */}
+            {liveBanners.map((banner, idx) => {
               const isActive = idx === activeBannerIndex;
+              const hasFestiveEffect = Boolean(banner.enableCrackersEffect || banner.isFestiveCampaign || banner.category === "festive");
               return (
                 <div
                   key={banner.id}
@@ -4422,6 +4537,23 @@ export default function VistaprintStorePage() {
                     isActive ? "opacity-100 z-10 pointer-events-auto" : "opacity-0 z-0 pointer-events-none"
                   }`}
                 >
+                  {/* Full-Bleed Background Video if available */}
+                  {banner.videoUrl ? (
+                    <video
+                      src={banner.videoUrl}
+                      autoPlay
+                      loop
+                      muted
+                      playsInline
+                      className="absolute inset-0 w-full h-full object-cover z-0 pointer-events-none opacity-85"
+                    />
+                  ) : null}
+
+                  {/* Festive Diwali Crackers & Fireworks Animation Overlay */}
+                  {hasFestiveEffect && (
+                    <CelebrationCrackersEffect active={isActive} />
+                  )}
+
                   {/* Full-Bleed Widescreen Background Photography */}
                   <Image
                     src={banner.image}
@@ -4437,6 +4569,13 @@ export default function VistaprintStorePage() {
 
                   {/* Centered Editorial Content */}
                   <div className="relative z-20 flex flex-col items-center text-center space-y-4 sm:space-y-5 max-w-4xl mx-auto px-4">
+                    {hasFestiveEffect && (
+                      <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-amber-500/25 via-amber-400/35 to-amber-500/25 border border-amber-300/40 backdrop-blur-md text-amber-200 text-xs font-mono font-bold tracking-widest uppercase shadow-lg">
+                        <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                        <span>{banner.badge || "DIWALI MAHOTSAV EDITION"}</span>
+                        <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                      </div>
+                    )}
                     <h1 className="text-3xl sm:text-5xl lg:text-6xl xl:text-7xl font-serif text-white tracking-wide font-normal drop-shadow-2xl">
                       {banner.title}
                     </h1>
@@ -4455,7 +4594,7 @@ export default function VistaprintStorePage() {
                         }}
                         className="inline-block border border-white/80 bg-black/40 hover:bg-white hover:text-black hover:border-white text-white text-xs sm:text-sm tracking-[0.28em] uppercase font-bold px-10 py-3.5 transition-all duration-300 backdrop-blur-md cursor-pointer hover:scale-105 active:scale-95 shadow-2xl"
                       >
-                        SHOP NOW
+                        {banner.ctaLabel || "SHOP NOW"}
                       </button>
                     </div>
                   </div>
@@ -4466,7 +4605,7 @@ export default function VistaprintStorePage() {
             {/* Previous Slide Button */}
             <button
               type="button"
-              onClick={() => setActiveBannerIndex((prev) => (prev - 1 + HERO_BANNERS.length) % HERO_BANNERS.length)}
+              onClick={() => setActiveBannerIndex((prev) => (prev - 1 + liveBanners.length) % liveBanners.length)}
               aria-label="Previous Slide"
               className="absolute left-4 sm:left-8 top-1/2 -translate-y-1/2 z-30 w-11 h-11 sm:w-13 sm:h-13 rounded-full bg-black/40 hover:bg-white hover:text-black text-white shadow-2xl border border-white/20 backdrop-blur-md flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95 cursor-pointer opacity-75 group-hover:opacity-100"
             >
@@ -4476,7 +4615,7 @@ export default function VistaprintStorePage() {
             {/* Next Slide Button */}
             <button
               type="button"
-              onClick={() => setActiveBannerIndex((prev) => (prev + 1) % HERO_BANNERS.length)}
+              onClick={() => setActiveBannerIndex((prev) => (prev + 1) % liveBanners.length)}
               aria-label="Next Slide"
               className="absolute right-4 sm:right-8 top-1/2 -translate-y-1/2 z-30 w-11 h-11 sm:w-13 sm:h-13 rounded-full bg-black/40 hover:bg-white hover:text-black text-white shadow-2xl border border-white/20 backdrop-blur-md flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95 cursor-pointer opacity-75 group-hover:opacity-100"
             >
@@ -4486,7 +4625,7 @@ export default function VistaprintStorePage() {
             {/* Bottom Luxury Category Switcher Pills */}
             <div className="absolute bottom-6 left-0 right-0 z-30 flex items-center justify-center px-4 pointer-events-none">
               <div className="flex items-center gap-1.5 sm:gap-2 pointer-events-auto bg-black/60 backdrop-blur-md p-1.5 rounded-full border border-white/20 shadow-2xl max-w-full overflow-x-auto no-scrollbar">
-                {HERO_BANNERS.map((b, i) => (
+                {liveBanners.map((b, i) => (
                   <button
                     key={b.id}
                     type="button"
@@ -4520,7 +4659,7 @@ export default function VistaprintStorePage() {
               <ChevronRight className="w-4 h-4 text-slate-400" />
               <span>Corporate Printing & Stationery</span>
               <ChevronRight className="w-4 h-4 text-slate-400" />
-              <span className="text-slate-900 font-bold">{HERO_BANNERS[activeBannerIndex]?.breadcrumb || "Custom Visiting Cards"}</span>
+              <span className="text-slate-900 font-bold">{liveBanners[activeBannerIndex]?.breadcrumb || "Custom Visiting Cards"}</span>
             </div>
 
             {/* All Products Displayed Downwards (Full Width) */}
@@ -4528,12 +4667,17 @@ export default function VistaprintStorePage() {
               {/* 1. HORIZONTAL PRODUCT OPTIONS TABS (The 5 Core Products + All) */}
               <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
                 {[
-                  { id: "all", label: "All Products", count: ALL_PRODUCTS.length, icon: Sparkles },
-                  { id: "visiting-cards", label: "Visiting Cards", count: ALL_PRODUCTS.filter((p) => p.category === "visiting-cards").length, icon: CreditCard },
-                  { id: "letterheads", label: "Executive Letterheads", count: ALL_PRODUCTS.filter((p) => p.category === "letterheads").length, icon: FileText },
-                  { id: "mugs", label: "Custom Mugs", count: ALL_PRODUCTS.filter((p) => p.category === "mugs").length, icon: Coffee },
-                  { id: "labels", label: "Labels & Packaging", count: ALL_PRODUCTS.filter((p) => p.category === "labels").length, icon: Package },
-                  { id: "tshirts", label: "Corporate T-Shirts", count: ALL_PRODUCTS.filter((p) => p.category === "tshirts").length, icon: Shirt },
+                  { id: "all", label: "All Products", count: catalogProducts.length, icon: Sparkles },
+                  { id: "visiting-cards", label: "Visiting Cards", count: catalogProducts.filter((p) => p.category === "visiting-cards").length, icon: CreditCard },
+                  { id: "letterheads", label: "Executive Letterheads", count: catalogProducts.filter((p) => p.category === "letterheads").length, icon: FileText },
+                  { id: "mugs", label: "Custom Mugs", count: catalogProducts.filter((p) => p.category === "mugs").length, icon: Coffee },
+                  { id: "labels", label: "Labels & Packaging", count: catalogProducts.filter((p) => p.category === "labels").length, icon: Package },
+                  { id: "tshirts", label: "Corporate T-Shirts", count: catalogProducts.filter((p) => p.category === "tshirts").length, icon: Shirt },
+
+
+
+
+
                 ].map((cat) => {
                   const IconComp = cat.icon;
                   const isActive = activeCatalogCategory === cat.id;
@@ -4732,7 +4876,20 @@ export default function VistaprintStorePage() {
                               }}
                               className="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition flex items-center gap-1 shadow-xs cursor-pointer"
                             >
-                              <span>{prod.category === "visiting-cards" && !prod.isGstIncluded ? "Customise" : "Select"}</span>
+                              <span>Customize</span>
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDirectBuyProduct(prod);
+                              }}
+                              className="px-3 py-2 rounded-xl bg-gradient-to-r from-[#A9782B] via-[#8E621E] to-[#734D15] hover:opacity-95 text-white text-xs font-bold transition flex items-center gap-1 shadow-sm cursor-pointer hover:scale-102"
+                              title="Instant 3-Click Checkout"
+                            >
+                              <Zap className="w-3.5 h-3.5 text-amber-300" />
+                              <span>Buy Now</span>
                               <ArrowRight className="w-3.5 h-3.5" />
                             </button>
                           </div>

@@ -580,3 +580,45 @@
 
 
 
+
+
+---
+
+## 🛡️ 25. DAY 23: PRODUCTION-GRADE EXECUTIVE ADMIN PORTAL & SECURITY SUITE (COMPLETED)
+- **High-End Security Architecture (`serverAdminAuth.ts` & `/api/auth/admin/route.ts`):**
+  - **Cryptographic JWT Authentication:** Signed with HMAC-SHA256 secret (`ADMIN_JWT_SECRET`) issued as HTTP-only cookie (`it_admin_jwt`, 7-day max-age, `SameSite=Lax`, `Secure` in production).
+  - **In-Memory Brute-Force Shield:** IP-based sliding window rate limiter allowing max 5 attempts per 15 minutes. Automatically locks out attackers for 15 minutes with HTTP 429 and `remainingSeconds` response.
+  - **Server-Side Mutation Guard (`serverAdminAuth.ts`):** Sensitive mutation endpoints (including `PATCH /api/orders/[id]`) verify `SUPER_ADMIN` role token, preventing unauthorized order or tracking modifications.
+  - **Master Credentials:** Master Email (`admin@incredibletreasures.com`) & Security PIN (`9945`) / Master Password (`IncredibleAdmin@2026`).
+
+- **Module I: Dynamic Banners & Festive Offers Engine (`AdminMarketingTab.tsx` & `marketingStore.ts`):**
+  - **Homepage Hero Banner Carousel Controller:**
+    - Live list of hero banners with thumbnails, categories, and priority badges.
+    - Modal to Add or Edit Festive Banners (Title, Subtitle, Category, Image URL, CTA text, Target URL, and Scheduled Auto-Expiry cutoff).
+    - Auto-rotation synced across desktop, tablet, and mobile without code changes.
+  - **Top Announcement Marquee Ticker:**
+    - Sticky banner at the very top of the customer storefront with toggle switch (ON/OFF).
+    - Customizable message, 1-click coupon code copy button (e.g. `DIWALI20`), badge text (`FESTIVE SALE`), and themes (Royal Gold, Festive Crimson, Emerald, Obsidian).
+    - Scheduled auto-expiry cutoff.
+  - **Promotional Coupon Code Engine:**
+    - Discount rule manager supporting Percentage (`%`), Flat (`₹`), and Free Express Shipping (`FREESHIP`).
+    - Minimum order requirement validation and auto-expiry date checks.
+    - Synchronized with `StudioCartDrawer` and checkout modals in real time.
+
+- **Module II: Automated Month-End CA Tax & Payment Ledger (`AdminTaxLedgerTab.tsx` & `taxExport.ts`):**
+  - **Statutory GSTR-1 Register:**
+    - Segregates Karnataka intra-state (9% CGST + 9% SGST) from inter-state (18% IGST).
+    - Formats all B2B transactions with verified 15-digit buyer GSTINs and B2C retail transactions.
+    - 1-Click `[ 📥 Export GSTR-1 CSV ]` formatted for direct upload to the Indian GST Portal.
+  - **Razorpay Settlement Audit:**
+    - Reconciles gross customer collections against Razorpay Payment IDs (`pay_...`).
+    - Applies standard Indian payment gateway MDR fee (2.0% base fee + 18% GST on fee = 2.36% total deduction).
+    - Computes net expected bank credit to HDFC Corporate Current Account.
+    - 1-Click `[ 📥 Export Razorpay Settlement CSV ]`.
+  - **1-Click CA Email Dispatch:**
+    - Formats a comprehensive confidential audit dossier for the Chartered Accountant (`ca.audit@incredibletreasures.com`).
+    - Includes turnover breakdown, tax split, gateway deductions, and HSN Table 12 summaries (`49090000`, `4911`, `6912`, etc.).
+
+- **Production Build & Verification:**
+  - TypeScript type check (`tsc --noEmit`) succeeded with 0 errors.
+  - Full production build (`next build --webpack`) succeeded with code 0 across all 16 static and dynamic application routes.

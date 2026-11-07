@@ -27,6 +27,22 @@ export function getAdminCatalog(): CatalogProduct[] {
   }
 }
 
+export async function syncCatalogFromServer(): Promise<CatalogProduct[]> {
+  if (typeof window === "undefined") return ALL_PRODUCTS;
+  try {
+    const res = await fetch("/api/catalog");
+    const data = await res.json();
+    if (data.success && Array.isArray(data.products) && data.products.length > 0) {
+      localStorage.setItem(STORAGE_KEY_ADMIN_CATALOG, JSON.stringify(data.products));
+      window.dispatchEvent(new CustomEvent("it_catalog_updated", { detail: data.products }));
+      return data.products;
+    }
+  } catch (err) {
+    console.warn("Could not sync catalog from server:", err);
+  }
+  return getAdminCatalog();
+}
+
 export function saveAdminProduct(product: CatalogProduct): void {
   if (typeof window === "undefined") return;
   try {
@@ -41,6 +57,13 @@ export function saveAdminProduct(product: CatalogProduct): void {
     }
     localStorage.setItem(STORAGE_KEY_ADMIN_CATALOG, JSON.stringify(updated));
     window.dispatchEvent(new CustomEvent("it_catalog_updated", { detail: updated }));
+
+    // Sync to Server API
+    fetch("/api/catalog", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(product),
+    }).catch((err) => console.warn("Background catalog sync failed:", err));
   } catch (err) {
     console.error("Failed to save product:", err);
   }
@@ -52,6 +75,11 @@ export function deleteAdminProduct(productId: string): void {
     const catalog = getAdminCatalog().filter((p) => p.id !== productId);
     localStorage.setItem(STORAGE_KEY_ADMIN_CATALOG, JSON.stringify(catalog));
     window.dispatchEvent(new CustomEvent("it_catalog_updated", { detail: catalog }));
+
+    // Sync to Server API
+    fetch(`/api/catalog?id=${encodeURIComponent(productId)}`, {
+      method: "DELETE",
+    }).catch((err) => console.warn("Background catalog delete failed:", err));
   } catch (err) {
     console.error("Failed to delete product:", err);
   }
@@ -138,98 +166,44 @@ export interface InventoryStockItem {
   lastUpdated: string;
 }
 
-export const DEFAULT_INVENTORY_ITEMS: InventoryStockItem[] = [
+export const RECOMMENDED_INVENTORY_PRESETS: InventoryStockItem[] = [
   {
     id: "inv-pvc-glossy",
     name: "400-Micron Regular Glossy White PVC Blanks",
     category: "pvc",
-    currentQuantity: 12400,
+    currentQuantity: 1000,
     unit: "Pieces",
-    minThreshold: 2000,
+    minThreshold: 200,
     reorderLeadTimeDays: 3,
-    supplier: "Jindal Poly Films Ltd • Mumbai Depot",
-    lastUpdated: new Date().toISOString(),
-  },
-  {
-    id: "inv-pvc-matt",
-    name: "400-Micron Satin Matt White PVC Blanks",
-    category: "pvc",
-    currentQuantity: 8200,
-    unit: "Pieces",
-    minThreshold: 1500,
-    reorderLeadTimeDays: 3,
-    supplier: "Jindal Poly Films Ltd • Mumbai Depot",
+    supplier: "Polymer Depo Mumbai",
     lastUpdated: new Date().toISOString(),
   },
   {
     id: "inv-paper-350matte",
     name: "350 GSM Silk Matte Art Board (12x18 Inches)",
     category: "paper",
-    currentQuantity: 95,
+    currentQuantity: 50,
     unit: "Reams",
-    minThreshold: 20,
+    minThreshold: 10,
     reorderLeadTimeDays: 2,
-    supplier: "ITC Paperboards & Specialty Papers • Chennai",
-    lastUpdated: new Date().toISOString(),
-  },
-  {
-    id: "inv-paper-400velvet",
-    name: "400 GSM Velvet Soft-Touch Heavyweight Stock",
-    category: "paper",
-    currentQuantity: 42,
-    unit: "Reams",
-    minThreshold: 15,
-    reorderLeadTimeDays: 4,
-    supplier: "Fedrigoni Luxury Papers • Bengaluru Warehouse",
-    lastUpdated: new Date().toISOString(),
-  },
-  {
-    id: "inv-mug-ceramic",
-    name: "Grade-A 350ml Matte Black Ceramic Corporate Mugs",
-    category: "mugs",
-    currentQuantity: 380,
-    unit: "Pieces",
-    minThreshold: 120,
-    reorderLeadTimeDays: 5,
-    supplier: "Khurja Ceramics Export Corporation",
-    lastUpdated: new Date().toISOString(),
-  },
-  {
-    id: "inv-foil-24k",
-    name: "24K Metallic Gold Foil Master Stamping Rolls",
-    category: "foil",
-    currentQuantity: 14,
-    unit: "Rolls",
-    minThreshold: 4,
-    reorderLeadTimeDays: 7,
-    supplier: "Kurz Foil Systems India • Peenya",
-    lastUpdated: new Date().toISOString(),
-  },
-  {
-    id: "inv-pack-deckle",
-    name: "120 GSM Cotton Deckle Edge Premium Envelopes",
-    category: "packaging",
-    currentQuantity: 3200,
-    unit: "Pieces",
-    minThreshold: 600,
-    reorderLeadTimeDays: 2,
-    supplier: "Incredible Treasures Conversion Plant",
+    supplier: "ITC Paperboards Depot",
     lastUpdated: new Date().toISOString(),
   },
 ];
 
+export const DEFAULT_INVENTORY_ITEMS: InventoryStockItem[] = [];
+
 export function getInventoryStock(): InventoryStockItem[] {
-  if (typeof window === "undefined") return DEFAULT_INVENTORY_ITEMS;
+  if (typeof window === "undefined") return [];
   try {
     const raw = localStorage.getItem(STORAGE_KEY_INVENTORY);
     if (!raw) {
-      localStorage.setItem(STORAGE_KEY_INVENTORY, JSON.stringify(DEFAULT_INVENTORY_ITEMS));
-      return DEFAULT_INVENTORY_ITEMS;
+      return [];
     }
     const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) && parsed.length > 0 ? parsed : DEFAULT_INVENTORY_ITEMS;
+    return Array.isArray(parsed) ? parsed : [];
   } catch {
-    return DEFAULT_INVENTORY_ITEMS;
+    return [];
   }
 }
 
@@ -374,17 +348,23 @@ export const DEFAULT_CORPORATE_ROSTER: CorporateClientProfile[] = [
 ];
 
 export function getCorporateRoster(): CorporateClientProfile[] {
-  if (typeof window === "undefined") return DEFAULT_CORPORATE_ROSTER;
+  if (typeof window === "undefined") return [];
   try {
     const raw = localStorage.getItem(STORAGE_KEY_CORPORATE_ROSTER);
-    if (!raw) {
-      localStorage.setItem(STORAGE_KEY_CORPORATE_ROSTER, JSON.stringify(DEFAULT_CORPORATE_ROSTER));
-      return DEFAULT_CORPORATE_ROSTER;
-    }
+    if (!raw) return [];
     const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) && parsed.length > 0 ? parsed : DEFAULT_CORPORATE_ROSTER;
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter(
+      (c) =>
+        c &&
+        c.id &&
+        c.id !== "corp-singhania" &&
+        c.id !== "corp-mahindra" &&
+        !c.id.startsWith("dummy-") &&
+        c.companyName !== "Singhania FinCorp HQ"
+    );
   } catch {
-    return DEFAULT_CORPORATE_ROSTER;
+    return [];
   }
 }
 

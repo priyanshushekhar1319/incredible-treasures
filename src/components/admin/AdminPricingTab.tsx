@@ -29,15 +29,15 @@ export const AdminPricingTab: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-white p-4 rounded-2xl border border-slate-200 flex flex-wrap items-center justify-between gap-3 shadow-xs">
+      <div className="bg-white p-5 rounded-3xl border border-[#EAD5B3] flex flex-wrap items-center justify-between gap-3 shadow-xs">
         <div>
-          <h3 className="text-sm font-black text-slate-900 flex items-center gap-2">
+          <h3 className="font-serif font-bold text-base text-slate-900 flex items-center gap-2">
             <span>Dynamic Price Matrix & GST Rules</span>
-            <span className="text-[10px] bg-emerald-50 text-emerald-800 border border-emerald-200 px-2 py-0.5 rounded-full font-mono font-bold">
+            <span className="text-[10px] bg-[#FAF6EE] text-[#734D15] border border-[#EAD5B3] px-2.5 py-0.5 rounded-full font-mono font-bold">
               Active on Customer Storefront
             </span>
           </h3>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-slate-500 mt-0.5">
             Configure volume tier multipliers, paper stock rates, and tax parameters without redeploying code.
           </p>
         </div>
@@ -46,14 +46,14 @@ export const AdminPricingTab: React.FC = () => {
           <button
             type="button"
             onClick={handleReset}
-            className="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition cursor-pointer"
+            className="px-3.5 py-2 rounded-xl bg-white hover:bg-[#FAF6EE] text-slate-700 border border-[#EAD5B3] font-serif font-bold text-xs transition cursor-pointer"
           >
             Reset Defaults
           </button>
           <button
             type="button"
             onClick={handleSave}
-            className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#A9782B] to-[#8E621E] hover:opacity-95 text-white font-bold text-xs transition flex items-center gap-1.5 shadow-sm cursor-pointer"
+            className="px-5 py-2.5 rounded-xl bg-[#A9782B] hover:bg-[#8E621E] text-white font-serif font-bold text-xs uppercase tracking-wider transition flex items-center gap-1.5 shadow-sm cursor-pointer"
           >
             {isSaved ? <Check className="w-4 h-4 text-emerald-300" /> : <Save className="w-4 h-4" />}
             <span>{isSaved ? "Saved to Storefront!" : "Save Changes"}</span>

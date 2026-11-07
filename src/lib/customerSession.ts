@@ -54,16 +54,7 @@ export function getCustomerSession(): CustomerUser | null {
   try {
     const raw = localStorage.getItem(STORAGE_KEY_USER);
     if (!raw) {
-      // Default to Mahi Kapoor demo session for seamless luxury experience
-      const defaultUser: CustomerUser = {
-        email: "mahi.kapoor@incredibletreasures.com",
-        name: "Mahi Kapoor",
-        phone: "+91 99450 39266",
-        companyName: "Incredible Treasures Luxury Studio",
-        gstin: "29AAKFI2392F1Z5",
-      };
-      localStorage.setItem(STORAGE_KEY_USER, JSON.stringify(defaultUser));
-      return defaultUser;
+      return null;
     }
     return JSON.parse(raw);
   } catch {

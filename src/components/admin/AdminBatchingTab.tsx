@@ -28,17 +28,17 @@ export const AdminBatchingTab: React.FC<Props> = ({ orders }) => {
   return (
     <div className="space-y-6">
       {/* Top Banner */}
-      <div className="bg-gradient-to-r from-slate-900 via-slate-950 to-slate-900 text-white p-6 rounded-3xl border border-slate-800 space-y-2 relative overflow-hidden shadow-lg">
+      <div className="bg-gradient-to-r from-slate-950 via-[#261b0d] to-slate-950 text-white p-6 rounded-3xl border border-[#EAD5B3]/40 space-y-2 relative overflow-hidden shadow-xl">
         <div className="flex items-center gap-2">
           <Grid3X3 className="w-5 h-5 text-[#CBA768]" />
-          <h3 className="text-base font-black tracking-tight text-white flex items-center gap-2">
+          <h3 className="font-serif font-bold text-base tracking-tight text-white flex items-center gap-2">
             <span>Gang-Run Imposition & Plate Optimizer</span>
-            <span className="text-[10px] bg-emerald-500 text-white px-2 py-0.5 rounded-full font-mono uppercase font-black">
-              Cost Saver Engine
+            <span className="text-[10px] bg-[#FAF6EE] text-[#734D15] border border-[#EAD5B3] px-2.5 py-0.5 rounded-full font-mono uppercase font-black">
+              ✦ 42% Offset Cost Saver ✦
             </span>
           </h3>
         </div>
-        <p className="text-xs text-slate-300 max-w-2xl leading-relaxed">
+        <p className="text-xs text-slate-300 max-w-2xl leading-relaxed font-sans">
           Instead of running individual press plates for each 500-card order, our automated imposition algorithm groups identical paper substrates onto a single master 12&quot; × 18&quot; sheet. This reduces CTP plate setup costs and paper trim wastage by up to <strong>42%</strong>.
         </p>
       </div>

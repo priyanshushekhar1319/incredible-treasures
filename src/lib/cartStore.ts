@@ -69,6 +69,13 @@ export interface CouponDef {
 }
 
 export const VALID_COUPONS: Record<string, CouponDef> = {
+  DIWALI20: {
+    code: "DIWALI20",
+    description: "Diwali Mahotsav: Flat 20% Off on 500+ Luxury PVC Cards",
+    type: "percent",
+    value: 20,
+    minOrder: 2500,
+  },
   FIRST500: {
     code: "FIRST500",
     description: "₹500 Flat Discount on First Corporate Order",
@@ -97,6 +104,36 @@ export const VALID_COUPONS: Record<string, CouponDef> = {
     value: 150,
   },
 };
+
+/**
+ * Dynamically resolves any coupon code against stored admin rules or hardcoded defaults.
+ */
+export function resolveCoupon(code: string): CouponDef | null {
+  const clean = code.trim().toUpperCase();
+  if (typeof window !== "undefined") {
+    try {
+      const raw = localStorage.getItem("it_admin_coupons_v1");
+      if (raw) {
+        const list = JSON.parse(raw);
+        if (Array.isArray(list)) {
+          const match = list.find((c: any) => c.code.toUpperCase() === clean);
+          if (match) {
+            if (!match.isActive) return null;
+            if (match.expiryDate && new Date() > new Date(match.expiryDate)) return null;
+            return {
+              code: match.code,
+              description: match.description,
+              type: match.type,
+              value: match.value,
+              minOrder: match.minOrder,
+            };
+          }
+        }
+      }
+    } catch {}
+  }
+  return VALID_COUPONS[clean] || null;
+}
 
 export const FREE_SHIPPING_THRESHOLD = 3000;
 export const STANDARD_SHIPPING_FEE = 150;

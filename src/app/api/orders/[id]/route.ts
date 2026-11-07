@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { verifyAdminSessionFromRequest } from "@/lib/serverAdminAuth";
 
 interface Params {
   params: Promise<{ id: string }>;
 }
 
-// GET /api/orders/[id] - Fetch single order
+// GET /api/orders/[id] - Fetch single order (Public lookup by Order ID or AWB for customers)
 export async function GET(request: NextRequest, { params }: Params) {
   try {
     const { id } = await params;
@@ -44,8 +45,20 @@ export async function GET(request: NextRequest, { params }: Params) {
   }
 }
 
-// PATCH /api/orders/[id] - Update order status or logistics (AWB, courier)
+// PATCH /api/orders/[id] - Update order status or logistics (PROTECTED: Requires Admin Authorization)
 export async function PATCH(request: NextRequest, { params }: Params) {
+  // Enforce Super Admin JWT validation
+  const authCheck = verifyAdminSessionFromRequest(request);
+  if (!authCheck.authorized) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: "Unauthorized: Super Admin authorization token required to mutate orders.",
+      },
+      { status: 401 }
+    );
+  }
+
   try {
     const { id } = await params;
     const body = await request.json();

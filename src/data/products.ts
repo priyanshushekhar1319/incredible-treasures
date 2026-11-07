@@ -23,6 +23,11 @@ export interface CatalogProduct {
   finishType?: string;
   cardMaterial?: string;
   pricingTiers?: PricingTier[];
+  videoUrl?: string;
+  description?: string;
+  isActive?: boolean;
+  comparePrice?: string;
+  galleryImages?: string[];
 }
 
 export const ALL_PRODUCTS: CatalogProduct[] = [

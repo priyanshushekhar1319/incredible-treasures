@@ -1,9 +1,8 @@
 "use client";
 
 const STORAGE_KEY_ADMIN_SESSION = "it_admin_auth_session";
-const MASTER_ADMIN_PIN = "9945"; // Matches Incredible Treasures company phone prefix
-const MASTER_ADMIN_PASSWORD = "IncredibleAdmin@2026";
-const MASTER_ADMIN_EMAIL = "admin@incredibletreasures.com";
+export const MASTER_ADMIN_EMAIL = "admin@incredibletreasures.com";
+export const MASTER_ADMIN_PASSWORD = "IncredibleAdmin@2026";
 
 export interface AdminUserSession {
   email: string;
@@ -13,37 +12,49 @@ export interface AdminUserSession {
 }
 
 /**
- * Verify master admin credentials synchronously (PIN or Password).
+ * Verify master admin credentials synchronously (Email & Password).
  */
-export function verifyAdminCredentials(input: string): boolean {
-  const clean = input.trim();
-  return clean === MASTER_ADMIN_PIN || clean === MASTER_ADMIN_PASSWORD;
+export function verifyAdminCredentials(emailInput: string, passwordInput: string): boolean {
+  const cleanEmail = (emailInput || "").toLowerCase().trim();
+  const cleanPassword = (passwordInput || "").trim();
+  return cleanEmail === MASTER_ADMIN_EMAIL.toLowerCase() && cleanPassword === MASTER_ADMIN_PASSWORD;
 }
 
 /**
  * Verify master admin credentials against server API.
  */
-export async function verifyAdminCredentialsAsync(input: string): Promise<boolean> {
-  const clean = input.trim();
+export async function verifyAdminCredentialsAsync(
+  emailInput: string,
+  passwordInput: string
+): Promise<{ success: boolean; error?: string }> {
+  const cleanEmail = (emailInput || "").toLowerCase().trim();
+  const cleanPassword = (passwordInput || "").trim();
+
   try {
     const res = await fetch("/api/auth/admin", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ pin: clean, password: clean }),
+      body: JSON.stringify({ email: cleanEmail, password: cleanPassword }),
     });
     const data = await res.json();
     if (data.success && data.token) {
-      createAdminSession(MASTER_ADMIN_EMAIL, data.token);
-      return true;
+      createAdminSession(cleanEmail, data.token);
+      return { success: true };
     }
-    return false;
+    return {
+      success: false,
+      error: data.error || "Invalid admin email or password. Access Denied.",
+    };
   } catch {
     // Graceful offline fallback
-    if (verifyAdminCredentials(clean)) {
-      createAdminSession(MASTER_ADMIN_EMAIL);
-      return true;
+    if (verifyAdminCredentials(cleanEmail, cleanPassword)) {
+      createAdminSession(cleanEmail);
+      return { success: true };
     }
-    return false;
+    return {
+      success: false,
+      error: "Invalid admin email or password. Access Denied.",
+    };
   }
 }
 
