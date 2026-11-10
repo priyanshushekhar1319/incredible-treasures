@@ -25,17 +25,17 @@ export interface AdminCouponRule {
   createdAt: string;
 }
 
-// Initial Preset Coupons (including festive Diwali & corporate offers)
+// Initial Preset Coupons (clean real starting coupons with 0 fake usage)
 export const DEFAULT_COUPONS: AdminCouponRule[] = [
   {
     code: "DIWALI20",
-    description: "Diwali Mahotsav: Flat 20% Off on 500+ Luxury PVC Cards",
+    description: "Diwali Mahotsav: Flat 20% Off on Luxury PVC Cards",
     type: "percent",
     value: 20,
     minOrder: 2500,
     isActive: true,
     expiryDate: "2026-11-20T23:59:59Z",
-    usageCount: 42,
+    usageCount: 0,
     createdAt: "2026-11-01T00:00:00Z",
   },
   {
@@ -45,17 +45,7 @@ export const DEFAULT_COUPONS: AdminCouponRule[] = [
     value: 500,
     minOrder: 1500,
     isActive: true,
-    usageCount: 128,
-    createdAt: "2026-10-01T00:00:00Z",
-  },
-  {
-    code: "MAHI20",
-    description: "20% Exclusive Executive Privilege Discount",
-    type: "percent",
-    value: 20,
-    minOrder: 1000,
-    isActive: true,
-    usageCount: 89,
+    usageCount: 0,
     createdAt: "2026-10-01T00:00:00Z",
   },
   {
@@ -65,7 +55,7 @@ export const DEFAULT_COUPONS: AdminCouponRule[] = [
     value: 10,
     minOrder: 3000,
     isActive: true,
-    usageCount: 215,
+    usageCount: 0,
     createdAt: "2026-10-01T00:00:00Z",
   },
   {
@@ -75,7 +65,7 @@ export const DEFAULT_COUPONS: AdminCouponRule[] = [
     value: 150,
     minOrder: 0,
     isActive: true,
-    usageCount: 310,
+    usageCount: 0,
     createdAt: "2026-10-01T00:00:00Z",
   },
 ];
@@ -268,7 +258,17 @@ export function getAdminCoupons(): AdminCouponRule[] {
       return DEFAULT_COUPONS;
     }
     const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) && parsed.length > 0 ? parsed : DEFAULT_COUPONS;
+    if (!Array.isArray(parsed) || parsed.length === 0) return DEFAULT_COUPONS;
+
+    // Filter out dummy test coupons like MAHI20 and reset fake usage counts if from legacy test
+    const clean = parsed
+      .filter((c) => c && c.code && c.code.toUpperCase() !== "MAHI20")
+      .map((c) => ({
+        ...c,
+        usageCount: typeof c.usageCount === "number" && c.usageCount > 40 ? 0 : (c.usageCount || 0),
+        description: c.description ? c.description.replace(/,1/g, "₹").replace(/,\s*1/g, "₹") : c.description,
+      }));
+    return clean;
   } catch {
     return DEFAULT_COUPONS;
   }

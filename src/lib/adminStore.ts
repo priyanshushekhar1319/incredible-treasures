@@ -270,82 +270,7 @@ export interface CorporateClientProfile {
   }>;
 }
 
-export const DEFAULT_CORPORATE_ROSTER: CorporateClientProfile[] = [
-  {
-    id: "corp-singhania",
-    companyName: "Singhania FinCorp HQ",
-    gstin: "27AAACS1482E1Z8",
-    primaryContactName: "Anand Singhania",
-    phone: "+91 98201 44820",
-    email: "anand.s@singhaniafincorp.com",
-    city: "Mumbai",
-    state: "Maharashtra",
-    pincode: "400051",
-    brandHexColors: ["#0B1B3D", "#A9782B", "#FFFFFF"],
-    savedSubstrate: "Executive Ceramic Mugs & 400 GSM Velvet",
-    savedCornerStyle: "6mm Rounded Corners",
-    totalOrdersRun: 14,
-    employees: [
-      {
-        id: "emp-1",
-        fullName: "Anand Singhania",
-        designation: "Managing Director & CEO",
-        phone: "+91 98201 44820",
-        email: "anand.s@singhaniafincorp.com",
-        lastCardRunDate: "2026-10-24",
-      },
-      {
-        id: "emp-2",
-        fullName: "Meera Deshmukh",
-        designation: "Chief Risk Officer",
-        phone: "+91 98201 55219",
-        email: "meera.d@singhaniafincorp.com",
-        lastCardRunDate: "2026-09-15",
-      },
-      {
-        id: "emp-3",
-        fullName: "Karan Johar",
-        designation: "VP • Institutional Banking",
-        phone: "+91 98201 99120",
-        email: "karan.j@singhaniafincorp.com",
-        lastCardRunDate: "2026-08-10",
-      },
-    ],
-  },
-  {
-    id: "corp-mahindra",
-    companyName: "Mahindra Tech Park Bangalore",
-    gstin: "29AAACM4921K1ZX",
-    primaryContactName: "Rajeshwari Nair",
-    phone: "+91 98450 29103",
-    email: "rajeshwari.n@mahindratech.com",
-    city: "Bengaluru",
-    state: "Karnataka",
-    pincode: "560100",
-    brandHexColors: ["#C72828", "#1E293B", "#FFFFFF"],
-    savedSubstrate: "400-Micron Luxury Glossy PVC",
-    savedCornerStyle: "Standard Square 90°",
-    totalOrdersRun: 28,
-    employees: [
-      {
-        id: "emp-4",
-        fullName: "Rajeshwari Nair",
-        designation: "Head of Infrastructure",
-        phone: "+91 98450 29103",
-        email: "rajeshwari.n@mahindratech.com",
-        lastCardRunDate: "2026-10-26",
-      },
-      {
-        id: "emp-5",
-        fullName: "Srinivas Rao",
-        designation: "Principal Cloud Architect",
-        phone: "+91 98450 78201",
-        email: "srinivas.r@mahindratech.com",
-        lastCardRunDate: "2026-09-29",
-      },
-    ],
-  },
-];
+export const DEFAULT_CORPORATE_ROSTER: CorporateClientProfile[] = [];
 
 export function getCorporateRoster(): CorporateClientProfile[] {
   if (typeof window === "undefined") return [];
@@ -365,6 +290,36 @@ export function getCorporateRoster(): CorporateClientProfile[] {
     );
   } catch {
     return [];
+  }
+}
+
+export function saveCorporateClient(client: CorporateClientProfile): void {
+  if (typeof window === "undefined") return;
+  try {
+    const roster = getCorporateRoster();
+    const idx = roster.findIndex((c) => c.id === client.id);
+    let updated: CorporateClientProfile[];
+    if (idx >= 0) {
+      updated = [...roster];
+      updated[idx] = client;
+    } else {
+      updated = [client, ...roster];
+    }
+    localStorage.setItem(STORAGE_KEY_CORPORATE_ROSTER, JSON.stringify(updated));
+    window.dispatchEvent(new CustomEvent("it_roster_updated", { detail: updated }));
+  } catch (err) {
+    console.error("Failed to save corporate client:", err);
+  }
+}
+
+export function deleteCorporateClient(clientId: string): void {
+  if (typeof window === "undefined") return;
+  try {
+    const roster = getCorporateRoster().filter((c) => c.id !== clientId);
+    localStorage.setItem(STORAGE_KEY_CORPORATE_ROSTER, JSON.stringify(roster));
+    window.dispatchEvent(new CustomEvent("it_roster_updated", { detail: roster }));
+  } catch (err) {
+    console.error("Failed to delete corporate client:", err);
   }
 }
 
