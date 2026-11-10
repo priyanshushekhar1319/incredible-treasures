@@ -25,8 +25,8 @@ export interface AdminAccountConfig {
   name: string;
   title: string;
   email: string;
-  password: string;
   role: AdminRole;
+  tierLevel: string;
   badgeLabel: string;
   badgeColor: string;
   description: string;
@@ -35,14 +35,15 @@ export interface AdminAccountConfig {
 }
 
 // 5 Enterprise Admin Accounts per Client Roadmap Specification (PDF Page 4 & 5)
+// STRICT ZERO-TRUST SECURITY: Passwords are NEVER stored or exposed in client-side code.
 export const ENTERPRISE_ADMIN_ACCOUNTS: Record<string, AdminAccountConfig> = {
   "admin@incredibletreasures.com": {
     id: "admin-super",
     name: "Master Administrator",
     title: "Chief Executive & Studio Owner",
     email: "admin@incredibletreasures.com",
-    password: "IncredibleAdmin@2026",
     role: "SUPER_ADMIN",
+    tierLevel: "Tier 1: Master Clearance",
     badgeLabel: "SUPER ADMIN",
     badgeColor: "bg-amber-500 text-slate-950 border-amber-400",
     description: "Complete master clearance. Access to all modules, team settings, and API configurations.",
@@ -63,8 +64,8 @@ export const ENTERPRISE_ADMIN_ACCOUNTS: Record<string, AdminAccountConfig> = {
     name: "Operations Manager",
     title: "General Store & Production Manager",
     email: "manager@incredibletreasures.com",
-    password: "Manager@2026",
     role: "MANAGER",
+    tierLevel: "Tier 2: Operations Lead",
     badgeLabel: "STORE MANAGER",
     badgeColor: "bg-indigo-600 text-white border-indigo-500",
     description: "Controls product catalog, orders, corporate customers, banners, and executive reports.",
@@ -82,8 +83,8 @@ export const ENTERPRISE_ADMIN_ACCOUNTS: Record<string, AdminAccountConfig> = {
     name: "Customer Support Executive",
     title: "Client Care & Ticket Concierge",
     email: "support@incredibletreasures.com",
-    password: "Support@2026",
     role: "SUPPORT",
+    tierLevel: "Tier 3: Client Relations",
     badgeLabel: "SUPPORT DESK",
     badgeColor: "bg-teal-600 text-white border-teal-500",
     description: "Inspects order states, client profiles, and tax invoices. Financial and pricing settings are locked.",
@@ -98,8 +99,8 @@ export const ENTERPRISE_ADMIN_ACCOUNTS: Record<string, AdminAccountConfig> = {
     name: "Warehouse & Logistics Lead",
     title: "Offset Press, Imposition & Packaging",
     email: "warehouse@incredibletreasures.com",
-    password: "Warehouse@2026",
     role: "WAREHOUSE",
+    tierLevel: "Tier 3: Fulfillment & Press",
     badgeLabel: "WAREHOUSE LEAD",
     badgeColor: "bg-orange-600 text-white border-orange-500",
     description: "Manages raw material inventory, BlueDart AWB packing, and press sheet batching. Revenue data is hidden.",
@@ -115,8 +116,8 @@ export const ENTERPRISE_ADMIN_ACCOUNTS: Record<string, AdminAccountConfig> = {
     name: "Senior Financial Auditor",
     title: "Chartered Accountant & GST Officer",
     email: "accountant@incredibletreasures.com",
-    password: "Accounts@2026",
     role: "ACCOUNTANT",
+    tierLevel: "Tier 2: Statutory Compliance",
     badgeLabel: "AUDITOR / CA",
     badgeColor: "bg-emerald-600 text-white border-emerald-500",
     description: "Audits statutory GSTR-1, Razorpay settlements, refunds, and MCA tax ledgers.",
@@ -129,7 +130,6 @@ export const ENTERPRISE_ADMIN_ACCOUNTS: Record<string, AdminAccountConfig> = {
 };
 
 export const MASTER_ADMIN_EMAIL = "admin@incredibletreasures.com";
-export const MASTER_ADMIN_PASSWORD = "IncredibleAdmin@2026";
 
 export interface AdminUserSession {
   email: string;
@@ -153,37 +153,8 @@ export function canRoleAccessTab(role: AdminRole, tab: AdminTab): boolean {
 }
 
 /**
- * Verify credentials synchronously against all 5 enterprise admin roles
- */
-export function verifyAdminCredentials(emailInput: string, passwordInput: string): AdminAccountConfig | null {
-  const cleanEmail = (emailInput || "").toLowerCase().trim();
-  const cleanPassword = (passwordInput || "").trim();
-
-  // 1. Direct Super Admin Master check
-  if (
-    cleanEmail === MASTER_ADMIN_EMAIL.toLowerCase() &&
-    (cleanPassword === MASTER_ADMIN_PASSWORD || cleanPassword === "IncredibleAdmin@2026")
-  ) {
-    return ENTERPRISE_ADMIN_ACCOUNTS[MASTER_ADMIN_EMAIL];
-  }
-
-  // 2. Multi-Role Enterprise Accounts check
-  const account = ENTERPRISE_ADMIN_ACCOUNTS[cleanEmail];
-  if (account) {
-    if (
-      cleanPassword === account.password ||
-      cleanPassword === MASTER_ADMIN_PASSWORD ||
-      cleanPassword === "IncredibleAdmin@2026"
-    ) {
-      return account;
-    }
-  }
-
-  return null;
-}
-
-/**
- * Verify admin credentials against server API
+ * Verify admin credentials strictly against the secure server API
+ * Zero plaintext passwords are checked or stored in client memory.
  */
 export async function verifyAdminCredentialsAsync(
   emailInput: string,
@@ -208,15 +179,9 @@ export async function verifyAdminCredentialsAsync(
       error: data.error || "Invalid admin credentials. Access Denied.",
     };
   } catch {
-    // Graceful offline fallback
-    const matched = verifyAdminCredentials(cleanEmail, cleanPassword);
-    if (matched) {
-      const session = createAdminSession(matched.email, matched.role, matched.name);
-      return { success: true, session };
-    }
     return {
       success: false,
-      error: "Invalid admin credentials. Access Denied.",
+      error: "Authentication service temporarily unreachable. Please check network connection.",
     };
   }
 }
@@ -231,7 +196,7 @@ export function createAdminSession(
   token?: string
 ): AdminUserSession {
   const account = ENTERPRISE_ADMIN_ACCOUNTS[email.toLowerCase()] || ENTERPRISE_ADMIN_ACCOUNTS[MASTER_ADMIN_EMAIL];
-  
+
   const validRoles: AdminRole[] = ["SUPER_ADMIN", "MANAGER", "SUPPORT", "WAREHOUSE", "ACCOUNTANT"];
   let finalRole: AdminRole = account.role;
   let finalToken: string | undefined = token;
@@ -269,15 +234,6 @@ export function createAdminSession(
 }
 
 /**
- * Switch session quickly to test different admin roles
- */
-export function switchAdminRole(email: string): AdminUserSession | null {
-  const account = ENTERPRISE_ADMIN_ACCOUNTS[email.toLowerCase()];
-  if (!account) return null;
-  return createAdminSession(account.email, account.role, account.name);
-}
-
-/**
  * Retrieve active admin session if valid
  */
 export function getAdminSession(): AdminUserSession | null {
@@ -300,7 +256,7 @@ export function getAdminSession(): AdminUserSession | null {
 }
 
 /**
- * Destroy admin session and remove auth cookie
+ * Destroy admin session and remove auth cookies
  */
 export function logoutAdmin(): void {
   if (typeof window !== "undefined") {
