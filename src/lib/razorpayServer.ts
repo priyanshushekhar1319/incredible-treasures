@@ -1,10 +1,39 @@
 import Razorpay from "razorpay";
 import crypto from "crypto";
 
+function cleanEnv(val?: string): string {
+  if (!val) return "";
+  return val.replace(/^["']|["']$/g, "").trim();
+}
+
 // Fallback or environment keys
-const KEY_ID = process.env.RAZORPAY_KEY_ID || process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "rzp_test_TsylG3b5RRkcg8";
-const KEY_SECRET = process.env.RAZORPAY_KEY_SECRET || "c7mDOxxwn5V0Y1811AY82a1C";
-const WEBHOOK_SECRET = process.env.RAZORPAY_WEBHOOK_SECRET || "whsec_incredibletreasures_live_2026";
+const KEY_ID =
+  cleanEnv(process.env.RAZORPAY_KEY_ID) ||
+  cleanEnv(process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID) ||
+  "rzp_test_TsylG3b5RRkcg8";
+
+const KEY_SECRET =
+  cleanEnv(process.env.RAZORPAY_KEY_SECRET) ||
+  "c7mDOxxwn5V0Y1811AY82a1C";
+
+const WEBHOOK_SECRET =
+  cleanEnv(process.env.RAZORPAY_WEBHOOK_SECRET) ||
+  "whsec_incredibletreasures_live_2026";
+
+/**
+ * Check if the active configuration is Live Mode or Test Mode
+ */
+export function isRazorpayLiveMode(): boolean {
+  return KEY_ID.startsWith("rzp_live_");
+}
+
+export function getRazorpayPublicConfig() {
+  return {
+    keyId: KEY_ID,
+    isLive: isRazorpayLiveMode(),
+    mode: isRazorpayLiveMode() ? "LIVE_PRODUCTION" : "TEST_SANDBOX",
+  };
+}
 
 /**
  * Singleton server-side Razorpay instance
@@ -34,6 +63,7 @@ export interface RazorpayOrderResponse {
   receipt: string;
   status: string;
   keyId: string;
+  isLive: boolean;
 }
 
 /**
@@ -72,6 +102,7 @@ export async function createRazorpayOrder({
     receipt: order.receipt || receiptId,
     status: order.status,
     keyId: KEY_ID,
+    isLive: isRazorpayLiveMode(),
   };
 }
 

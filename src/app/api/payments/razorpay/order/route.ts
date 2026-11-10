@@ -27,6 +27,7 @@ export async function POST(req: NextRequest) {
       currency: order.currency,
       receipt: order.receipt,
       keyId: order.keyId,
+      isLive: order.isLive,
     });
   } catch (error: any) {
     console.error("Error creating Razorpay order:", error);
