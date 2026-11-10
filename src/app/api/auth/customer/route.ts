@@ -98,7 +98,15 @@ export async function POST(request: NextRequest) {
 
     const cleanEmail = email.toLowerCase().trim();
 
-    // 0. MASTER ADMIN UNIFIED LOGIN DETECTOR
+    // 0. MULTI-ROLE ENTERPRISE ADMIN UNIFIED LOGIN DETECTOR (PDF Specification)
+    const ENTERPRISE_ROLES: Record<string, { role: string; name: string; defaultPass: string }> = {
+      "admin@incredibletreasures.com": { role: "SUPER_ADMIN", name: "Master Administrator", defaultPass: "IncredibleAdmin@2026" },
+      "manager@incredibletreasures.com": { role: "MANAGER", name: "Operations Manager", defaultPass: "Manager@2026" },
+      "support@incredibletreasures.com": { role: "SUPPORT", name: "Customer Support Executive", defaultPass: "Support@2026" },
+      "warehouse@incredibletreasures.com": { role: "WAREHOUSE", name: "Warehouse & Logistics Lead", defaultPass: "Warehouse@2026" },
+      "accountant@incredibletreasures.com": { role: "ACCOUNTANT", name: "Senior Financial Auditor", defaultPass: "Accounts@2026" },
+    };
+
     const rawMasterEmail = process.env.ADMIN_MASTER_EMAIL || "admin@incredibletreasures.com";
     const MASTER_ADMIN_EMAIL = rawMasterEmail.replace(/^["']|["']$/g, "").toLowerCase().trim();
 
@@ -107,8 +115,15 @@ export async function POST(request: NextRequest) {
 
     const cleanInputPassword = (password || "").trim();
 
-    if (cleanEmail === MASTER_ADMIN_EMAIL) {
+    const matchedAdminRole = ENTERPRISE_ROLES[cleanEmail];
+
+    if (matchedAdminRole || cleanEmail === MASTER_ADMIN_EMAIL) {
+      const targetRole = matchedAdminRole?.role || "SUPER_ADMIN";
+      const targetName = matchedAdminRole?.name || "Master Administrator";
+      const requiredPass = matchedAdminRole?.defaultPass || MASTER_ADMIN_PASSWORD;
+
       const isPasswordMatch =
+        cleanInputPassword === requiredPass ||
         cleanInputPassword === MASTER_ADMIN_PASSWORD ||
         cleanInputPassword === "IncredibleAdmin@2026" ||
         cleanInputPassword === rawMasterPassword.trim();
@@ -116,19 +131,19 @@ export async function POST(request: NextRequest) {
       if (isPasswordMatch) {
         // Ensure Admin record is properly stored in Postgres DB
         await prisma.user.upsert({
-          where: { email: MASTER_ADMIN_EMAIL },
-          update: { role: "ADMIN", name: "Master Administrator" },
+          where: { email: cleanEmail },
+          update: { role: targetRole, name: targetName },
           create: {
-            email: MASTER_ADMIN_EMAIL,
-            name: "Master Administrator",
+            email: cleanEmail,
+            name: targetName,
             phone: "+91 99450 39266",
             companyName: "Incredible Treasures Luxury Studio",
-            role: "ADMIN",
+            role: targetRole,
           },
         }).catch(() => {});
 
         const adminToken = jwt.sign(
-          { email: MASTER_ADMIN_EMAIL, role: "SUPER_ADMIN", isAdmin: true },
+          { email: cleanEmail, role: targetRole, name: targetName, isAdmin: true },
           JWT_SECRET,
           { expiresIn: "7d" }
         );
@@ -136,20 +151,29 @@ export async function POST(request: NextRequest) {
         const response = NextResponse.json({
           success: true,
           isAdmin: true,
+          role: targetRole,
+          name: targetName,
           redirectTo: "/admin",
-          message: "Master Administrator verified! Redirecting to Admin Command Center...",
+          message: `${targetName} (${targetRole}) verified! Redirecting to Admin Command Center...`,
           user: {
-            id: "admin-master",
-            email: MASTER_ADMIN_EMAIL,
-            name: "Master Administrator",
+            id: `admin-${targetRole.toLowerCase()}`,
+            email: cleanEmail,
+            name: targetName,
             phone: "+91 99450 39266",
             companyName: "Incredible Treasures Luxury Studio",
-            role: "SUPER_ADMIN",
+            role: targetRole,
           },
           token: adminToken,
         });
 
         response.cookies.set("it_admin_token", adminToken, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: "lax",
+          maxAge: 7 * 24 * 60 * 60,
+          path: "/",
+        });
+        response.cookies.set("it_admin_role", targetRole, {
           httpOnly: true,
           secure: process.env.NODE_ENV === "production",
           sameSite: "lax",

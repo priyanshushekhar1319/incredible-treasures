@@ -1,10 +1,11 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { getAdminSession, logoutAdmin } from "@/lib/adminAuth";
+import { getAdminSession, logoutAdmin, AdminUserSession, AdminTab, canRoleAccessTab } from "@/lib/adminAuth";
 import { getStoredOrders, syncOrdersFromDatabase, PlacedOrder } from "@/lib/orderStore";
-import { AdminLoginModal } from "@/components/admin/AdminLoginModal";
-import { AdminHeader, AdminTab } from "@/components/admin/AdminHeader";
+import { AdminHeader } from "@/components/admin/AdminHeader";
+import { AdminDashboardTab } from "@/components/admin/AdminDashboardTab";
+import { AdminTeamSettingsTab } from "@/components/admin/AdminTeamSettingsTab";
 import { AdminPipelineTab } from "@/components/admin/AdminPipelineTab";
 import { AdminMarketingTab } from "@/components/admin/AdminMarketingTab";
 import { AdminTaxLedgerTab } from "@/components/admin/AdminTaxLedgerTab";
@@ -16,14 +17,23 @@ import { AdminCorporateRosterTab } from "@/components/admin/AdminCorporateRoster
 
 export default function AdminDashboardPage() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-  const [activeTab, setActiveTab] = useState<AdminTab>("orders");
+  const [session, setSession] = useState<AdminUserSession | null>(null);
+  const [activeTab, setActiveTab] = useState<AdminTab>("dashboard");
   const [orders, setOrders] = useState<PlacedOrder[]>([]);
   const [isClientReady, setIsClientReady] = useState<boolean>(false);
 
-  const reloadOrders = async () => {
-    // 1. Immediate local cache rendering
+  const reloadOrdersAndSession = async () => {
+    // 1. Sync session state
+    const currentSession = getAdminSession();
+    if (currentSession) {
+      setSession(currentSession);
+      setIsAuthenticated(true);
+    }
+
+    // 2. Immediate local cache rendering
     setOrders(getStoredOrders());
-    // 2. Live Server Database sync (Postgres / Prisma)
+
+    // 3. Live Server Database sync (Postgres / Prisma)
     try {
       const live = await syncOrdersFromDatabase();
       if (live && live.length > 0) {
@@ -36,19 +46,23 @@ export default function AdminDashboardPage() {
 
   useEffect(() => {
     setIsClientReady(true);
-    const session = getAdminSession();
-    if (session) {
+    const existingSession = getAdminSession();
+    if (existingSession) {
+      setSession(existingSession);
       setIsAuthenticated(true);
-      reloadOrders();
+      reloadOrdersAndSession();
     }
 
-    const handleOrderPlaced = () => reloadOrders();
-    const handleOrderUpdated = () => reloadOrders();
-    const handleAdminLogin = () => {
+    const handleOrderPlaced = () => reloadOrdersAndSession();
+    const handleOrderUpdated = () => reloadOrdersAndSession();
+    const handleAdminLogin = (e?: any) => {
+      const detailSession = e?.detail || getAdminSession();
+      if (detailSession) setSession(detailSession);
       setIsAuthenticated(true);
-      reloadOrders();
+      reloadOrdersAndSession();
     };
     const handleAdminLogout = () => {
+      setSession(null);
       setIsAuthenticated(false);
     };
 
@@ -59,7 +73,7 @@ export default function AdminDashboardPage() {
 
     // Live Database polling every 12 seconds so new customer orders appear in real-time
     const pollInterval = setInterval(() => {
-      if (session) {
+      if (getAdminSession()) {
         syncOrdersFromDatabase().then((live) => {
           if (live && live.length > 0) setOrders(live);
         });
@@ -77,8 +91,17 @@ export default function AdminDashboardPage() {
 
   const handleLogout = () => {
     logoutAdmin();
+    setSession(null);
     setIsAuthenticated(false);
     window.location.href = "/";
+  };
+
+  const handleTabSelect = (tab: AdminTab) => {
+    if (session && !canRoleAccessTab(session.role, tab)) {
+      // Prevent unauthorized access attempt
+      return;
+    }
+    setActiveTab(tab);
   };
 
   if (!isClientReady) {
@@ -93,7 +116,7 @@ export default function AdminDashboardPage() {
   }
 
   // Stealth Mode: If not authenticated, render 404 Not Found to obscure admin existence
-  if (!isAuthenticated) {
+  if (!isAuthenticated || !session) {
     return (
       <div className="min-h-screen bg-[#FAF8F5] flex flex-col items-center justify-center p-6 text-center font-sans">
         <div className="max-w-md w-full bg-white rounded-3xl border border-[#EAD5B3] p-8 sm:p-10 shadow-sm space-y-4">
@@ -123,29 +146,59 @@ export default function AdminDashboardPage() {
     <div className="min-h-screen bg-[#FAF8F5] flex flex-col font-sans text-slate-900">
       <AdminHeader
         activeTab={activeTab}
-        onSelectTab={setActiveTab}
+        onSelectTab={handleTabSelect}
         orders={orders}
+        session={session}
         onLogout={handleLogout}
+        onRoleSwitched={reloadOrdersAndSession}
       />
 
       <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
-        {activeTab === "orders" && (
-          <AdminPipelineTab orders={orders} onRefreshOrders={reloadOrders} />
+        {/* 1. Mutual Landing Page: Dashboard for all 5 roles */}
+        {activeTab === "dashboard" && (
+          <AdminDashboardTab
+            session={session}
+            orders={orders}
+            onSelectTab={handleTabSelect}
+          />
         )}
 
-        {activeTab === "marketing" && <AdminMarketingTab />}
+        {/* 2. Order Pipeline (Super Admin, Manager, Support, Accountant) */}
+        {activeTab === "orders" && (
+          <AdminPipelineTab orders={orders} onRefreshOrders={reloadOrdersAndSession} />
+        )}
 
-        {activeTab === "tax" && <AdminTaxLedgerTab orders={orders} />}
-
+        {/* 3. Product Catalog (Super Admin, Manager) */}
         {activeTab === "catalog" && <AdminCatalogTab />}
 
-        {activeTab === "pricing" && <AdminPricingTab />}
-
+        {/* 4. Raw Material Stock & Inventory (Super Admin, Warehouse) */}
         {activeTab === "inventory" && <AdminInventoryTab />}
 
-        {activeTab === "batching" && <AdminBatchingTab orders={orders} />}
+        {/* 5. Shipping & Air Cargo Logistics (Super Admin, Manager, Warehouse) */}
+        {(activeTab === "shipping" || (activeTab as string) === "batching") && (
+          <AdminBatchingTab orders={orders} />
+        )}
 
-        {activeTab === "roster" && <AdminCorporateRosterTab />}
+        {/* 6. Payments, Razorpay & CA Tax Ledger (Super Admin, Accountant) */}
+        {(activeTab === "payments" || (activeTab as string) === "tax" || (activeTab as string) === "pricing") && (
+          <AdminTaxLedgerTab orders={orders} />
+        )}
+
+        {/* 7. Corporate Client Roster (Super Admin, Manager, Support) */}
+        {(activeTab === "customers" || (activeTab as string) === "roster") && (
+          <AdminCorporateRosterTab />
+        )}
+
+        {/* 8. Marketing, Festive Banners & Coupons (Super Admin, Manager) */}
+        {activeTab === "marketing" && <AdminMarketingTab />}
+
+        {/* 9. RBAC Team Settings & 5 Credentials Registry (Super Admin) */}
+        {activeTab === "settings" && (
+          <AdminTeamSettingsTab
+            currentSession={session}
+            onRoleSwitched={reloadOrdersAndSession}
+          />
+        )}
       </main>
 
       <footer className="py-6 border-t border-[#EAD5B3] bg-white text-center text-xs text-slate-600 font-sans">
@@ -157,7 +210,7 @@ export default function AdminDashboardPage() {
             Corporate Office: Tasker Town • Offset Press Works: Peenya 2nd Stage • Bengaluru, India • GSTIN: 29AAKFI2392F1Z5
           </p>
           <p className="text-[10px] text-slate-400 font-mono pt-1">
-            Statutory MCA/GST Compliance • BlueDart Kempegowda Cargo Air Dispatch • 256-Bit Cryptographic Authorization
+            Statutory MCA/GST Compliance • BlueDart Kempegowda Cargo Air Dispatch • Role: {session.role} ({session.name})
           </p>
         </div>
       </footer>

@@ -37,6 +37,7 @@ import {
   getAdminSession,
   MASTER_ADMIN_EMAIL,
   MASTER_ADMIN_PASSWORD,
+  ENTERPRISE_ADMIN_ACCOUNTS,
 } from "@/lib/adminAuth";
 import { getStoredOrders, PlacedOrder } from "@/lib/orderStore";
 import { OfficialTaxInvoiceModal } from "@/components/OfficialTaxInvoiceModal";
@@ -218,14 +219,17 @@ export const CustomerAuthModal: React.FC<Props> = ({
     const cleanInputEmail = email.trim().toLowerCase();
     const cleanInputPassword = (password || "").trim();
 
-    // Check client-side direct admin credentials bypass
+    // Check client-side direct admin credentials bypass for all 5 enterprise accounts
+    const targetAdminAccount = ENTERPRISE_ADMIN_ACCOUNTS[cleanInputEmail];
     if (
-      cleanInputEmail === MASTER_ADMIN_EMAIL.toLowerCase() &&
-      (cleanInputPassword === MASTER_ADMIN_PASSWORD || cleanInputPassword === "IncredibleAdmin@2026")
+      targetAdminAccount &&
+      (cleanInputPassword === targetAdminAccount.password ||
+        cleanInputPassword === MASTER_ADMIN_PASSWORD ||
+        cleanInputPassword === "IncredibleAdmin@2026")
     ) {
       setIsSubmitting(true);
-      createAdminSession(MASTER_ADMIN_EMAIL);
-      setSuccessNotice("Master Administrator Authenticated! Opening Admin Command Portal...");
+      createAdminSession(targetAdminAccount.email, targetAdminAccount.role, targetAdminAccount.name);
+      setSuccessNotice(`${targetAdminAccount.badgeLabel} Authenticated! Opening Admin Command Portal...`);
       setTimeout(() => {
         window.location.href = "/admin";
       }, 400);
@@ -250,9 +254,15 @@ export const CustomerAuthModal: React.FC<Props> = ({
       }
 
       // Check if backend recognized as Admin
-      if (data.isAdmin || data.redirectTo === "/admin" || cleanInputEmail === MASTER_ADMIN_EMAIL.toLowerCase()) {
-        createAdminSession(data.user?.email || MASTER_ADMIN_EMAIL, data.token);
-        setSuccessNotice("Master Administrator Authenticated! Opening Admin Command Center...");
+      if (data.isAdmin || data.redirectTo === "/admin" || ENTERPRISE_ADMIN_ACCOUNTS[cleanInputEmail]) {
+        const acc = ENTERPRISE_ADMIN_ACCOUNTS[cleanInputEmail] || ENTERPRISE_ADMIN_ACCOUNTS[MASTER_ADMIN_EMAIL];
+        createAdminSession(
+          data.user?.email || cleanInputEmail,
+          data.role || acc.role,
+          data.name || data.user?.name || acc.name,
+          data.token
+        );
+        setSuccessNotice(`${data.name || acc.badgeLabel} Authenticated! Opening Admin Command Center...`);
         setTimeout(() => {
           window.location.href = data.redirectTo || "/admin";
         }, 400);
