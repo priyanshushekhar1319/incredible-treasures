@@ -98,6 +98,8 @@ export async function POST(request: NextRequest) {
 
     const cleanEmail = email.toLowerCase().trim();
 
+    const cleanInputPassword = (password || "").trim();
+
     // 0. MULTI-ROLE ENTERPRISE ADMIN UNIFIED LOGIN DETECTOR (PDF Specification)
     const ENTERPRISE_ROLES: Record<string, { role: string; name: string; defaultPass: string }> = {
       "admin@incredibletreasures.com": { role: "SUPER_ADMIN", name: "Master Administrator", defaultPass: "IncredibleAdmin@2026" },
@@ -107,13 +109,49 @@ export async function POST(request: NextRequest) {
       "accountant@incredibletreasures.com": { role: "ACCOUNTANT", name: "Senior Financial Auditor", defaultPass: "Accounts@2026" },
     };
 
+    // 0.1 RAZORPAY KYC COMPLIANCE TEST CUSTOMER ACCOUNT
+    if (cleanEmail === "demo@incredibletreasures.com" || cleanEmail === "test@incredibletreasures.com") {
+      if (cleanInputPassword === "Welcome@2026" || cleanInputPassword === "Customer@2026") {
+        const testUser = {
+          id: "razorpay-kyc-reviewer",
+          email: cleanEmail,
+          name: "Razorpay Compliance Reviewer",
+          phone: "+91 99450 39266",
+          companyName: "Incredible Treasures Luxury Studio",
+          gstin: "29AAKFI2392F1Z5",
+          role: "CUSTOMER",
+        };
+
+        const token = jwt.sign(
+          { userId: testUser.id, email: testUser.email, role: testUser.role },
+          JWT_SECRET,
+          { expiresIn: "30d" }
+        );
+
+        const response = NextResponse.json({
+          success: true,
+          message: "Signed in successfully for payment verification.",
+          user: testUser,
+          token,
+        });
+
+        response.cookies.set("it_customer_token", token, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: "lax",
+          maxAge: 30 * 24 * 60 * 60,
+          path: "/",
+        });
+
+        return response;
+      }
+    }
+
     const rawMasterEmail = process.env.ADMIN_MASTER_EMAIL || "admin@incredibletreasures.com";
     const MASTER_ADMIN_EMAIL = rawMasterEmail.replace(/^["']|["']$/g, "").toLowerCase().trim();
 
     const rawMasterPassword = process.env.ADMIN_MASTER_PASSWORD || "IncredibleAdmin@2026";
     const MASTER_ADMIN_PASSWORD = rawMasterPassword.replace(/^["']|["']$/g, "").trim();
-
-    const cleanInputPassword = (password || "").trim();
 
     const matchedAdminRole = ENTERPRISE_ROLES[cleanEmail];
 
